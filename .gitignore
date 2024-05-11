@@ -1,0 +1,6 @@
+#Cargo
+Cargo.lock
+*/target
+
+#misc
+.env
