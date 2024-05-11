@@ -19,7 +19,25 @@ async fn main() -> tide::Result<()>{
     let db_name = env::var("POSTGRES_NAME").expect("");
 
     let database_url = db_host.clone() + "://" + &db_user + ":" + &db_password + "@localhost:" + &db_port + "/" + &db_name;
-    let client = Client::connect(&database_url,NoTls)?;
+    let mut client = Client::connect(&database_url,NoTls)?;
+
+    /* 
+    client.batch_execute("
+        CREATE TABLE IF NOT EXISTS author (
+            id              SERIAL PRIMARY KEY,
+            name            VARCHAR NOT NULL,
+            country         VARCHAR NOT NULL
+            )
+    ")?;
+
+    client.batch_execute("
+        CREATE TABLE IF NOT EXISTS book  (
+            id              SERIAL PRIMARY KEY,
+            title           VARCHAR NOT NULL,
+            author_id       INTEGER NOT NULL REFERENCES author
+            )
+    ")?;
+    */
 
     // create app
     let mut app = tide::new();
