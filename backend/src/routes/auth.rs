@@ -1,10 +1,5 @@
-use core::hash;
 use core::panic;
-use std::io::Write;
-use std::io::Result;
-
 use tide::Request;
-use rand::Rng;
 use scrypt::{
     password_hash::{
         rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString
@@ -46,5 +41,12 @@ fn hash_password(password: &String, salt: &SaltString) -> String {
         Err(e) => {
             panic!("brick");
         }
+    }
+}
+
+fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool{
+    let res = Scrypt.hash_password(pass_arr, salt);
+    match res {
+        Ok(hash)
     }
 }
