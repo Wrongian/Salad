@@ -1,6 +1,5 @@
 use core::panic;
 use tide::Request;
-use postgres::{Client, NoTls, Error};
 use scrypt::{
     password_hash::{
         rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString
