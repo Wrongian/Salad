@@ -1,5 +1,6 @@
 use core::panic;
 use tide::Request;
+use postgres::{Client, NoTls, Error};
 use scrypt::{
     password_hash::{
         rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString
@@ -28,6 +29,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     Ok(format!("Username: {}\n Password: {}", username, password).into())
 }
 
+//
 fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
