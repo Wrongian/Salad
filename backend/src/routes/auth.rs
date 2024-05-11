@@ -45,8 +45,18 @@ fn hash_password(password: &String, salt: &SaltString) -> String {
 }
 
 fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool{
+    let pass_arr = to_check.as_bytes();
     let res = Scrypt.hash_password(pass_arr, salt);
     match res {
-        Ok(hash)
+        Ok(hash) => {
+            if hash.to_string() == *hash_string {
+                return true;
+            }
+            return false;
+        }
+        Err(e) => {
+            return false;
+        }
     }
+    false
 }
