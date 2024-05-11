@@ -1,4 +1,5 @@
 use core::hash;
+use core::panic;
 use std::io::Write;
 use std::io::Result;
 
@@ -35,18 +36,15 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
 fn generate_salt() -> SaltString {
     SaltString::generate(&mut OsRng)
 }
-/* 
-fn hash_password(password: &String, salt: &SaltString) -> Result<String, Error> {
-    let mut pass_arr: &mut [u8];
-    pass_arr.write(password.as_bytes()).unwrap();
+fn hash_password(password: &String, salt: &SaltString) -> String {
+    let pass_arr = password.as_bytes();
     let res = Scrypt.hash_password(pass_arr, salt);
     match res {
         Ok(hash) => {
-            return Ok(hash.to_string());
+            return hash.to_string();
         }
         Err(e) => {
-            return Err(e);
+            panic!("brick");
         }
     }
 }
-*/
