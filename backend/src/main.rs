@@ -4,8 +4,6 @@ use std::env;
 use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
-use sqlx::Connection;
-use sqlx::Row;
 
 #[async_std::main]
 async fn main() -> tide::Result<()>{
