@@ -23,8 +23,7 @@ async fn main() -> tide::Result<()>{
     let database_url = db_host.clone() + "://" + &db_user + ":" + &db_password + "@localhost:" + &db_port + "/" + &db_name;
 
     // connect to the postgres db
-    // add connection pooling later
-    let mut client = sqlx::postgres::PgConnection::connect(&database_url).await?;
+    let mut pool = sqlx::postgres::PgConnection::connect(&database_url).await?;
 
     
     /*
@@ -38,6 +37,7 @@ async fn main() -> tide::Result<()>{
     ")?;
     */
 
+    // let res = sqlx::query()
     
     // create app
     let mut app = tide::new();
