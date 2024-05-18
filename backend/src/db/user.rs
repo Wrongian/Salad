@@ -1,5 +1,6 @@
 struct User {
     username: String,
+    // hashed password
     password: String,  
     email: String,
     bio: String,
