@@ -26,19 +26,6 @@ async fn main() -> tide::Result<()>{
     let pool = sqlx::postgres::PgPool::connect(&database_url).await?;
     sqlx::migrate!("./migrations").run(&pool).await?;
     
-    /*
-    // testing basic table
-    client.batch_execute("
-        CREATE TABLE IF NOT EXISTS users (
-            id              SERIAL PRIMARY KEY,
-            username            VARCHAR NOT NULL,
-            password         VARCHAR NOT NULL
-            )
-    ")?;
-    */
-
-    // let res = sqlx::query()
-    
     // create app
     let mut app = tide::new();
 
