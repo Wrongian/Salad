@@ -15,3 +15,6 @@ We will require 3 separate terminals to track the database, backend and frontend
 2. (Backend testing) On the 2nd terminal, cd into `./backend` and run `cargo run`.
 3. (Frontend testing) On the 3rd terminal cd into `./frontend` and run `npm run dev`.
 
+# Common Issues
+## Migrations being bricked
+delete the _sqlx_migrations table and try again
