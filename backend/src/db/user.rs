@@ -1,4 +1,6 @@
-struct User {
+// pub mod user {
+
+pub struct User {
     username: String,
     // hashed password
     password: String,  
@@ -20,3 +22,4 @@ async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> 
         .await?;
     Ok(());
 }
+// }

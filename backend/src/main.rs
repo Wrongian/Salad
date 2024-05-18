@@ -5,6 +5,7 @@ use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
 
+
 #[async_std::main]
 async fn main() -> tide::Result<()>{
     // load dotenv
@@ -23,6 +24,17 @@ async fn main() -> tide::Result<()>{
     // connect to the postgres db
     let pool = sqlx::postgres::PgPool::connect(&database_url).await?;
     sqlx::migrate!("./migrations").run(&pool).await?;
+
+    /* 
+    // placeholder test to create a user
+    new_user = user {
+        username: "meme",
+        password: "meme1",
+        email: "meme2",
+        bio: "meme3",
+        is_private: false,
+    };
+    */
     
     // create app
     let mut app = tide::new();
