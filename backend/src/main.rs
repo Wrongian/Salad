@@ -4,7 +4,8 @@ use std::env;
 use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
-use postgres::{Client, NoTls, Error};
+use sqlx::Connection;
+use sqlx::Row;
 
 #[async_std::main]
 async fn main() -> tide::Result<()>{
@@ -18,27 +19,26 @@ async fn main() -> tide::Result<()>{
     let db_password = env::var("POSTGRES_PASSWORD").expect("");
     let db_name = env::var("POSTGRES_NAME").expect("");
 
+    // database url
     let database_url = db_host.clone() + "://" + &db_user + ":" + &db_password + "@localhost:" + &db_port + "/" + &db_name;
-    let mut client = Client::connect(&database_url,NoTls)?;
 
-    /* 
-    client.batch_execute("
-        CREATE TABLE IF NOT EXISTS author (
-            id              SERIAL PRIMARY KEY,
-            name            VARCHAR NOT NULL,
-            country         VARCHAR NOT NULL
-            )
-    ")?;
+    // connect to the postgres db
+    // add connection pooling later
+    let mut client = sqlx::postgres::PgConnection::connect(&database_url).await?;
 
+    
+    /*
+    // testing basic table
     client.batch_execute("
-        CREATE TABLE IF NOT EXISTS book  (
+        CREATE TABLE IF NOT EXISTS users (
             id              SERIAL PRIMARY KEY,
-            title           VARCHAR NOT NULL,
-            author_id       INTEGER NOT NULL REFERENCES author
+            username            VARCHAR NOT NULL,
+            password         VARCHAR NOT NULL
             )
     ")?;
     */
 
+    
     // create app
     let mut app = tide::new();
 
