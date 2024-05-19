@@ -6,7 +6,8 @@ pub struct User {
     pub password: String,  
     pub email: String,
     pub bio: String,
-    pub is_private: bool
+    pub is_private: bool,
+    pub salt: String
 }
 
 pub async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {

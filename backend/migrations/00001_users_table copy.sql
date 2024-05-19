@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR NOT NULL,
     email VARCHAR NOT NULL,
     bio VARCHAR,
-    is_private BOOLEAN NOT NULL
+    is_private BOOLEAN NOT NULL,
+    salt VARCHAR NOT NULL
 );
