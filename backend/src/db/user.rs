@@ -1,16 +1,16 @@
-// pub mod user {
+use std::error::Error;
 
 pub struct User {
-    username: String,
+    pub username: String,
     // hashed password
-    password: String,  
-    email: String,
-    bio: String,
-    is_private: bool
+    pub password: String,  
+    pub email: String,
+    pub bio: String,
+    pub is_private: bool
 }
 
-async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {
-    let query = "INSERT INTO users (username, password, email, bio, is_private) VALUES ($1, $2, $3)";
+pub async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {
+    let query = "INSERT INTO users (username, password, email, bio, is_private) VALUES ($1, $2, $3, $4, $5)";
 
     sqlx::query(query)
         .bind(&user.username)
@@ -20,6 +20,5 @@ async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> 
         .bind(&user.is_private)
         .execute(pool)
         .await?;
-    Ok(());
+    Ok(())
 }
-// }
