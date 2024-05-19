@@ -29,6 +29,7 @@ async fn main() -> tide::Result<()>{
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     // placeholder test to create a user
+    /* 
     let new_user = User {
         username: "meme".to_string(),
         password: "meme1".to_string(),
@@ -36,6 +37,7 @@ async fn main() -> tide::Result<()>{
         bio: "meme3".to_string(),
         is_private: false,
     };
+    */
 
     // hot glue fix, todo error handling later
     create(&new_user,&pool).await.unwrap();
