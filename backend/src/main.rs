@@ -36,11 +36,12 @@ async fn main() -> tide::Result<()>{
         email: "meme2".to_string(),
         bio: "meme3".to_string(),
         is_private: false,
+        salt: "meme4".to_string(),
     };
     */
 
     // hot glue fix, todo error handling later
-    create(&new_user,&pool).await.unwrap();
+    // create(&new_user,&pool).await.unwrap();
     
     
     // create app
