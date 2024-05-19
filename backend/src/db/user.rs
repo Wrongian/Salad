@@ -5,13 +5,13 @@ pub struct User {
     // hashed password
     pub password: String,  
     pub email: String,
-    pub bio: String,
+    pub bio: Option<String>,
     pub is_private: bool,
-    pub salt: String
+    pub salt: String,
 }
 
 pub async fn create(user: &User, pool: &sqlx::PgPool) -> Result<(), Box<dyn Error>> {
-    let query = "INSERT INTO users (username, password, email, bio, is_private) VALUES ($1, $2, $3, $4, $5, $6)";
+    let query = "INSERT INTO users (username, password, email, bio, is_private, salt) VALUES ($1, $2, $3, $4, $5, $6)";
 
     sqlx::query(query)
         .bind(&user.username)
