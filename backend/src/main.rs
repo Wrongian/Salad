@@ -1,32 +1,19 @@
 pub mod routes;
 use std::env;
-
 use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
-
 pub mod db;
 use db::user::User;
 use db::user::create;
+use db::start_connection;
+use tide::log::start;
 
 #[async_std::main]
 async fn main() -> tide::Result<()>{
     // load dotenv
     dotenv().expect("No .env file found");
-    
-    // setup database
-    let db_host = env::var("POSTGRES_HOST").expect("");
-    let db_port = env::var("POSTGRES_PORT").expect("");
-    let db_user = env::var("POSTGRES_USER").expect("");
-    let db_password = env::var("POSTGRES_PASSWORD").expect("");
-    let db_name = env::var("POSTGRES_NAME").expect("");
 
-    // database url
-    let database_url = db_host.clone() + "://" + &db_user + ":" + &db_password + "@localhost:" + &db_port + "/" + &db_name;
-
-    // connect to the postgres db
-    let pool = sqlx::postgres::PgPool::connect(&database_url).await?;
-    sqlx::migrate!("./migrations").run(&pool).await?;
 
     // placeholder test to create a user
     /* 
@@ -39,6 +26,8 @@ async fn main() -> tide::Result<()>{
         salt: "meme4".to_string(),
     };
     */
+
+    let db = start_connection().await?;
 
     // hot glue fix, todo error handling later
     // create(&new_user,&pool).await.unwrap();
