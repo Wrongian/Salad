@@ -7,11 +7,25 @@
 </script>
 
 <div class="form">
-  <label for="text" class="block text-sm font-medium py-2">Email</label>
-  <input id="text" type="text" class="w-full rounded" bind:value={email} />
+  <label for="register-email-text" class="block text-sm font-medium py-2"
+    >Email</label
+  >
+  <input
+    id="register-email-text"
+    type="text"
+    class="w-full rounded"
+    bind:value={email}
+  />
 
-  <label for="text" class="block text-sm font-medium py-2">Username</label>
-  <input id="text" type="text" class="w-full rounded" bind:value={username} />
+  <label for="register-username-text" class="block text-sm font-medium py-2"
+    >Username</label
+  >
+  <input
+    id="register-username-text"
+    type="text"
+    class="w-full rounded"
+    bind:value={username}
+  />
 
   <label for="password" class="block text-sm font-medium py-2">Password</label>
   <input
