@@ -33,6 +33,13 @@
           >
         </a>
       </div>
+      <div class="flex justify-center">
+        <a href="/auth/register" on:click={() => (reset = false)}>
+          <span class="text-neutral-500 hover:text-green-950"
+            >Don't have an account? Join us!</span
+          >
+        </a>
+      </div>
     {/if}
   </div>
 </main>
