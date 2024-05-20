@@ -1,12 +1,18 @@
 <script lang="ts">
-  import { login } from "../../scripts/queries";
-  let username: string = "";
-  let password: string = "";
+  import { register } from "../../scripts/queries";
+
+  let email = "";
+  let username = "";
+  let password = "";
 </script>
 
 <div class="form">
+  <label for="text" class="block text-sm font-medium py-2">Email</label>
+  <input id="text" type="text" class="w-full rounded" bind:value={email} />
+
   <label for="text" class="block text-sm font-medium py-2">Username</label>
   <input id="text" type="text" class="w-full rounded" bind:value={username} />
+
   <label for="password" class="block text-sm font-medium py-2">Password</label>
   <input
     id="password"
@@ -18,9 +24,9 @@
     <button
       type="submit"
       class="justify-center rounded-md w-[200px]"
-      on:click={() => login(username, password)}
+      on:click={() => register(email, username, password)}
     >
-      <span>Submit</span>
+      <span>Register</span>
     </button>
   </div>
 </div>
