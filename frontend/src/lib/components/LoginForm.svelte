@@ -5,8 +5,14 @@
 </script>
 
 <div class="form">
-  <label for="text" class="block text-sm font-medium py-2">Username</label>
-  <input id="text" type="text" class="w-full rounded" bind:value={username} />
+  <label for="login-text" class="block text-sm font-medium py-2">Username</label
+  >
+  <input
+    id="login-text"
+    type="text"
+    class="w-full rounded"
+    bind:value={username}
+  />
   <label for="password" class="block text-sm font-medium py-2">Password</label>
   <input
     id="password"
