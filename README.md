@@ -25,3 +25,4 @@ delete the _sqlx_migrations table and try again
 ## need to install diesel cli
 need to install libpq first on the backend
 cargo install diesel_cli --no-default-features --features postgres
+then do `diesel setup`
