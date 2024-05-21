@@ -1,5 +1,6 @@
 use std::error::Error;
 
+// should create a separate models folder
 pub struct User {
     pub username: String,
     // hashed password
