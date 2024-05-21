@@ -3,7 +3,15 @@
 -- changes will be added to existing projects as new migrations.
 
 
-
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(30) NOT NULL,
+    password VARCHAR NOT NULL,
+    email VARCHAR NOT NULL,
+    bio VARCHAR,
+    is_private BOOLEAN NOT NULL,
+    salt VARCHAR NOT NULL
+);
 
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
