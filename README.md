@@ -19,3 +19,8 @@ We will require 3 separate terminals to track the database, backend and frontend
 
 ## Migrations being bricked
 delete the _sqlx_migrations table and try again
+
+# Random notes
+
+## need to install diesel cli
+cargo install diesel_cli --no-default-features --features postgres
