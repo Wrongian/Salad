@@ -1,5 +1,5 @@
 use core::panic;
-use tide::Request;
+use tide::{log::start, Request};
 use scrypt::{
     password_hash::{
         rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString
@@ -7,8 +7,9 @@ use scrypt::{
     Scrypt
 };
 use tide::prelude::*;
+use crate::db::start_connection;
 use crate::db::user::create;
-use crate::db::user::User;
+use crate::models::users::User;
 
 #[derive(Debug, Deserialize)]
 pub struct LoginParams {
@@ -45,8 +46,11 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         bio: None,
         salt: salt_str,
     };
+    
+    // start a connection with the database
+    let mut conn = start_connection().await;
 
-    create(&new_user, &pool);
+    create(&mut conn, &new_user).await;
 
     Ok(format!("Username: {}\n Password: {}", username, password).into())
 }
