@@ -1,19 +1,25 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+  import "../app.css";
+  import { onMount } from "svelte";
 
-    let doneLoad = false;
-    onMount(async () => {
-        // TODO: logic to render all the necessary components
+  let doneLoad = false;
+  onMount(async () => {
+    // TODO: logic to render all the necessary components
 
-        doneLoad = true;
-    })
-
+    doneLoad = true;
+  });
 </script>
 
 <svelte:head>
-    <title>Welcome to Salad!</title>
+  <title>Welcome to Salad!</title>
 </svelte:head>
 
 {#if doneLoad}
-    <slot/>
+  <slot />
 {/if}
+
+<footer class="p-2">
+  <p class="text-center text-300 text-neutral-500">
+    <span> All rights reserved @Salad. </span>
+  </p>
+</footer>
