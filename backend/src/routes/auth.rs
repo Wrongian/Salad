@@ -46,7 +46,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         salt: salt_str,
     };
 
-    // create(&user, &pool);
+    create(&new_user, &pool);
 
     Ok(format!("Username: {}\n Password: {}", username, password).into())
 }
