@@ -23,7 +23,7 @@ pub async fn start_connection() -> tide::Result<Pool<Postgres>> {
 
     // migrate
     // placeholder for now
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    // sqlx::migrate!("./migrations").run(&pool).await?;
 
     Ok(pool)
 }
