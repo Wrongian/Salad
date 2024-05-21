@@ -4,7 +4,8 @@ pub mod user;
 use std::env;
 // use sqlx::Pool;
 use dotenvy::dotenv;
-use diesel::pg::PgConnection;
+// connection pooling later
+use diesel::result::Error;
 use diesel::prelude::*;
 
 pub async fn start_connection() -> PgConnection {
