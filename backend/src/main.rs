@@ -1,13 +1,11 @@
 pub mod routes;
+pub mod schema;
+pub mod models;
 use std::env;
 use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
 pub mod db;
-use db::user::User;
-use db::user::create;
-use db::start_connection;
-use tide::log::start;
 
 #[async_std::main]
 async fn main() -> tide::Result<()>{
@@ -26,12 +24,6 @@ async fn main() -> tide::Result<()>{
         salt: "meme4".to_string(),
     };
     */
-
-    let db = start_connection().await?;
-
-    // hot glue fix, todo error handling later
-    // create(&new_user,&pool).await.unwrap();
-    
     
     // create app
     let mut app = tide::new();
