@@ -12,6 +12,13 @@ use crate::db::user::create;
 use crate::models::users::User;
 
 #[derive(Debug, Deserialize)]
+pub struct RegisterParams {
+    pub email : String,
+    pub username : String,
+    pub password : String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct LoginParams {
     pub username : String,
     pub password : String,
@@ -25,9 +32,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 } 
 
 pub async fn register(mut req: Request<()>) -> tide::Result {
-    // probably will change later to form
-    // email will be a placeholder for now
-    let LoginParams {username, password} = req.body_json().await?;
+    let RegisterParams {email, username, password} = req.body_json().await?;
     // generate salt
     let salt: SaltString = generate_salt();
     // hash salt
@@ -41,7 +46,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     let new_user = User {
         username: username.clone(),
         password: hashed_password,
-        email: "bruh@gmail.com".to_string(),
+        email: email.clone(),
         is_private: false,
         bio: None,
         salt: salt_str,
