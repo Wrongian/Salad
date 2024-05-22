@@ -28,6 +28,14 @@ async fn main() -> tide::Result<()>{
     // create app
     let mut app = tide::new();
 
+
+    // session middleware
+    // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
+    app.with(tide::sessions::SessionMiddleware::new(
+        tide::sessions::MemoryStore::new(),
+        env::var("TIDE_SECRET").expect("Tide Key not found").as_bytes()
+    ));
+
     // setup routes
     app.at("/login").post(login);
     app.at("/register").post(register);
