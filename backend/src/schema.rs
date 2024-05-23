@@ -21,7 +21,7 @@ diesel::table! {
         bio -> Nullable<Varchar>,
         is_private -> Bool,
         salt -> Varchar,
-        display_name -> Varchar,
+        display_name -> Varchar ,
     }
 }
 

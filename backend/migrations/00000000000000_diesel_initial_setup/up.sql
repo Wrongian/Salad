@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR NOT NULL,
     bio VARCHAR,
     is_private BOOLEAN NOT NULL,
-    salt VARCHAR NOT NULL
+    salt VARCHAR NOT NULL,
+    display_name VARCHAR NOT NULL
 );
 
 -- Sets up a trigger for the given table to automatically set a column called
