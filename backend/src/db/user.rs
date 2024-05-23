@@ -23,12 +23,12 @@ pub async fn get_user_id_from_name(conn: &mut PgConnection, name: &String) -> i3
     return res;
 }
 
-pub async fn get_password_from_id(conn: &mut PgConnection, user_id: i32) -> String {
+pub async fn get_password_salt_from_id(conn: &mut PgConnection, user_id: i32) -> (String, String) {
     use crate::schema::users::dsl::*;
     let res = users
         .find(user_id)
-        .select(password)
-        .first::<String>(conn)
+        .select((password, salt))
+        .first::<(String, String)>(conn)
         .unwrap();
 
     return res;
