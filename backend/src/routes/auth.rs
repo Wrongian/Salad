@@ -7,7 +7,7 @@ use scrypt::{
     Scrypt
 };
 use tide::prelude::*;
-use crate::db::start_connection;
+use crate::db::{start_connection, user::get_user_id_from_name};
 use crate::db::user::create;
 use crate::models::users::User;
 
@@ -50,12 +50,20 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         is_private: false,
         bio: None,
         salt: salt_str,
+        display_name: username.clone(),
     };
     
     // start a connection with the database
     let mut conn = start_connection().await;
 
-    create(&mut conn, &new_user).await;
+    let user = create(&mut conn, &new_user).await;
+    let user_id = get_user_id_from_name(&mut conn, &username).await;
+    
+    // log the user in
+    let session = req.session_mut();
+
+    // insert user_id into the session
+    session.insert("user_id", user_id)?;
 
     Ok(format!("Username: {}\n Password: {}", username, password).into())
 }
