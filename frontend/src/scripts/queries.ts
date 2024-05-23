@@ -2,6 +2,8 @@ import type { TUpdateProfileQuery } from "./query.d.ts";
 import { authStore } from "../stores/stores.js";
 import { get } from "svelte/store";
 import { goto, invalidateAll } from "$app/navigation";
+import { getContext } from "svelte";
+import type { TErrorContext } from "$lib/types/ErrorTypes.js";
 const SERVER_IP_ADDR = import.meta.env.VITE_BACKEND_IP_ADDR
 
 /**
@@ -21,15 +23,19 @@ export const login = async (username: string, password: string): Promise<void> =
             username: username,
             password: password
         })
+    }).then(success => {
+        return {status: 200, message: ""}
     }).catch(err => {
-        return {status: 400, message: err}
+        return {status: 400, message: JSON.stringify(err)}
     });
 
     if (response.status === 200) {
         // code to redirect client to GET profile/:userId
         goto('/profiles')
     } else {
-        // TODO: flash svelte error
+        // TODO: type validation and integration tests 
+        getContext<TErrorContext>('error').addError(response.message, response.status);
+
     }
 }
 
@@ -87,6 +93,8 @@ export const resetPassword = async (email: string) => {
     } else {
         // TODO: flash svelte error
     }
+    // uncomment to test for reset routing 
+    // invalidateAll()
 }
 
 // TODO: server-side CORS 
