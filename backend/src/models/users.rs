@@ -11,4 +11,5 @@ pub struct User {
     pub bio: Option<String>,
     pub is_private: bool,
     pub salt: String,
+    pub display_name: String,
 }
