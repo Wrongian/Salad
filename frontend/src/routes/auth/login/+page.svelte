@@ -7,7 +7,11 @@
 </script>
 
 <header class="p-3">
-  <h1 class="text-center">Login to continue</h1>
+  {#if reset}
+    <h1 class="text-center">Forgot password</h1>
+  {:else}
+    <h1 class="text-center">Login to continue</h1>
+  {/if}
 </header>
 
 <main
