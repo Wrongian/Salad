@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Errors from "$lib/components/Errors.svelte";
   import "../app.css";
   import { onMount } from "svelte";
 
@@ -14,6 +15,7 @@
   <title>Welcome to Salad!</title>
 </svelte:head>
 
+<Errors />
 {#if doneLoad}
   <slot />
 {/if}
