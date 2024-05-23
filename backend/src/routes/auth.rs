@@ -7,7 +7,7 @@ use scrypt::{
     Scrypt
 };
 use tide::prelude::*;
-use crate::db::{start_connection, user::get_user_id_from_name};
+use crate::db::{start_connection, user::get_user_id_from_name, user::get_password_from_id};
 use crate::db::user::create;
 use crate::models::users::User;
 
@@ -25,9 +25,11 @@ pub struct LoginParams {
 }
 
 pub async fn login(mut req: Request<()>) -> tide::Result {
-    // probably will change later to form
-    // todo
     let LoginParams {username, password} = req.body_json().await?;
+    // probably need to validate this at some point
+    let uid: i32 = req.session().get("user_id").expect("user_id not found in session");
+    
+
     Ok(format!("Username: {}\n Password: {}", username, password).into())
 } 
 
@@ -65,7 +67,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     // insert user_id into the session
     session.insert("user_id", user_id)?;
 
-    Ok(format!("Username: {}\n Password: {}", username, password).into())
+    Ok(format!("result: {}\n err: {}", true, "Successfully Registered").into())
 }
 
 //
