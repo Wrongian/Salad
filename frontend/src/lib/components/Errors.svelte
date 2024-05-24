@@ -2,11 +2,10 @@
   import type { TRenderErrorProp } from "$lib/types/ErrorTypes";
   import { setContext, getContext, onMount } from "svelte";
   import ErrorFlashCard from "./ErrorFlashCard.svelte";
+  import { errorStore } from "../../stores/stores";
 
-  setContext("error", {
-    addError,
-    removeAt,
-  });
+  errorStore.set({addError, removeAt})
+
   let errors: TRenderErrorProp[];
   $: errors = [];
 
