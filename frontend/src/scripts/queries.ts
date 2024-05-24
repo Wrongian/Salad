@@ -1,10 +1,13 @@
-import type { TUpdateProfileQuery } from "./query.d.ts";
-import { authStore } from "../stores/stores.js";
+import type { TAuthResult, TUpdateProfileQuery } from "./query.d.ts";
+import { authStore, errorStore } from "../stores/stores.js";
 import { get } from "svelte/store";
 import { goto, invalidateAll } from "$app/navigation";
 import { getContext } from "svelte";
 import type { TErrorContext } from "$lib/types/ErrorTypes.js";
+import { authResponseValidator } from "./response-validator.js";
 const SERVER_IP_ADDR = import.meta.env.VITE_BACKEND_IP_ADDR
+
+
 
 /**
  * forms a POST query to the /login endpoint to validate and log in user
@@ -16,26 +19,30 @@ const SERVER_IP_ADDR = import.meta.env.VITE_BACKEND_IP_ADDR
  * @param password 
  */
 export const login = async (username: string, password: string): Promise<void> => {
-    const response = await fetch(`${SERVER_IP_ADDR}/login`, {
+    const response: TAuthResult = await fetch(`${SERVER_IP_ADDR}/login`, {
         method: "POST",
-        mode: "no-cors",
+        mode: "cors",
         body: JSON.stringify({
             username: username,
             password: password
         })
-    }).then(success => {
-        return {status: 200, message: ""}
+    }).then(async success => {
+        const resBody = await success.json()
+        if (!authResponseValidator(resBody)) return Promise.reject("Obtained an invalid response body.")
+        return {status: success.status, err: resBody.err }
     }).catch(err => {
-        return {status: 400, message: JSON.stringify(err)}
+        return {status: 500, err: JSON.stringify(err)}
     });
 
     if (response.status === 200) {
         // code to redirect client to GET profile/:userId
         goto('/profiles')
-    } else {
+    } else if (response.status === 400) {
         // TODO: type validation and integration tests 
-        getContext<TErrorContext>('error').addError(response.message, response.status);
-
+        get(errorStore).addError(response.err, response.status)
+    } else {
+        // render error page on other error status codes
+        goto('/error')
     }
 }
 
@@ -50,7 +57,7 @@ export const login = async (username: string, password: string): Promise<void> =
  */
 export const register = async (email: string, username: string, password: string): Promise<void> => {
 
-    const response = await fetch(`${SERVER_IP_ADDR}/register`, {
+    const response: TAuthResult = await fetch(`${SERVER_IP_ADDR}/register`, {
         method: "POST",
         mode: "no-cors",
         body: JSON.stringify({
@@ -58,8 +65,12 @@ export const register = async (email: string, username: string, password: string
             username: username,
             password: password
         })
+    }).then(async success => {
+        const resBody = await success.json()
+        if (!authResponseValidator(resBody)) return Promise.reject("Obtained an invalid response body.")
+        return {status: success.status, err: resBody.err }
     }).catch(err => {
-        return {status: 400, message: err}
+        return {status: 400, err: JSON.stringify(err)}
     });
 
     if (response.status === 200) {
@@ -67,6 +78,7 @@ export const register = async (email: string, username: string, password: string
         goto('/profiles')
     } else {
         // TODO: flash svelte error
+        get(errorStore).addError(response.err, response.status);
     }
 
 }
