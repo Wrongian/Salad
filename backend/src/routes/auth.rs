@@ -8,8 +8,10 @@ use scrypt::{
 };
 use tide::prelude::*;
 use tide::Response;
-use crate::db::{start_connection, user::get_user_id_from_name, user::get_password_salt_from_id};
-use crate::db::user::create;
+use crate::db::user::{
+    check_user_exists, create, get_password_salt_from_id, get_user_id_from_name
+};
+use crate::db::start_connection;
 use crate::models::users::User;
 
 #[derive(Debug, Deserialize)]
@@ -107,7 +109,13 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     
     // start a connection with the database
     let mut conn = start_connection().await;
+    
+    // check if the user already exists
+    if check_user_exists(&mut conn, &username, &email).await {
+        return build_response(true, "Username or Email already taken".to_string(), 400);
+    }
 
+    // create user
     let user = create(&mut conn, &new_user).await;
     let user_id = get_user_id_from_name(&mut conn, &username).await;
     
