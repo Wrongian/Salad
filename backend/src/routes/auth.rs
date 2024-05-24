@@ -45,16 +45,16 @@ fn build_response(result: bool, err: String, status: u16) -> tide::Result{
 
 pub async fn login(mut req: Request<()>) -> tide::Result {
     let LoginParams {username, password} = req.body_json().await?;
-    // probably need to validate this at some point
-    let uid: i32 = req.session().get("user_id").expect("user_id not found in session");
 
     // start a connection with the database
     let mut conn = start_connection().await;
 
+    let uid = get_user_id_from_name(&mut conn, &username).await;
+
     // get the password hash from db
     let (password_hash, salt) = get_password_salt_from_id(&mut conn, uid).await;
 
-    let salt_string = SaltString::encode_b64(salt.as_bytes())?;
+    let salt_string = SaltString::from_b64(&salt)?;
 
     // check if already logged in 
     let is_logged_in: Option<i32> = req.session().get("user_id");
@@ -127,6 +127,7 @@ fn generate_salt() -> SaltString {
 fn hash_password(password: &String, salt: &SaltString) -> String {
     let pass_arr = password.as_bytes();
     let res = Scrypt.hash_password(pass_arr, salt);
+
     match res {
         Ok(hash) => {
             return hash.to_string();
@@ -140,8 +141,14 @@ fn hash_password(password: &String, salt: &SaltString) -> String {
 fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
     let pass_arr = to_check.as_bytes();
     let res = Scrypt.hash_password(pass_arr, salt);
+    println!("SALT:");
+    let salt_str = salt.to_string();
+    println!("{}", salt_str);
+
     match res {
         Ok(hash) => {
+
+            println!("PASSWORD:");
             println!("{}",hash.to_string());
             println!("{}",hash_string);
             if hash.to_string() == *hash_string {
