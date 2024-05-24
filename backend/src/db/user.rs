@@ -34,7 +34,7 @@ pub async fn get_password_salt_from_id(conn: &mut PgConnection, user_id: i32) ->
 }
 
 // check uniqueness before inserting
-pub async fn check_present(conn: &mut PgConnection, name: &String, email_string: &String) -> bool {
+pub async fn check_user_exists(conn: &mut PgConnection, name: &String, email_string: &String) -> bool {
     use crate::schema::users::dsl::*;
     let count: i64 = users
     .filter(username.eq(&name))
@@ -44,8 +44,8 @@ pub async fn check_present(conn: &mut PgConnection, name: &String, email_string:
     .unwrap();
 
     if count == 0 {
-        return true
+        return false
     }
-    false
+    true
      
 }
