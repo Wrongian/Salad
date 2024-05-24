@@ -6,6 +6,8 @@ use routes::auth::login;
 use routes::auth::register;
 use dotenv::dotenv;
 pub mod db;
+use http_types::headers::HeaderValue;
+use tide::security::{CorsMiddleware, Origin};
 
 #[async_std::main]
 async fn main() -> tide::Result<()>{
@@ -28,6 +30,13 @@ async fn main() -> tide::Result<()>{
     // create app
     let mut app = tide::new();
 
+    let cors = CorsMiddleware::new()
+    .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
+    .allow_origin(Origin::from(vec!["http://localhost:5173"]))
+    .allow_credentials(false);
+
+    app.with(cors);
+
 
     // session middleware
     // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
@@ -36,6 +45,7 @@ async fn main() -> tide::Result<()>{
         env::var("TIDE_SECRET").expect("Tide Key not found").as_bytes()
     ));
 
+    
     // setup routes
     app.at("/login").post(login);
     app.at("/register").post(register);
