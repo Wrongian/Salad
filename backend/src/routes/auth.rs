@@ -40,7 +40,7 @@ fn build_response(result: bool, err: String, status: u16) -> tide::Result{
         err : err,
     };
     let response = Response::builder(status)
-        .body(tide::Body::from_form(&res_body)?)
+        .body(tide::Body::from_json(&res_body)?)
         .build();
     Ok(response)
 }
@@ -76,7 +76,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
         // insert user_id into the session
         session.insert("user_id", user_id)?;
 
-        return build_response(true, "Successfully Logged in".to_string(), 200);
+        return build_response(true, "".to_string(), 200);
     }
     else {
 
@@ -125,7 +125,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     // insert user_id into the session
     session.insert("user_id", user_id)?;
 
-    return build_response(true, "Successfully Registered".to_string(), 200);
+    return build_response(true, "".to_string(), 200);
 }
 
 //
@@ -149,10 +149,6 @@ fn hash_password(password: &String, salt: &SaltString) -> String {
 fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
     let pass_arr = to_check.as_bytes();
     let res = Scrypt.hash_password(pass_arr, salt);
-    println!("SALT:");
-    let salt_str = salt.to_string();
-    println!("{}", salt_str);
-
     match res {
         Ok(hash) => {
 
