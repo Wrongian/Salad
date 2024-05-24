@@ -1,4 +1,3 @@
-use std::error::Error;
 use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
 use crate::models::users::User;
 use diesel::prelude::*;
@@ -32,5 +31,21 @@ pub async fn get_password_salt_from_id(conn: &mut PgConnection, user_id: i32) ->
         .unwrap();
 
     return res;
+}
 
+// check uniqueness before inserting
+pub async fn check_present(conn: &mut PgConnection, name: &String, email_string: &String) -> bool {
+    use crate::schema::users::dsl::*;
+    let count: i64 = users
+    .filter(username.eq(&name))
+    .or_filter(email.eq(&email_string))
+    .count()
+    .get_result::<i64>(conn)
+    .unwrap();
+
+    if count == 0 {
+        return true
+    }
+    false
+     
 }
