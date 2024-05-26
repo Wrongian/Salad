@@ -1,6 +1,7 @@
 use crate::db::user;
 use crate::models::users::{User, UserProfileView};
 use diesel::prelude::*;
+use diesel::result::Error;
 use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
 
 pub async fn create(conn: &mut PgConnection, user: &User) {
@@ -71,19 +72,28 @@ pub async fn check_username_present(conn: &mut PgConnection, name: &String) -> b
 pub async fn get_user_profile_by_username(
     conn: &mut PgConnection,
     name: &String,
-) -> UserProfileView {
+) -> Result<UserProfileView, String> {
     use crate::schema::users::dsl::*;
 
-    let retrieved_obj: (String, Option<String>, String) = users
+    let retrieved_obj: Result<(String, Option<String>, String), Error> = users
         .filter(username.eq(&name))
         .select((username, bio, display_name))
-        .first::<(String, Option<String>, String)>(conn)
-        .unwrap();
+        .first::<(String, Option<String>, String)>(conn);
 
-    UserProfileView {
-        username: retrieved_obj.0,
-        bio: retrieved_obj.1,
-        display_name: retrieved_obj.2,
-        picture: String::from(""), // empty placeholder for now
+    match retrieved_obj {
+        Ok(obj) => Ok(UserProfileView {
+            username: obj.0,
+            bio: obj.1,
+            display_name: obj.2,
+            picture: String::from("this_picture_is_a_placeholder"), // empty placeholder for now
+        }),
+        Err(err) => match err {
+            Error::NotFound => Err(String::from(
+                "Unable to find user profile with the given username.",
+            )),
+            _ => Err(String::from(
+                "Error occurred in querying database for user profile.",
+            )),
+        },
     }
 }
