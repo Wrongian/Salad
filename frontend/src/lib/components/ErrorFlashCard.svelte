@@ -5,7 +5,9 @@
 
   export let message: string = "Something really bad has occurred.";
   export let status: number = 500;
+
   $: closed = true;
+
   onMount(() => (closed = false));
 </script>
 

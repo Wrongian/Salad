@@ -1,10 +1,9 @@
 import type { TAuthResult, TUpdateProfileQuery } from "./query.d.ts";
-import { authStore, errorStore } from "../stores/stores.js";
+import { authStore } from "../stores/stores.js";
 import { get } from "svelte/store";
 import { goto, invalidateAll } from "$app/navigation";
-import { getContext } from "svelte";
-import type { TErrorContext } from "$lib/types/ErrorTypes.js";
 import { authResponseValidator } from "./response-validator.js";
+import { addError } from "$lib/modules/Errors.svelte";
 const SERVER_IP_ADDR = import.meta.env.VITE_BACKEND_IP_ADDR
 
 
@@ -39,7 +38,7 @@ export const login = async (username: string, password: string): Promise<void> =
         goto('/profiles')
     } else if (response.status === 400) {
         // TODO: type validation and integration tests 
-        get(errorStore).addError(response.err, response.status)
+        addError(response.err, response.status)
     } else {
         // render error page on other error status codes
         goto('/error')
@@ -78,7 +77,7 @@ export const register = async (email: string, username: string, password: string
         goto('/profiles')
     } else {
         // TODO: flash svelte error
-        get(errorStore).addError(response.err, response.status);
+        addError(response.err, response.status);
     }
 
 }

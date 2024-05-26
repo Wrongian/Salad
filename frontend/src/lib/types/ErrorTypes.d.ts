@@ -1,10 +1,7 @@
-export type TRenderErrorProp = {
+export type TErrorContext = {
     id: number,
     statusCode: number,
     message: string
 }
 
-export type TErrorContext = {
-    addError: (message: string, statusCode: number) => void,
-    removeAt: (index: number) => void
-}
+export type TErrorState = TErrorContext[];
