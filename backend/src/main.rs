@@ -46,6 +46,10 @@ async fn main() -> tide::Result<()> {
             .as_bytes(),
     ));
 
+    // set up logging middleware, default log level is 'info'
+    femme::start();
+    app.with(tide::log::LogMiddleware::new());
+
     // setup routes
     app.at("/login").post(login);
     app.at("/register").post(register);
