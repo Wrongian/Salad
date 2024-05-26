@@ -1,4 +1,5 @@
 use diesel::prelude::*;
+use serde::Serialize;
 
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = crate::schema::users)]
@@ -6,10 +7,17 @@ use diesel::prelude::*;
 pub struct User {
     pub username: String,
     // hashed password
-    pub password: String,  
+    pub password: String,
     pub email: String,
     pub bio: Option<String>,
     pub is_private: bool,
     pub salt: String,
     pub display_name: String,
+}
+
+pub struct UserProfileView {
+    pub username: String,
+    pub bio: Option<String>,
+    pub display_name: String,
+    pub picture: String,
 }

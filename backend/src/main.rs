@@ -1,22 +1,22 @@
+pub mod models;
 pub mod routes;
 pub mod schema;
-pub mod models;
-use std::env;
+use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
-use dotenv::dotenv;
+use routes::profile_controller::get_profile;
+use std::env;
 pub mod db;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
 
 #[async_std::main]
-async fn main() -> tide::Result<()>{
+async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
 
-
     // placeholder test to create a user
-    /* 
+    /*
     let new_user = User {
         username: "meme".to_string(),
         password: "meme1".to_string(),
@@ -26,29 +26,30 @@ async fn main() -> tide::Result<()>{
         salt: "meme4".to_string(),
     };
     */
-    
+
     // create app
     let mut app = tide::new();
 
     let cors = CorsMiddleware::new()
-    .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
-    .allow_origin(Origin::from(vec!["http://localhost:5173"]))
-    .allow_credentials(false);
+        .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
+        .allow_origin(Origin::from(vec!["http://localhost:5173"]))
+        .allow_credentials(false);
 
     app.with(cors);
-
 
     // session middleware
     // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
     app.with(tide::sessions::SessionMiddleware::new(
         tide::sessions::MemoryStore::new(),
-        env::var("TIDE_SECRET").expect("Tide Key not found").as_bytes()
+        env::var("TIDE_SECRET")
+            .expect("Tide Key not found")
+            .as_bytes(),
     ));
 
-    
     // setup routes
     app.at("/login").post(login);
     app.at("/register").post(register);
+    app.at("/profile/:username").get(get_profile);
 
     // attach to IP and port
     let ip_address = env::var("IP_ADDRESS").expect("Ip address needs to be set in .env");
