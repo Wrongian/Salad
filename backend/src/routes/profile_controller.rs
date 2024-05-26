@@ -41,12 +41,12 @@ fn build_error(message: String, status: u16) -> tide::Result {
     Ok(response)
 }
 
-pub async fn update_profile(mut req: Request<()>) -> tide::Result {
+pub async fn update_profile(req: Request<()>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }
 
-pub async fn get_profile(mut req: Request<()>) -> tide::Result {
+pub async fn get_profile(req: Request<()>) -> tide::Result {
     // let username = req.query::<GetProfileParams>()?.username;
     let username = match req.param("username") {
         Ok(name) => name.to_owned(),
@@ -77,7 +77,7 @@ pub async fn get_profile(mut req: Request<()>) -> tide::Result {
     build_response(res_body, 200)
 }
 
-pub async fn delete_profile(mut req: Request<()>) -> tide::Result {
+pub async fn delete_profile(req: Request<()>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }

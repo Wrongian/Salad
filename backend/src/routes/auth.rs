@@ -123,6 +123,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
             register_params = params;
         }
         Err(e) => {
+            log::error!("Error converting request body to json: {}", e);
             return build_response(false, "Bad Request Body".to_string(), 400);
         }
     }
