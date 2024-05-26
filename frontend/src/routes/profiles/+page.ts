@@ -1,3 +1,4 @@
+import { goto } from '$app/navigation';
 import type { PageLoad } from './$types';
 
 /**
@@ -6,6 +7,7 @@ import type { PageLoad } from './$types';
  * @returns an object to be pointed to by 'data' variable in +page.svelte
  */
 export const load: PageLoad = async ({ data, route, fetch, params}) => {
+
     return {
         test: "test field"
     };
