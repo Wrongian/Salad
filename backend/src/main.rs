@@ -2,6 +2,7 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
+pub mod lib;
 use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
@@ -10,6 +11,7 @@ use std::env;
 pub mod db;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
+
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
@@ -57,10 +59,7 @@ async fn main() -> tide::Result<()> {
     app.at("/profile/:username").get(get_profile);
 
     // attach to IP and port
-    let ip_address = env::var("IP_ADDRESS").expect("Ip address needs to be set in .env");
-    let port = env::var("PORT").expect("Port needs to be set in .env");
-    let ip_port = ip_address.clone() + ":" + &port;
-    app.listen(ip_port).await?;
+    app.listen(lib::get_url()).await?;
 
     Ok(())
 }
