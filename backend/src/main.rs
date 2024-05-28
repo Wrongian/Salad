@@ -1,6 +1,7 @@
 pub mod models;
 pub mod routes;
 pub mod schema;
+pub mod tests;
 use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
