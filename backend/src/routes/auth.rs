@@ -16,7 +16,7 @@ use tide::Response;
 use tide::{log::start, Request};
 use validator::{Validate, ValidationError};
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Serialize)]
 pub struct RegisterParams {
     #[validate(email)]
     pub email: String,
