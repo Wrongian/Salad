@@ -1,4 +1,4 @@
-use crate::{db::start_connection, lib, routes::auth::{register, RegisterParams}};
+use crate::{db::start_connection, funcs, routes::auth::{register, RegisterParams}};
 use diesel::PgConnection;
 use tide::http::{Url, Method, Body, Request, Response};
 use validator::Validate;
@@ -15,7 +15,7 @@ async fn db_connection_test() -> tide::Result<()> {
 async fn register_test() -> tide::Result<()> {
     let conn : PgConnection = start_connection().await;
     let mut app = tide::new();
-    let url_string = "http://".to_string() + &lib::get_url();
+    let url_string = "http://".to_string() + &funcs::get_url();
     let url = Url::parse(&url_string)?;
     let mut req = Request::new(Method::Post, url);
     let register_params = RegisterParams {

@@ -2,7 +2,7 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-pub mod lib;
+pub mod funcs;
 use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
@@ -59,7 +59,7 @@ async fn main() -> tide::Result<()> {
     app.at("/profile/:username").get(get_profile);
 
     // attach to IP and port
-    app.listen(lib::get_url()).await?;
+    app.listen(funcs::get_url()).await?;
 
     Ok(())
 }
