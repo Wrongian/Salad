@@ -5,6 +5,8 @@ use validator::Validate;
 
 // Do not run this in production
 
+// to run this with println! outputs use "rust test -- --nocapture"
+
 #[async_std::test]
 async fn db_connection_test() -> tide::Result<()> {
     let conn : PgConnection = start_connection().await;
@@ -14,8 +16,7 @@ async fn db_connection_test() -> tide::Result<()> {
 #[async_std::test]
 async fn register_test() -> tide::Result<()> {
     let conn : PgConnection = start_connection().await;
-    let mut app = tide::new();
-    let url_string = "http://".to_string() + &funcs::get_url();
+    let url_string = "http://".to_string() + &funcs::get_url() + "/login";
     let url = Url::parse(&url_string)?;
     let mut req = Request::new(Method::Post, url);
     let register_params = RegisterParams {
@@ -27,8 +28,9 @@ async fn register_test() -> tide::Result<()> {
     register_params.validate()?;
     let body = Body::from_json(&register_params)?;
     req.set_body(body);
-    let mut res: Response = app.respond(req).await?;
-    println!("{}",res.body_string().await?);
+    // returns ok if case is handled
+    let res = register(req.into()).await;
+    assert!(res.is_ok());
     Ok(())
 }
 
