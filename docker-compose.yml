@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:alpine 
-    container_name: postgres_db 
+    container_name: pg_db 
     restart: always
     env_file:
       - ./backend/.env
@@ -20,6 +20,7 @@ services:
       timeout: 5s
       retries: 5
   backend_server: 
+    container_name: be_server
     # restart: always
     depends_on:
       - db
@@ -30,19 +31,21 @@ services:
       - ./backend/.env
     environment:
       TIDE_SECRET: ${TIDE_SECRET}
-      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/${POSTGRES_DB}" 
-      PORT: ${PORT}
+      # DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}" 
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${BACKEND_PORT}
       IP_ADDRESS: ${IP_ADDRESS}
       TZ: Asia/Singapore
-  frontend_server:
-    # restart: always
-    build: ./frontend
-    depends_on:
-      - backend_server
-    ports: 
-      - ${FRONTEND_PORT}:${FRONTEND_PORT}
-    env_file:
-      - ./frontend/.env
+  # frontend_server:
+  #   container_name: fe_server
+  #   # restart: always
+  #   build: ./frontend
+  #   depends_on:
+  #     - backend_server
+  #   ports: 
+  #     - ${FRONTEND_PORT}:${FRONTEND_PORT}
+  #   env_file:
+  #     - ./frontend/.env
 
     
 

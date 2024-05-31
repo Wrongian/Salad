@@ -1,10 +1,18 @@
-FROM rust:alpine  
+FROM rust:1.78.0-buster
 
-# COPY . ./backend 
-COPY . . 
+RUN apt-get update && apt install -y build-essential postgresql libpq-dev
 
-# WORKDIR /backend
+
+COPY . ./backend 
+WORKDIR /backend
+
+RUN cargo build 
+
+RUN cargo install diesel_cli --no-default-features --features postgres
+
 EXPOSE 8080
+# RUN diesel migration run
+
 
 ENTRYPOINT ["cargo", "run"]
 

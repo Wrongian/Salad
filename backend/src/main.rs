@@ -1,8 +1,8 @@
+pub mod funcs;
 pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-pub mod funcs;
 use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
@@ -11,8 +11,9 @@ use std::env;
 pub mod db;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
-
-
+// Migration to DB tables creation
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 #[async_std::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
@@ -29,6 +30,12 @@ async fn main() -> tide::Result<()> {
         salt: "meme4".to_string(),
     };
     */
+    println!("database url: {}", env::var("DATABASE_URL").unwrap());
+    let db_url = env::var("DATABASE_URL").expect("No database url found");
+    let mut conn = db::start_connection().await;
+
+    // setup migrations
+    conn.run_pending_migrations(MIGRATIONS).unwrap();
 
     // create app
     let mut app = tide::new();
