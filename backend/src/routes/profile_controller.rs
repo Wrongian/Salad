@@ -46,12 +46,14 @@ pub async fn update_profile(req: Request<()>) -> tide::Result {
     Ok(Response::builder(200).build())
 }
 
-pub async fn get_profile(req: Request<()>) -> tide::Result {
+pub async fn get_profile(mut req: Request<()>) -> tide::Result {
     // let username = req.query::<GetProfileParams>()?.username;
     let username = match req.param("username") {
         Ok(name) => name.to_owned(),
         Err(e) => return build_error(e.to_string(), 400),
     };
+    
+    let session = req.session_mut();
 
     log::info!("Obtained username in get_profile: {}", &username);
 

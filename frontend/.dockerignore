@@ -1,0 +1,10 @@
+**/node_modules/
+**/build/
+**/dist/
+**/.svelte-kit/
+.git
+npm-debug.log
+.env.sample
+.vscode
+.gitignore
+package-lock.json
