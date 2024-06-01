@@ -11,6 +11,7 @@ use scrypt::{
     },
     Scrypt,
 };
+use sha256::{digest, try_digest};
 use tide::prelude::*;
 use tide::Response;
 use tide::{log::start, Request};
@@ -89,8 +90,6 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     // get the password hash from db
     let (password_hash, salt) = get_password_salt_from_id(&mut conn, uid).await;
 
-    let salt_string = SaltString::from_b64(&salt)?;
-
     // check if already logged in
     let is_logged_in: Option<i32> = req.session().get("user_id");
     if is_logged_in != None {
@@ -98,7 +97,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     }
 
     // verify password
-    if verify_password(&password, &salt_string, &password_hash) {
+    if verify_password(&password, &password_hash) {
         // password correct
 
         // login the user
@@ -140,14 +139,8 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         }
         _ => (),
     }
-    // generate salt
-    let salt: SaltString = generate_salt();
     // hash salt
-    let hashed_password = hash_password(&password, &salt);
-    // get SaltString as String
-    let salt_str = salt.to_string();
-    // get back the SaltString
-    // let salt = SaltString::from_b64(salt_str);
+    let hashed_password = hash_password(password);
 
     // create new user
     let new_user = User {
@@ -156,7 +149,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         email: email.clone(),
         is_private: false,
         bio: None,
-        salt: salt_str,
+        salt: "".to_string(),
         display_name: username.clone(),
     };
 
@@ -181,41 +174,52 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     return build_response(true, "".to_string(), 200);
 }
 
-//
-fn generate_salt() -> SaltString {
-    SaltString::generate(&mut OsRng)
-}
-fn hash_password(password: &String, salt: &SaltString) -> String {
-    let pass_arr = password.as_bytes();
-    let res = Scrypt.hash_password(pass_arr, salt);
-
-    match res {
-        Ok(hash) => {
-            return hash.to_string();
-        }
-        Err(e) => {
-            panic!("brick");
-        }
-    }
+fn hash_password(password: &String) -> String {
+    digest(password)
 }
 
-fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
-    let pass_arr = to_check.as_bytes();
-    let res = Scrypt.hash_password(pass_arr, salt);
-    match res {
-        Ok(hash) => {
-            println!("PASSWORD:");
-            println!("{}", hash.to_string());
-            println!("{}", hash_string);
-            if hash.to_string() == *hash_string {
-                return true;
-            }
-            return false;
-        }
-        Err(e) => {
-            println!("Error: {}", e.to_string());
-            return false;
-        }
+fn verify_password(password: &String, hash_string: &String) -> bool {
+    let val = digest(password);
+    if val == *hash_string {
+        return true;
     }
     false
 }
+//
+// fn generate_salt() -> SaltString {
+//     SaltString::generate(&mut OsRng)
+// }
+// fn hash_password(password: &String, salt: &SaltString) -> String {
+//     let pass_arr = password.as_bytes();
+//     let res = Scrypt.hash_password(pass_arr, salt);
+
+//     match res {
+//         Ok(hash) => {
+//             return hash.to_string();
+//         }
+//         Err(e) => {
+//             panic!("brick");
+//         }
+//     }
+// }
+
+// fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
+//     let pass_arr = to_check.as_bytes();
+//     let res = Scrypt.hash_password(pass_arr, salt);
+//     match res {
+//         Ok(hash) => {
+//             println!("PASSWORD:");
+//             println!("{}", hash.to_string());
+//             println!("{}", hash_string);
+//             if hash.to_string() == *hash_string {
+//                 return true;
+//             }
+//             return false;
+//         }
+//         Err(e) => {
+//             println!("Error: {}", e.to_string());
+//             return false;
+//         }
+//     }
+//     false
+// }

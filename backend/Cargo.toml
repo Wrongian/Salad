@@ -17,3 +17,4 @@ validator = { version = "0.16", features = ["derive"] }
 femme = "2.2.1"
 log = "0.4.21"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
+sha256 = "1.5.0"
