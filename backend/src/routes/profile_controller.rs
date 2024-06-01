@@ -52,8 +52,12 @@ pub async fn get_profile(mut req: Request<()>) -> tide::Result {
         Ok(name) => name.to_owned(),
         Err(e) => return build_error(e.to_string(), 400),
     };
-    
-    let session = req.session_mut();
+
+    let is_logged_in: Option<i32> = req.session().get("user_id");
+
+    // if is_logged_in != None {
+    //     return build_response(, "".to_string(), 400);
+    // }
 
     log::info!("Obtained username in get_profile: {}", &username);
 
