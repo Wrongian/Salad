@@ -8,8 +8,6 @@ WORKDIR backend
 
 RUN cargo build 
 
-RUN cargo install diesel_cli --no-default-features --features postgres
-
 EXPOSE 8080
 
 
