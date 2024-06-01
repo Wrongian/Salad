@@ -1,5 +1,5 @@
 import type { TAuthResult, TUpdateProfileQuery } from "./query.d.ts";
-import { authStore } from "../stores/stores.js";
+import { blackSwanError } from "../stores/stores.js";
 import { get } from "svelte/store";
 import { goto, invalidateAll } from "$app/navigation";
 import { authResponseValidator } from "./response-validator.js";
@@ -41,7 +41,7 @@ export const login = async (username: string, password: string): Promise<void> =
         addError(response.err, response.status)
     } else {
         // render error page on other error status codes
-        goto('/error')
+        blackSwanError.set({status: response.status, message: response.err})
     }
 }
 
@@ -58,7 +58,7 @@ export const register = async (email: string, username: string, password: string
 
     const response: TAuthResult = await fetch(`${SERVER_IP_ADDR}/register`, {
         method: "POST",
-        mode: "no-cors",
+        mode: "cors",
         body: JSON.stringify({
             email: email,
             username: username,
@@ -75,9 +75,11 @@ export const register = async (email: string, username: string, password: string
     if (response.status === 200) {
         // code to redirect client to GET profile/:userId
         goto('/profiles')
-    } else {
+    } else if (response.status === 400) {
         // TODO: flash svelte error
         addError(response.err, response.status);
+    } else {
+        blackSwanError.set({status: response.status, message: response.err})
     }
 
 }
@@ -87,9 +89,6 @@ export const resetPassword = async (email: string) => {
     console.log(SERVER_IP_ADDR)
     const response = await fetch(`${SERVER_IP_ADDR}/users`, {
         method: "PUT",
-        headers: {
-            'Authorization': `Bearer ${get(authStore)}`
-        },
         body: JSON.stringify({
             email: email    
         })
@@ -112,9 +111,6 @@ export const resetPassword = async (email: string) => {
 export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
     const response = await fetch(`${SERVER_IP_ADDR}/profiles`, {
         method: "PUT",
-        headers: {
-            'Authorization': `Bearer ${get(authStore)}`
-        },
         body: JSON.stringify(updateQuery)
     })
 

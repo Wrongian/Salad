@@ -3,5 +3,3 @@ export type TErrorContext = {
     statusCode: number,
     message: string
 }
-
-export type TErrorState = TErrorContext[];
