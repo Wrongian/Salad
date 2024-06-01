@@ -4,14 +4,13 @@ RUN apt-get update && apt install -y build-essential postgresql libpq-dev
 
 
 COPY . ./backend 
-WORKDIR /backend
+WORKDIR backend
 
 RUN cargo build 
 
 RUN cargo install diesel_cli --no-default-features --features postgres
 
 EXPOSE 8080
-# RUN diesel migration run
 
 
 ENTRYPOINT ["cargo", "run"]
