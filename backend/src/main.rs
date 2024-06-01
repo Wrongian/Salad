@@ -32,8 +32,8 @@ async fn main() -> tide::Result<()> {
     */
     println!("database url: {}", env::var("DATABASE_URL").unwrap());
     let db_url = env::var("DATABASE_URL").expect("No database url found");
-    let mut conn = db::start_connection().await;
 
+    let mut conn = db::start_connection().await;
     // setup migrations
     conn.run_pending_migrations(MIGRATIONS).unwrap();
 
@@ -42,7 +42,10 @@ async fn main() -> tide::Result<()> {
 
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
-        .allow_origin(Origin::from(vec!["http://localhost:5173"]))
+        .allow_origin(Origin::from(vec![
+            "http://localhost:3000",
+            "http://localhost:5173",
+        ]))
         .allow_credentials(false);
 
     app.with(cors);
