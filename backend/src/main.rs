@@ -11,6 +11,7 @@ use std::env;
 pub mod db;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
+
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -30,7 +31,7 @@ async fn main() -> tide::Result<()> {
         salt: "meme4".to_string(),
     };
     */
-    println!("database url: {}", env::var("DATABASE_URL").unwrap());
+    log::info!("database url: {}", env::var("DATABASE_URL").unwrap());
     let db_url = env::var("DATABASE_URL").expect("No database url found");
 
     let mut conn = db::start_connection().await;
@@ -40,18 +41,22 @@ async fn main() -> tide::Result<()> {
     // create app
     let mut app = tide::new();
 
+    let whitelist_urls = env::var::<&str>("CORS_WHITELIST_URLS")
+        .unwrap()
+        .split(",")
+        .map(|s| s.to_owned())
+        .collect::<Vec<String>>();
+
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
-        .allow_origin(Origin::from(vec![
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://saladify.duckdns.org:3000",
-            "http://139.59.193.27:3000",
-            "http://143.198.198.122:3000",
-        ]))
+        .allow_origin(Origin::from(whitelist_urls.clone()))
         .allow_credentials(false);
-
     app.with(cors);
+
+    log::info!(
+        "accepting requests from the following urls: {:?}",
+        whitelist_urls
+    );
 
     // session middleware
     // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
