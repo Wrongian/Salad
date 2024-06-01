@@ -4,37 +4,42 @@ use crate::db::user::{
     get_user_id_from_name,
 };
 use crate::models::users::User;
-use core::panic;
-use scrypt::{
-    password_hash::{
-        rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString,
-    },
-    Scrypt,
-};
-use sha256::{digest, try_digest};
+use sha256::digest;
+use std::borrow::Borrow;
 use tide::prelude::*;
+use tide::Request;
 use tide::Response;
-use tide::{log::start, Request};
-use validator::{Validate, ValidationError};
-
+use validator::Validate;
 #[derive(Debug, Deserialize, Validate, Serialize)]
+
+// register parameters for register route
 pub struct RegisterParams {
-    #[validate(email)]
+    #[validate(email(message = "Email is incorrect"))]
     pub email: String,
-    #[validate(length(max = 30))]
+    #[validate(length(max = 30, message = "Username must be a maximum of 30 characters"))]
     pub username: String,
-    #[validate(length(min = 5, max = 50))]
+    #[validate(length(
+        min = 8,
+        max = 50,
+        message = "Password must be minimum 8 characters and maximum 50 characters"
+    ))]
     pub password: String,
 }
 
+// login parameters for the login route
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginParams {
-    #[validate(length(max = 30))]
+    #[validate(length(max = 30, message = "Username must be a maximum of 30 characters"))]
     pub username: String,
-    #[validate(length(min = 5, max = 50))]
+    #[validate(length(
+        min = 8,
+        max = 50,
+        message = "Password must be minimum 8 characters and maximum 50 characters"
+    ))]
     pub password: String,
 }
 
+// standard response body without error
 #[derive(Debug, Serialize)]
 pub struct StandardBody {
     pub result: bool,
@@ -71,7 +76,23 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     match login_params.validate() {
         Err(e) => {
             // returns the validation error
-            return build_response(false, e.to_string(), 400);
+            let mut error_string: String = "".to_string();
+            let validations = e.field_errors();
+            let values = validations.values();
+            for validation_errors in values {
+                for validation_error in validation_errors.iter() {
+                    let error_message = validation_error.message.borrow();
+                    match error_message {
+                        Some(message) => {
+                            error_string += message.borrow();
+                            error_string += ".";
+                        }
+                        None => {}
+                    }
+                }
+            }
+
+            return build_response(false, error_string, 400);
         }
         _ => (),
     }
@@ -116,6 +137,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 
 pub async fn register(mut req: Request<()>) -> tide::Result {
     // process the body
+
     let register_params: RegisterParams;
     match req.body_json().await {
         Ok(params) => {
@@ -135,8 +157,24 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     match register_params.validate() {
         Err(e) => {
             // returns the validation error
-            return build_response(false, e.to_string(), 400);
+            let mut error_string: String = "".to_string();
+            let validations = e.field_errors();
+            let values = validations.values();
+            for validation_errors in values {
+                for validation_error in validation_errors.iter() {
+                    let error_message = validation_error.message.borrow();
+                    match error_message {
+                        Some(message) => {
+                            error_string += message.borrow();
+                            error_string += ".";
+                        }
+                        None => {}
+                    }
+                }
+            }
+            return build_response(false, error_string, 400);
         }
+
         _ => (),
     }
     // hash salt
