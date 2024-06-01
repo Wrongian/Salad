@@ -3,44 +3,35 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
+use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
 
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
+// main function
 #[async_std::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
 
-    // placeholder test to create a user
-    /*
-    let new_user = User {
-        username: "meme".to_string(),
-        password: "meme1".to_string(),
-        email: "meme2".to_string(),
-        bio: "meme3".to_string(),
-        is_private: false,
-        salt: "meme4".to_string(),
-    };
-    */
-    log::info!("database url: {}", env::var("DATABASE_URL").unwrap());
-    let db_url = env::var("DATABASE_URL").expect("No database url found");
-
-    let mut conn = db::start_connection().await;
     // setup migrations
+    let mut conn = db::start_connection().await;
     conn.run_pending_migrations(MIGRATIONS).unwrap();
 
     // create app
     let mut app = tide::new();
 
+    // middleware
+
+    // CORS middleware
     let whitelist_urls = env::var::<&str>("CORS_WHITELIST_URLS")
         .unwrap()
         .split(",")
@@ -79,5 +70,6 @@ async fn main() -> tide::Result<()> {
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
+    // return
     Ok(())
 }

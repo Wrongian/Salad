@@ -1,6 +1,6 @@
 use tide::Request;
 use tide::Response;
-use validator::{Validate, ValidationError};
+use validator::Validate;
 
 use crate::db::start_connection;
 use crate::db::user::get_user_profile_by_username;
@@ -46,7 +46,7 @@ pub async fn update_profile(req: Request<()>) -> tide::Result {
     Ok(Response::builder(200).build())
 }
 
-pub async fn get_profile(mut req: Request<()>) -> tide::Result {
+pub async fn get_profile(req: Request<()>) -> tide::Result {
     // let username = req.query::<GetProfileParams>()?.username;
     let username = match req.param("username") {
         Ok(name) => name.to_owned(),

@@ -1,4 +1,3 @@
-use dotenvy::dotenv;
 use std::env;
 
 pub fn get_url() -> String {

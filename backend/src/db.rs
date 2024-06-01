@@ -6,7 +6,6 @@ use std::env;
 use dotenvy::dotenv;
 // connection pooling later
 use diesel::prelude::*;
-use diesel::result::Error;
 
 pub async fn start_connection() -> PgConnection {
     dotenv().expect("No .env file found");
