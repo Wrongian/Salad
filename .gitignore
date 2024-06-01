@@ -5,3 +5,6 @@ Cargo.lock
 #misc
 .env
 data/*
+
+#rustdocs
+backend/docs/doc/*
