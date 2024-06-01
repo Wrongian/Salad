@@ -45,6 +45,9 @@ async fn main() -> tide::Result<()> {
         .allow_origin(Origin::from(vec![
             "http://localhost:3000",
             "http://localhost:5173",
+            "http://saladify.duckdns.org:3000",
+            "http://139.59.193.27:3000",
+            "http://143.198.198.122:3000",
         ]))
         .allow_credentials(false);
 
