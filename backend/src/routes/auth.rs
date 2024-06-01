@@ -94,7 +94,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     // check if already logged in
     let is_logged_in: Option<i32> = req.session().get("user_id");
     if is_logged_in != None {
-        return build_response(false, "Already Logged in".to_string(), 400);
+        return build_response(true, "".to_string(), 200);
     }
 
     // verify password
