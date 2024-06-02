@@ -1,16 +1,17 @@
+use crate::db::start_connection;
+use crate::db::user::get_user_profile_by_username;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
 
-use crate::db::start_connection;
-use crate::db::user::get_user_profile_by_username;
-
+// Profile parameters struct
 #[derive(Debug, serde::Deserialize, Validate)]
 pub struct GetProfileParams {
     #[validate(length(min = 5, max = 50))]
     username: String,
 }
 
+// Profile parameters for getting the profile response body
 #[derive(Debug, serde::Serialize)]
 struct GetProfileResponseBody {
     display_name: String,
@@ -21,6 +22,7 @@ struct GetProfileResponseBody {
     followers: i32,
 }
 
+// Parameters for the route to update the profile response body
 #[derive(Debug, serde::Deserialize, Validate)]
 struct UpdateProfileBody {
     display_name: String,
@@ -28,6 +30,7 @@ struct UpdateProfileBody {
     picture: String,
 }
 
+// build the standard response
 fn build_response(body: impl serde::Serialize, status: u16) -> tide::Result {
     // build response
     let response = Response::builder(status)
@@ -36,16 +39,19 @@ fn build_response(body: impl serde::Serialize, status: u16) -> tide::Result {
     Ok(response)
 }
 
+// build an error response
 fn build_error(message: String, status: u16) -> tide::Result {
     let response = Response::builder(status).body(message).build();
     Ok(response)
 }
 
+// update profile response body
 pub async fn update_profile(req: Request<()>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }
 
+// Get profile route
 pub async fn get_profile(req: Request<()>) -> tide::Result {
     // let username = req.query::<GetProfileParams>()?.username;
     let username = match req.param("username") {
@@ -54,10 +60,6 @@ pub async fn get_profile(req: Request<()>) -> tide::Result {
     };
 
     let is_logged_in: Option<i32> = req.session().get("user_id");
-
-    // if is_logged_in != None {
-    //     return build_response(, "".to_string(), 400);
-    // }
 
     log::info!("Obtained username in get_profile: {}", &username);
 
@@ -83,6 +85,7 @@ pub async fn get_profile(req: Request<()>) -> tide::Result {
     build_response(res_body, 200)
 }
 
+// delete profile response builder
 pub async fn delete_profile(req: Request<()>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())

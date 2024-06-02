@@ -16,12 +16,12 @@ use validator::Validate;
 pub struct RegisterParams {
     #[validate(email(message = "Email is incorrect"))]
     pub email: String,
-    #[validate(length(max = 30, message = "Username must be a maximum of 30 characters"))]
+    #[validate(length(max = 30, message = "Username must be between 5 to 30 characters"))]
     pub username: String,
     #[validate(length(
         min = 8,
         max = 50,
-        message = "Password must be minimum 8 characters and maximum 50 characters"
+        message = "Password must be between 8 to 50 characters"
     ))]
     pub password: String,
 }
@@ -29,12 +29,16 @@ pub struct RegisterParams {
 // login parameters for the login route
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginParams {
-    #[validate(length(max = 30, message = "Username must be a maximum of 30 characters"))]
+    #[validate(length(
+        min = 5,
+        max = 30,
+        message = "Username must be between 5 to 30 characters"
+    ))]
     pub username: String,
     #[validate(length(
         min = 8,
         max = 50,
-        message = "Password must be minimum 8 characters and maximum 50 characters"
+        message = "Password must be between 8 to 50 characters"
     ))]
     pub password: String,
 }
@@ -46,6 +50,7 @@ pub struct StandardBody {
     pub err: String,
 }
 
+// build a tide result with standard response body
 fn build_response(result: bool, err: String, status: u16) -> tide::Result {
     // build response
     let res_body = StandardBody {
@@ -58,6 +63,7 @@ fn build_response(result: bool, err: String, status: u16) -> tide::Result {
     Ok(response)
 }
 
+// handles the requests coming into the login route and gives back an appropriate response
 pub async fn login(mut req: Request<()>) -> tide::Result {
     // process the body
     let login_params: LoginParams;
@@ -69,13 +75,15 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
             return build_response(false, "Bad Request Body".to_string(), 400);
         }
     }
+
+    // get fields
     let username = &login_params.username;
     let password = &login_params.password;
 
-    // validate login
+    // validate login parameters
     match login_params.validate() {
         Err(e) => {
-            // returns the validation error
+            // returns the validation errors
             let mut error_string: String = "".to_string();
             let validations = e.field_errors();
             let values = validations.values();
@@ -131,13 +139,14 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 
         return build_response(true, "".to_string(), 200);
     } else {
+        // password is incorrect
         return build_response(false, "Incorrect Password".to_string(), 400);
     }
 }
 
+// handles the requests coming into the register route and gives back an appropriate response
 pub async fn register(mut req: Request<()>) -> tide::Result {
-    // process the body
-
+    // process the register request body
     let register_params: RegisterParams;
     match req.body_json().await {
         Ok(params) => {
@@ -149,6 +158,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         }
     }
 
+    // borrow fields
     let email = &register_params.email;
     let username = &register_params.username;
     let password = &register_params.password;
@@ -177,10 +187,11 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
 
         _ => (),
     }
+
     // hash salt
     let hashed_password = hash_password(password);
 
-    // create new user
+    // create new user instance
     let new_user = User {
         username: username.clone(),
         password: hashed_password,
@@ -209,13 +220,16 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     // insert user_id into the session
     session.insert("user_id", user_id)?;
 
+    // all done
     return build_response(true, "".to_string(), 200);
 }
 
+// hashes the password using sha-256(for now)
 fn hash_password(password: &String) -> String {
     digest(password)
 }
 
+// verifies the password using sha-256 hash(for now)
 fn verify_password(password: &String, hash_string: &String) -> bool {
     let val = digest(password);
     if val == *hash_string {
@@ -223,6 +237,8 @@ fn verify_password(password: &String, hash_string: &String) -> bool {
     }
     false
 }
+
+// legacy code for old password hashing
 //
 // fn generate_salt() -> SaltString {
 //     SaltString::generate(&mut OsRng)

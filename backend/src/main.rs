@@ -50,6 +50,7 @@ async fn main() -> tide::Result<()> {
     );
 
     // session middleware
+    // words from the documentation
     // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
     app.with(tide::sessions::SessionMiddleware::new(
         tide::sessions::MemoryStore::new(),
