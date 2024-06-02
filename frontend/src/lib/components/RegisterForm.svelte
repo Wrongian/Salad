@@ -39,7 +39,10 @@
     return (
       emailElement.validity.valid &&
       usernameElement.validity.valid &&
-      passwordElement.validity.valid
+      passwordElement.validity.valid &&
+      !!isPasswordChanged &&
+      !!isUsernameChanged &&
+      !!isEmailChanged
     );
   };
 </script>
