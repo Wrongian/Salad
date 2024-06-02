@@ -1,13 +1,11 @@
 pub mod user;
-// use dotenv::dotenv;
-// use sqlx::Postgres;
-use std::env;
-// use sqlx::Pool;
-use dotenvy::dotenv;
-// connection pooling later
 use diesel::prelude::*;
-use diesel::result::Error;
+use dotenvy::dotenv;
+use std::env;
 
+// connection pooling later
+
+// function to start the db connection
 pub async fn start_connection() -> PgConnection {
     dotenv().expect("No .env file found");
 

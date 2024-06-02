@@ -4,42 +4,53 @@ use crate::db::user::{
     get_user_id_from_name,
 };
 use crate::models::users::User;
-use core::panic;
-use scrypt::{
-    password_hash::{
-        rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, Salt, SaltString,
-    },
-    Scrypt,
-};
+use sha256::digest;
+use std::borrow::Borrow;
 use tide::prelude::*;
+use tide::Request;
 use tide::Response;
-use tide::{log::start, Request};
-use validator::{Validate, ValidationError};
-
+use validator::Validate;
 #[derive(Debug, Deserialize, Validate, Serialize)]
+
+// register parameters for register route
 pub struct RegisterParams {
-    #[validate(email)]
+    #[validate(email(message = "Email is incorrect"))]
     pub email: String,
-    #[validate(length(max = 30))]
+    #[validate(length(max = 30, message = "Username must be between 5 to 30 characters"))]
     pub username: String,
-    #[validate(length(min = 5, max = 50))]
+    #[validate(length(
+        min = 8,
+        max = 50,
+        message = "Password must be between 8 to 50 characters"
+    ))]
     pub password: String,
 }
 
+// login parameters for the login route
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginParams {
-    #[validate(length(max = 30))]
+    #[validate(length(
+        min = 5,
+        max = 30,
+        message = "Username must be between 5 to 30 characters"
+    ))]
     pub username: String,
-    #[validate(length(min = 5, max = 50))]
+    #[validate(length(
+        min = 8,
+        max = 50,
+        message = "Password must be between 8 to 50 characters"
+    ))]
     pub password: String,
 }
 
+// standard response body without error
 #[derive(Debug, Serialize)]
 pub struct StandardBody {
     pub result: bool,
     pub err: String,
 }
 
+// build a tide result with standard response body
 fn build_response(result: bool, err: String, status: u16) -> tide::Result {
     // build response
     let res_body = StandardBody {
@@ -52,6 +63,7 @@ fn build_response(result: bool, err: String, status: u16) -> tide::Result {
     Ok(response)
 }
 
+// handles the requests coming into the login route and gives back an appropriate response
 pub async fn login(mut req: Request<()>) -> tide::Result {
     // process the body
     let login_params: LoginParams;
@@ -63,14 +75,32 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
             return build_response(false, "Bad Request Body".to_string(), 400);
         }
     }
+
+    // get fields
     let username = &login_params.username;
     let password = &login_params.password;
 
-    // validate login
+    // validate login parameters
     match login_params.validate() {
         Err(e) => {
-            // returns the validation error
-            return build_response(false, e.to_string(), 400);
+            // returns the validation errors
+            let mut error_string: String = "".to_string();
+            let validations = e.field_errors();
+            let values = validations.values();
+            for validation_errors in values {
+                for validation_error in validation_errors.iter() {
+                    let error_message = validation_error.message.borrow();
+                    match error_message {
+                        Some(message) => {
+                            error_string += message.borrow();
+                            error_string += ".";
+                        }
+                        None => {}
+                    }
+                }
+            }
+
+            return build_response(false, error_string, 400);
         }
         _ => (),
     }
@@ -89,16 +119,14 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     // get the password hash from db
     let (password_hash, salt) = get_password_salt_from_id(&mut conn, uid).await;
 
-    let salt_string = SaltString::from_b64(&salt)?;
-
     // check if already logged in
     let is_logged_in: Option<i32> = req.session().get("user_id");
     if is_logged_in != None {
-        return build_response(false, "Already Logged in".to_string(), 400);
+        return build_response(true, "".to_string(), 200);
     }
 
     // verify password
-    if verify_password(&password, &salt_string, &password_hash) {
+    if verify_password(&password, &password_hash) {
         // password correct
 
         // login the user
@@ -111,12 +139,14 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 
         return build_response(true, "".to_string(), 200);
     } else {
+        // password is incorrect
         return build_response(false, "Incorrect Password".to_string(), 400);
     }
 }
 
+// handles the requests coming into the register route and gives back an appropriate response
 pub async fn register(mut req: Request<()>) -> tide::Result {
-    // process the body
+    // process the register request body
     let register_params: RegisterParams;
     match req.body_json().await {
         Ok(params) => {
@@ -128,6 +158,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
         }
     }
 
+    // borrow fields
     let email = &register_params.email;
     let username = &register_params.username;
     let password = &register_params.password;
@@ -136,27 +167,38 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     match register_params.validate() {
         Err(e) => {
             // returns the validation error
-            return build_response(false, e.to_string(), 400);
+            let mut error_string: String = "".to_string();
+            let validations = e.field_errors();
+            let values = validations.values();
+            for validation_errors in values {
+                for validation_error in validation_errors.iter() {
+                    let error_message = validation_error.message.borrow();
+                    match error_message {
+                        Some(message) => {
+                            error_string += message.borrow();
+                            error_string += ".";
+                        }
+                        None => {}
+                    }
+                }
+            }
+            return build_response(false, error_string, 400);
         }
+
         _ => (),
     }
-    // generate salt
-    let salt: SaltString = generate_salt();
-    // hash salt
-    let hashed_password = hash_password(&password, &salt);
-    // get SaltString as String
-    let salt_str = salt.to_string();
-    // get back the SaltString
-    // let salt = SaltString::from_b64(salt_str);
 
-    // create new user
+    // hash salt
+    let hashed_password = hash_password(password);
+
+    // create new user instance
     let new_user = User {
         username: username.clone(),
         password: hashed_password,
         email: email.clone(),
         is_private: false,
         bio: None,
-        salt: salt_str,
+        salt: "".to_string(),
         display_name: username.clone(),
     };
 
@@ -178,44 +220,60 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     // insert user_id into the session
     session.insert("user_id", user_id)?;
 
+    // all done
     return build_response(true, "".to_string(), 200);
 }
 
-//
-fn generate_salt() -> SaltString {
-    SaltString::generate(&mut OsRng)
-}
-fn hash_password(password: &String, salt: &SaltString) -> String {
-    let pass_arr = password.as_bytes();
-    let res = Scrypt.hash_password(pass_arr, salt);
-
-    match res {
-        Ok(hash) => {
-            return hash.to_string();
-        }
-        Err(e) => {
-            panic!("brick");
-        }
-    }
+// hashes the password using sha-256(for now)
+fn hash_password(password: &String) -> String {
+    digest(password)
 }
 
-fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
-    let pass_arr = to_check.as_bytes();
-    let res = Scrypt.hash_password(pass_arr, salt);
-    match res {
-        Ok(hash) => {
-            println!("PASSWORD:");
-            println!("{}", hash.to_string());
-            println!("{}", hash_string);
-            if hash.to_string() == *hash_string {
-                return true;
-            }
-            return false;
-        }
-        Err(e) => {
-            println!("Error: {}", e.to_string());
-            return false;
-        }
+// verifies the password using sha-256 hash(for now)
+fn verify_password(password: &String, hash_string: &String) -> bool {
+    let val = digest(password);
+    if val == *hash_string {
+        return true;
     }
     false
 }
+
+// legacy code for old password hashing
+//
+// fn generate_salt() -> SaltString {
+//     SaltString::generate(&mut OsRng)
+// }
+// fn hash_password(password: &String, salt: &SaltString) -> String {
+//     let pass_arr = password.as_bytes();
+//     let res = Scrypt.hash_password(pass_arr, salt);
+
+//     match res {
+//         Ok(hash) => {
+//             return hash.to_string();
+//         }
+//         Err(e) => {
+//             panic!("brick");
+//         }
+//     }
+// }
+
+// fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
+//     let pass_arr = to_check.as_bytes();
+//     let res = Scrypt.hash_password(pass_arr, salt);
+//     match res {
+//         Ok(hash) => {
+//             println!("PASSWORD:");
+//             println!("{}", hash.to_string());
+//             println!("{}", hash_string);
+//             if hash.to_string() == *hash_string {
+//                 return true;
+//             }
+//             return false;
+//         }
+//         Err(e) => {
+//             println!("Error: {}", e.to_string());
+//             return false;
+//         }
+//     }
+//     false
+// }

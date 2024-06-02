@@ -1,21 +1,48 @@
+version: "3.5"
 services:
-  postgres:
-    image: postgres
-    container_name: postgres_db 
-    restart: always
-    env_file:
-      - .env
+  db:
+    image: postgres:alpine 
+    container_name: pg_db 
+    # restart: always
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
+      TZ: Asia/Singapore
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
-    volumes:
-      - ./data:/var/lib/postgresql/data
+    # volumes:
+    #   - ./data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $POSTGRES_DB $POSTGRES_USER"]
       interval: 1s 
       timeout: 5s
       retries: 5
-    
+
+  backend_server: 
+    container_name: be_server
+    # restart: always
+    depends_on:
+      - db
+    build: ./backend
+    ports: 
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg_db/${POSTGRES_DB}" 
+      TZ: Asia/Singapore
+
+  frontend_server:
+    container_name: fe_server
+    # restart: always
+    build: ./frontend
+    depends_on:
+      - backend_server 
+    ports: 
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    env_file:
+      - ./frontend/.env
+
+
+

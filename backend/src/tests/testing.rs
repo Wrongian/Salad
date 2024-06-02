@@ -1,21 +1,27 @@
-use crate::{db::start_connection, funcs, routes::auth::{register, RegisterParams}};
+use crate::{
+    db::start_connection,
+    funcs,
+    routes::auth::{register, RegisterParams},
+};
 use diesel::PgConnection;
-use tide::http::{Url, Method, Body, Request, Response};
+use tide::http::{Body, Method, Request, Response, Url};
 use validator::Validate;
 
 // Do not run this in production
 
 // to run this with println! outputs use "rust test -- --nocapture"
 
+// test whether can connect to the db
 #[async_std::test]
 async fn db_connection_test() -> tide::Result<()> {
-    let conn : PgConnection = start_connection().await;
+    let conn: PgConnection = start_connection().await;
     Ok(())
 }
 
+// test whether can register
 #[async_std::test]
 async fn register_test() -> tide::Result<()> {
-    let conn : PgConnection = start_connection().await;
+    let conn: PgConnection = start_connection().await;
     let url_string = "http://".to_string() + &funcs::get_url() + "/login";
     let url = Url::parse(&url_string)?;
     let mut req = Request::new(Method::Post, url);
@@ -33,4 +39,3 @@ async fn register_test() -> tide::Result<()> {
     assert!(res.is_ok());
     Ok(())
 }
-

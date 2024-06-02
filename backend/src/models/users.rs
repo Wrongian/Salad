@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use serde::Serialize;
 
 #[derive(Queryable, Selectable, Insertable)]
 #[diesel(table_name = crate::schema::users)]

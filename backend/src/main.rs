@@ -1,46 +1,56 @@
+pub mod funcs;
 pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-pub mod funcs;
-use dotenv::dotenv;
 use routes::auth::login;
 use routes::auth::register;
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
+use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
 
+// Migration to DB tables creation
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
+// main function
 #[async_std::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
 
-    // placeholder test to create a user
-    /*
-    let new_user = User {
-        username: "meme".to_string(),
-        password: "meme1".to_string(),
-        email: "meme2".to_string(),
-        bio: "meme3".to_string(),
-        is_private: false,
-        salt: "meme4".to_string(),
-    };
-    */
+    // setup migrations
+    let mut conn = db::start_connection().await;
+    conn.run_pending_migrations(MIGRATIONS).unwrap();
 
     // create app
     let mut app = tide::new();
 
+    // middleware
+
+    // CORS middleware
+    let whitelist_urls = env::var::<&str>("CORS_WHITELIST_URLS")
+        .unwrap()
+        .split(",")
+        .map(|s| s.to_owned())
+        .collect::<Vec<String>>();
+
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST, OPTIONS, PUT".parse::<HeaderValue>().unwrap())
-        .allow_origin(Origin::from(vec!["http://localhost:5173"]))
+        .allow_origin(Origin::from(whitelist_urls.clone()))
         .allow_credentials(false);
-
     app.with(cors);
 
+    log::info!(
+        "accepting requests from the following urls: {:?}",
+        whitelist_urls
+    );
+
     // session middleware
+    // words from the documentation
     // DO NOT USE MEMORY STORE IN PRODUCTION USE A PROPER EXTERNAL DATASTORE
     app.with(tide::sessions::SessionMiddleware::new(
         tide::sessions::MemoryStore::new(),
@@ -61,5 +71,6 @@ async fn main() -> tide::Result<()> {
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
+    // return
     Ok(())
 }

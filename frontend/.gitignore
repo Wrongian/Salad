@@ -10,7 +10,6 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
 
 # Editor directories and files
 /.vscode
@@ -29,7 +28,7 @@ dist-ssr
 /.svelte-kit
 /package
 .env
-.env.*
+.env.local
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
