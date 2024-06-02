@@ -9,8 +9,12 @@
   } from "$lib/modules/Constants.svelte";
   let username: string = "";
   let password: string = "";
+
   let canSubmit = false;
+  let isPasswordChanged = false;
+  let isUsernameChanged = false;
   $: (canSubmit = checkValid()), username, password;
+
   const checkValid = () => {
     // username
     const usernameElement = document.getElementById("login-username-text");
@@ -44,6 +48,8 @@
       class="peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
+      required={isUsernameChanged}
+      on:input={() => (isUsernameChanged = true)}
       bind:value={username}
     />
     <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
@@ -66,6 +72,8 @@
       class="peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
+      required={isPasswordChanged}
+      on:input={() => (isPasswordChanged = true)}
       bind:value={password}
     />
     <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
