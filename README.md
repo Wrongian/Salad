@@ -91,8 +91,4 @@ We will require 3 separate terminals to track the database, backend and frontend
 
 1. Run `docker compose up` in the base directory
 
-# Credits
 
-Used for the favicon
-
-1. [1] Flaticon, “Flaticon, The Largest Database of Free Vector Icons,” Flaticon, 2010. https://www.flaticon.com/ (accessed June 2, 2024).
