@@ -6,6 +6,10 @@
   $: reset = data.reset;
 </script>
 
+<svelte:head>
+  <title>Login</title>
+</svelte:head>
+
 <header class="p-3">
   {#if reset}
     <h1 class="text-center">Forgot password</h1>
@@ -17,7 +21,7 @@
 <main
   class="flex flex-col border border-black items-center p-3 min-h-[500px] h-[80vh]"
 >
-  <div class="bg-slate-200 rounded-xl p-3 w-[450px]">
+  <div class="bg-primary shadow-lg rounded-xl p-3 w-[450px]">
     {#if reset}
       <LoginResetForm />
       <!--TODO: Modularise this into a svelte component  -->
@@ -30,13 +34,14 @@
       </div>
     {:else}
       <LoginForm />
-      <div class="flex justify-center">
+      <!-- TODO: Forgot password business logic -->
+      <!-- <div class="flex justify-center">
         <a href="/auth/login" on:click={() => (reset = true)}>
           <span class="text-neutral-500 hover:text-green-950"
             >Forgot password?</span
           >
         </a>
-      </div>
+      </div> -->
       <div class="flex justify-center">
         <a href="/auth/register" on:click={() => (reset = false)}>
           <span class="text-neutral-500 hover:text-green-950"

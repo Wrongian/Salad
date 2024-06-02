@@ -4,6 +4,10 @@
   // listen for err store change
 </script>
 
+<svelte:head>
+  <title>Error..</title>
+</svelte:head>
+
 <header class="p-5">
   <h1 class="text-center">
     Oh no! Looks like an unknown error has occurred...
