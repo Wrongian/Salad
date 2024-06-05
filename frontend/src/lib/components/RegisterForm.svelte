@@ -11,7 +11,11 @@
   let email = "";
   let username = "";
   let password = "";
+
   let canSubmit = false;
+  let isPasswordChanged = false;
+  let isUsernameChanged = false;
+  let isEmailChanged = false;
 
   // re run statement whenever username, password or email state changes
   $: (canSubmit = checkValid()), username, password, email;
@@ -35,7 +39,10 @@
     return (
       emailElement.validity.valid &&
       usernameElement.validity.valid &&
-      passwordElement.validity.valid
+      passwordElement.validity.valid &&
+      !!isPasswordChanged &&
+      !!isUsernameChanged &&
+      !!isEmailChanged
     );
   };
 </script>
@@ -53,6 +60,8 @@
       class="block peer mt-1 w-full bg-primary border border-slate-300 rounded-md text-sm shadow-sm
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
+      required={isEmailChanged}
+      on:input={() => (isEmailChanged = true)}
       bind:value={email}
     />
     <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
@@ -74,6 +83,8 @@
       class="peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
+      required={isUsernameChanged}
+      on:input={() => (isUsernameChanged = true)}
       bind:value={username}
     />
     <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
@@ -96,6 +107,8 @@
       class="peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
+      required={isPasswordChanged}
+      on:input={() => (isPasswordChanged = true)}
       bind:value={password}
     />
     <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
