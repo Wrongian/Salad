@@ -4,14 +4,18 @@ use crate::db::user::{
     get_user_id_from_name,
 };
 use crate::models::users::User;
-use sha256::digest;
+use bcrypt::verify;
+use bcrypt::hash;
 use std::borrow::Borrow;
 use tide::prelude::*;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
-#[derive(Debug, Deserialize, Validate, Serialize)]
 
+// password cost
+const COST : u32 = 10;
+
+#[derive(Debug, Deserialize, Validate, Serialize)]
 // register parameters for register route
 pub struct RegisterParams {
     #[validate(email(message = "Email is incorrect"))]
@@ -125,22 +129,36 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
         return build_response(true, "".to_string(), 200);
     }
 
-    // verify password
-    if verify_password(&password, &password_hash) {
-        // password correct
+    // verify the password is correct
+    // bcrypt alr auto includes the hash into the password
+    let verify_password_res = verify(&password, &password_hash);
+    match verify_password_res {
+        Ok(is_correct) => {
+            if is_correct {
+                // password correct
 
-        // login the user
-        let user_id = get_user_id_from_name(&mut conn, &username).await;
+                // login the user
+                let user_id = get_user_id_from_name(&mut conn, &username).await;
 
-        let session = req.session_mut();
+                let session = req.session_mut();
 
-        // insert user_id into the session
-        session.insert("user_id", user_id)?;
+                // insert user_id into the session
+                session.insert("user_id", user_id)?;
 
-        return build_response(true, "".to_string(), 200);
-    } else {
-        // password is incorrect
-        return build_response(false, "Incorrect Password".to_string(), 400);
+                return build_response(true, "".to_string(), 200);
+            }
+            else {
+                // password is incorrect
+                return build_response(false, "Incorrect Password".to_string(), 400);
+            }
+   
+        }
+        Err(e) => {
+            // log the error
+            println!("Error has occurred: {}", e.to_string());
+            // Returns a response that does not expose internal implementation
+            return build_response(false, "".to_string(), 500);
+        }
     }
 }
 
@@ -189,7 +207,19 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     }
 
     // hash salt
-    let hashed_password = hash_password(password);
+    let password_res = hash(password, COST);
+    let hashed_password: String;
+    match password_res {
+        Ok(password_hash) => {
+            hashed_password = password_hash; 
+        }
+        Err(e) => {
+            // log the error
+            println!("Error has occurred: {}", e.to_string());
+            // Returns a response that does not expose internal implementation
+            return build_response(false, "".to_string(), 500);
+        }
+    } 
 
     // create new user instance
     let new_user = User {
@@ -224,19 +254,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     return build_response(true, "".to_string(), 200);
 }
 
-// hashes the password using sha-256(for now)
-fn hash_password(password: &String) -> String {
-    digest(password)
-}
 
-// verifies the password using sha-256 hash(for now)
-fn verify_password(password: &String, hash_string: &String) -> bool {
-    let val = digest(password);
-    if val == *hash_string {
-        return true;
-    }
-    false
-}
 
 // legacy code for old password hashing
 //
