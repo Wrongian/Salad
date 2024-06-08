@@ -53,6 +53,14 @@ pub struct StandardBody {
     pub result: bool,
     pub err: String,
 }
+fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &String) {
+    session
+        .insert("user_id", user_id)
+        .expect("Error serializing user_id");
+    session
+        .insert("username", username)
+        .expect("Error serializing username");
+}
 
 // build a tide result with standard response body
 fn build_response(result: bool, err: String, status: u16) -> tide::Result {
@@ -140,10 +148,8 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
                 // login the user
                 let user_id = get_user_id_from_name(&mut conn, &username).await;
 
-                let session = req.session_mut();
-
                 // insert user_id into the session
-                session.insert("user_id", user_id)?;
+                init_session(req.session_mut(), user_id, &username);
 
                 return build_response(true, "".to_string(), 200);
             } else {
@@ -243,11 +249,8 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     let user_id = get_user_id_from_name(&mut conn, &username).await;
 
     // log the user in
-    let session = req.session_mut();
-
     // insert user_id, username into the session
-    session.insert("user_id", user_id)?;
-    session.insert("username", username)?;
+    init_session(req.session_mut(), user_id, &username);
 
     // all done
     return build_response(true, "".to_string(), 200);
