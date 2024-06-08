@@ -4,8 +4,8 @@ use crate::db::user::{
     get_user_id_from_name,
 };
 use crate::models::users::User;
-use bcrypt::verify;
 use bcrypt::hash;
+use bcrypt::verify;
 use std::borrow::Borrow;
 use tide::prelude::*;
 use tide::Request;
@@ -13,7 +13,7 @@ use tide::Response;
 use validator::Validate;
 
 // password cost
-const COST : u32 = 10;
+const COST: u32 = 10;
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 // register parameters for register route
@@ -146,12 +146,10 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
                 session.insert("user_id", user_id)?;
 
                 return build_response(true, "".to_string(), 200);
-            }
-            else {
+            } else {
                 // password is incorrect
                 return build_response(false, "Incorrect Password".to_string(), 400);
             }
-   
         }
         Err(e) => {
             // log the error
@@ -211,7 +209,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     let hashed_password: String;
     match password_res {
         Ok(password_hash) => {
-            hashed_password = password_hash; 
+            hashed_password = password_hash;
         }
         Err(e) => {
             // log the error
@@ -219,7 +217,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
             // Returns a response that does not expose internal implementation
             return build_response(false, "".to_string(), 500);
         }
-    } 
+    }
 
     // create new user instance
     let new_user = User {
@@ -247,14 +245,13 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     // log the user in
     let session = req.session_mut();
 
-    // insert user_id into the session
+    // insert user_id, username into the session
     session.insert("user_id", user_id)?;
+    session.insert("username", username)?;
 
     // all done
     return build_response(true, "".to_string(), 200);
 }
-
-
 
 // legacy code for old password hashing
 //
