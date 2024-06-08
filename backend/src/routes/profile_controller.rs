@@ -16,10 +16,10 @@ pub struct GetProfileParams {
 struct GetProfileResponseBody {
     display_name: String,
     bio: String,
-    username: String,
+    is_owner: bool,
     picture: String,
-    following: i32,
-    followers: i32,
+    following: Option<i32>,
+    followers: Option<i32>,
 }
 
 // Parameters for the route to update the profile response body
@@ -53,29 +53,49 @@ pub async fn update_profile(req: Request<()>) -> tide::Result {
 
 // Get profile route
 pub async fn get_profile(req: Request<()>) -> tide::Result {
-    // let username = req.query::<GetProfileParams>()?.username;
     let username = match req.param("username") {
         Ok(name) => name.to_owned(),
+        // last match clause should not happen.
         Err(e) => return build_error(e.to_string(), 400),
     };
-
-    let is_logged_in: Option<i32> = req.session().get("user_id");
-
+    // get relevant username session field
+    let session_username: String = req.session().get("username").unwrap_or("".to_owned());
+    println!("session username: {}", &session_username);
     log::info!("Obtained username in get_profile: {}", &username);
 
     let mut conn = start_connection().await;
 
+    // get profile view from database
     let profile_query_result = get_user_profile_by_username(&mut conn, &username).await;
+    let is_owner = session_username == username;
 
     let res_body = match profile_query_result {
-        Ok(profile) => GetProfileResponseBody {
-            display_name: profile.display_name,
-            bio: profile.bio.unwrap_or("".to_owned()),
-            username: profile.username,
-            picture: String::from("Placeholder for picture"),
-            followers: 0,
-            following: 0,
-        },
+        Ok(profile) => {
+            // TODO: we need to update is_private to profile.is_private when DB is updated
+            let is_private = true;
+            if !is_owner && is_private {
+                // return object with certain fields defaulted to empty values
+                GetProfileResponseBody {
+                    display_name: profile.display_name,
+                    bio: "".to_owned(),
+                    picture: String::from("picture placeholder"),
+                    is_owner: false,
+                    followers: None,
+                    following: None,
+                }
+            } else {
+                // either is_owner or not private account, either ways all fields are accessible.
+                // So return all fields.
+                GetProfileResponseBody {
+                    display_name: profile.display_name,
+                    bio: profile.bio.unwrap_or("".to_owned()),
+                    picture: String::from("picture placeholder"),
+                    is_owner,
+                    followers: Some(0),
+                    following: Some(0),
+                }
+            }
+        }
         Err(message) => {
             log::error!("{}", message);
             return build_error(message, 500);
