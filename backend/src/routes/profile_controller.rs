@@ -18,8 +18,8 @@ struct GetProfileResponseBody {
     bio: String,
     is_owner: bool,
     picture: String,
-    following: i32,
-    followers: i32,
+    following: Option<i32>,
+    followers: Option<i32>,
 }
 
 // Parameters for the route to update the profile response body
@@ -60,7 +60,7 @@ pub async fn get_profile(req: Request<()>) -> tide::Result {
     };
     // get relevant username session field
     let session_username: String = req.session().get("username").unwrap_or("".to_owned());
-
+    println!("session username: {}", &session_username);
     log::info!("Obtained username in get_profile: {}", &username);
 
     let mut conn = start_connection().await;
@@ -80,18 +80,19 @@ pub async fn get_profile(req: Request<()>) -> tide::Result {
                     bio: "".to_owned(),
                     picture: String::from("picture placeholder"),
                     is_owner: false,
-                    followers: -1,
-                    following: -1,
+                    followers: None,
+                    following: None,
                 }
             } else {
-                // not owner and not private, so return all, with is_owner
+                // either is_owner or not private account, either ways all fields are accessible.
+                // So return all fields.
                 GetProfileResponseBody {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
                     picture: String::from("picture placeholder"),
                     is_owner,
-                    followers: 0,
-                    following: 0,
+                    followers: Some(0),
+                    following: Some(0),
                 }
             }
         }
