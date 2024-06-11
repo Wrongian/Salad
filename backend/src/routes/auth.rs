@@ -10,10 +10,15 @@ use std::borrow::Borrow;
 use tide::{prelude::*, Redirect};
 use tide::Request;
 use tide::Response;
-use validator::Validate;
+use validator::{Validate, ValidateArgs, ValidationError};
+use once_cell::sync::Lazy;
+use fancy_regex::Regex;
 
 // password cost
 const COST: u32 = 10;
+
+// regex for password
+const PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$")}.unwrap());
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 // register parameters for register route
@@ -26,7 +31,7 @@ pub struct RegisterParams {
         min = 8,
         max = 50,
         message = "Password must be between 8 to 50 characters"
-    ))]
+    ), custom(function = "validate_password", message = "Password must have at least one letter and one number"))]
     pub password: String,
 }
 
@@ -53,6 +58,15 @@ pub struct StandardBody {
     pub result: bool,
     pub err: String,
 }
+
+
+fn validate_password(value: &str) -> Result<(), ValidationError>{
+    if (&*PASSWORD_REGEX).is_match(value).unwrap() {
+        return Ok(());
+    }
+    Err(ValidationError::new("Invalid Password"))
+}
+
 fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &String) {
     session
         .insert("user_id", user_id)
