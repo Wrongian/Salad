@@ -133,8 +133,10 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 
     // check if already logged in
     let is_logged_in: Option<i32> = req.session().get("user_id");
+
+    // redirect to home page if already logged in
     if is_logged_in != None {
-        return build_response(true, "".to_string(), 200);
+        return Ok(Redirect::new("/").into());
     }
 
     // verify the password is correct
