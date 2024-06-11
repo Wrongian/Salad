@@ -7,7 +7,7 @@ use crate::models::users::User;
 use bcrypt::hash;
 use bcrypt::verify;
 use std::borrow::Borrow;
-use tide::prelude::*;
+use tide::{prelude::*, Redirect};
 use tide::Request;
 use tide::Response;
 use validator::Validate;
@@ -256,3 +256,9 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     return build_response(true, "".to_string(), 200);
 }
 
+// get route that logs the user out from the website
+pub async fn logout(mut req: Request<()>) -> tide::Result {
+    let session = req.session_mut(); 
+    session.destroy();
+    Ok(Redirect::new("/auth/login").into())
+}
