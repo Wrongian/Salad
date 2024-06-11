@@ -7,13 +7,18 @@ use crate::models::users::User;
 use bcrypt::hash;
 use bcrypt::verify;
 use std::borrow::Borrow;
-use tide::prelude::*;
+use tide::{prelude::*, Redirect};
 use tide::Request;
 use tide::Response;
-use validator::Validate;
+use validator::{Validate, ValidateArgs, ValidationError};
+use once_cell::sync::Lazy;
+use fancy_regex::Regex;
 
 // password cost
 const COST: u32 = 10;
+
+// regex for password
+const PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$")}.unwrap());
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 // register parameters for register route
@@ -26,7 +31,7 @@ pub struct RegisterParams {
         min = 8,
         max = 50,
         message = "Password must be between 8 to 50 characters"
-    ))]
+    ), custom(function = "validate_password", message = "Password must have at least one letter and one number"))]
     pub password: String,
 }
 
@@ -53,6 +58,15 @@ pub struct StandardBody {
     pub result: bool,
     pub err: String,
 }
+
+
+fn validate_password(value: &str) -> Result<(), ValidationError>{
+    if (&*PASSWORD_REGEX).is_match(value).unwrap() {
+        return Ok(());
+    }
+    Err(ValidationError::new("Invalid Password"))
+}
+
 fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &String) {
     session
         .insert("user_id", user_id)
@@ -133,8 +147,10 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 
     // check if already logged in
     let is_logged_in: Option<i32> = req.session().get("user_id");
+
+    // redirect to home page if already logged in
     if is_logged_in != None {
-        return build_response(true, "".to_string(), 200);
+        return Ok(Redirect::new("/").into());
     }
 
     // verify the password is correct
@@ -256,42 +272,9 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     return build_response(true, "".to_string(), 200);
 }
 
-// legacy code for old password hashing
-//
-// fn generate_salt() -> SaltString {
-//     SaltString::generate(&mut OsRng)
-// }
-// fn hash_password(password: &String, salt: &SaltString) -> String {
-//     let pass_arr = password.as_bytes();
-//     let res = Scrypt.hash_password(pass_arr, salt);
-
-//     match res {
-//         Ok(hash) => {
-//             return hash.to_string();
-//         }
-//         Err(e) => {
-//             panic!("brick");
-//         }
-//     }
-// }
-
-// fn verify_password(to_check: &String, salt: &SaltString, hash_string: &String) -> bool {
-//     let pass_arr = to_check.as_bytes();
-//     let res = Scrypt.hash_password(pass_arr, salt);
-//     match res {
-//         Ok(hash) => {
-//             println!("PASSWORD:");
-//             println!("{}", hash.to_string());
-//             println!("{}", hash_string);
-//             if hash.to_string() == *hash_string {
-//                 return true;
-//             }
-//             return false;
-//         }
-//         Err(e) => {
-//             println!("Error: {}", e.to_string());
-//             return false;
-//         }
-//     }
-//     false
-// }
+// get route that logs the user out from the website
+pub async fn logout(mut req: Request<()>) -> tide::Result {
+    let session = req.session_mut(); 
+    session.destroy();
+    Ok(Redirect::new("/auth/login").into())
+}
