@@ -15,11 +15,13 @@
   <title>Welcome to Saladify!</title>
 </svelte:head>
 <Errors />
-{#if doneLoad}
-  <slot />
-{/if}
-<footer class="p-2 bg-primary">
-  <p class="text-center text-300 text-primary-500">
-    <span> All rights reserved @Saladify. </span>
-  </p>
-</footer>
+<div class="h-screen">
+  {#if doneLoad}
+    <slot />
+  {/if}
+  <footer class="p-2 bg-primary">
+    <p class="text-center text-300 text-primary-500">
+      <span> All rights reserved @Saladify. </span>
+    </p>
+  </footer>
+</div>

@@ -3,7 +3,7 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-use routes::auth::{login, register, logout};
+use routes::auth::{login, logout, register};
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
@@ -69,8 +69,7 @@ async fn main() -> tide::Result<()> {
     app.at("/register").post(register);
     app.at("/logout").post(register);
     // profile
-    app.at("/profile/:username").get(get_profile);
-
+    app.at("/profiles/:username").get(get_profile);
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
