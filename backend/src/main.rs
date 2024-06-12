@@ -66,7 +66,7 @@ async fn main() -> tide::Result<()> {
     // setup routes
     app.at("/login").post(login);
     app.at("/register").post(register);
-    app.at("/profile/:username").get(get_profile);
+    app.at("/profiles/:username").get(get_profile);
 
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
