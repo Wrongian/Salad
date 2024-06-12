@@ -5,11 +5,13 @@ pub mod schema;
 pub mod tests;
 use routes::auth::{login, register, logout};
 use routes::profile_controller::get_profile;
+use tide::new;
 use std::env;
 pub mod db;
 use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
+use tide_diesel::DieselMiddleware;
 
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -57,6 +59,10 @@ async fn main() -> tide::Result<()> {
             .expect("Tide Key not found")
             .as_bytes(),
     ));
+
+    // Diesel Middleware
+    let database_url = env::var("DATABASE_URL").expect("No database url found");
+    app.with(DieselMiddleware::new(&database_url).unwrap());
 
     // set up logging middleware, default log level is 'info'
     femme::start();
