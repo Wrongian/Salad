@@ -1,3 +1,4 @@
+import { getProfile } from "../../../scripts/queries";
 import type { PageLoad } from "./$types";
 
 /**
@@ -6,13 +7,9 @@ import type { PageLoad } from "./$types";
  * @returns an object to be pointed to by 'data' variable in +page.svelte
  */
 export const load: PageLoad = async ({ data, route, fetch, params }) => {
+  const profileData = await getProfile(params.username);
   return {
-    display_name: params.username,
-    bio: "this is a bio",
-    picture: "",
-    following: 2,
-    followers: 2,
-    is_private: false,
+    ...profileData,
     links: [
       {
         link_id: 0,

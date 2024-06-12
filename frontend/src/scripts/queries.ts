@@ -1,7 +1,13 @@
-import type { TAuthResult, TUpdateProfileQuery } from "./query.d.ts";
+import type { TAuthResult, TResult, TUpdateProfileQuery } from "./query.d.ts";
 import { blackSwanError } from "../stores/stores.js";
 import { goto, invalidateAll } from "$app/navigation";
-import { authResponseValidator } from "./response-validator.js";
+import {
+  TLinkBodyValidator,
+  TProfileBodyValidator,
+  authResponseValidator,
+  type TLinkBody,
+  type TProfileBody,
+} from "./response-validator.js";
 import { addError } from "$lib/modules/Errors.svelte";
 
 /**
@@ -35,8 +41,8 @@ export const login = async (
     });
 
   if (response.status === 200) {
-    // code to redirect client to GET profile/:userId
-    goto("/profiles");
+    // code to redirect client to GET profile/:username
+    goto(`/profiles/${username}`);
   } else if (response.status === 400) {
     // TODO: type validation and integration tests
     addError(response.err, response.status);
@@ -83,8 +89,8 @@ export const register = async (
     });
 
   if (response.status === 200) {
-    // code to redirect client to GET profile/:userId
-    goto("/profiles");
+    // code to redirect client to GET profile/:username
+    goto(`/profiles/${username}`);
   } else if (response.status === 400) {
     // TODO: flash svelte error
     addError(response.err, response.status);
@@ -122,9 +128,57 @@ export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
   });
 
   if (response.status === 200) {
-    // code to redirect client to GET profile/:userId
-    goto("/profiles");
+    // code to redirect client to GET profile/:username
+    await invalidateAll();
   } else {
     // TODO: flash svelte error
+  }
+};
+
+export const getProfile = async (username: string): Promise<TProfileBody> => {
+  const result: TResult<TProfileBody> = await fetch(
+    `/api/profiles/${username}`,
+    { method: "GET" }
+  )
+    .then(async (success) => {
+      return {
+        payload: await TProfileBodyValidator.validateAsync(
+          await success.json()
+        ),
+        success: true as const,
+      };
+    })
+    .catch((err) => {
+      return { status: 400, err: JSON.stringify(err), success: false as const };
+    });
+  if (result.success) {
+    return result.payload;
+  } else {
+    // something really bad happened here
+    blackSwanError.set({ status: result.status, message: result.err });
+    return result as never;
+  }
+};
+
+export const getLinks = async (username: string): Promise<TLinkBody> => {
+  const result: TResult<TLinkBody> = await fetch(`/api/links/${username}`, {
+    method: "GET",
+  })
+    .then(async (success) => {
+      return {
+        payload: await TLinkBodyValidator.validateAsync(await success.json()),
+        success: true as const,
+      };
+    })
+    .catch((err) => {
+      return { status: 400, err: JSON.stringify(err), success: false as const };
+    });
+
+  if (result.success) {
+    return result.payload;
+  } else {
+    // something really bad happened here
+    blackSwanError.set({ status: result.status, message: result.err });
+    return [] as never;
   }
 };
