@@ -16,3 +16,5 @@ log = "0.4.21"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
 sha256 = "1.5.0"
 bcrypt = "0.15.1"
+once_cell = "1.19.0"
+fancy-regex = "0.13.0"
