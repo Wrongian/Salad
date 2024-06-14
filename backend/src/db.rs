@@ -6,6 +6,8 @@ use std::env;
 // connection pooling later
 
 // function to start the db connection
+// do not use this function to start connections with the database in each route
+#[deprecated]
 pub async fn start_connection() -> PgConnection {
     dotenv().expect("No .env file found");
 
