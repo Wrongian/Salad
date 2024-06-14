@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use crate::db::start_connection;
 use crate::db::user::get_user_profile_by_username;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
+use crate::TideState;
 
 // Profile parameters struct
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -46,13 +49,13 @@ fn build_error(message: String, status: u16) -> tide::Result {
 }
 
 // update profile response body
-pub async fn update_profile(req: Request<()>) -> tide::Result {
+pub async fn update_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }
 
 // Get profile route
-pub async fn get_profile(req: Request<()>) -> tide::Result {
+pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     let username = match req.param("username") {
         Ok(name) => name.to_owned(),
         // last match clause should not happen.
@@ -106,7 +109,7 @@ pub async fn get_profile(req: Request<()>) -> tide::Result {
 }
 
 // delete profile response builder
-pub async fn delete_profile(req: Request<()>) -> tide::Result {
+pub async fn delete_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }
