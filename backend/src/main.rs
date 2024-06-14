@@ -86,7 +86,7 @@ async fn main() -> tide::Result<()> {
     // auth
     app.at("/login").post(login);
     app.at("/register").post(register);
-    app.at("/logout").post(register);
+    app.at("/logout").post(logout);
     // profile
     app.at("/profile/:username").get(get_profile);
 
