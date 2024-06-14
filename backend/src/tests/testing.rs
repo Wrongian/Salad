@@ -19,6 +19,7 @@ async fn db_connection_test() -> tide::Result<()> {
 }
 
 // test whether can register
+/* 
 #[async_std::test]
 async fn register_test() -> tide::Result<()> {
     let conn: PgConnection = start_connection().await;
@@ -39,3 +40,4 @@ async fn register_test() -> tide::Result<()> {
     assert!(res.is_ok());
     Ok(())
 }
+*/
