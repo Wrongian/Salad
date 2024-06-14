@@ -16,7 +16,7 @@ use fancy_regex::Regex;
 use diesel::pg::PgConnection;
 use crate::TideState;
 use std::sync::Arc;
-use crate::DBConnection;
+use crate::db::DBConnection;
 
 // password cost
 const COST: u32 = 10;

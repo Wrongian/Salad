@@ -3,7 +3,7 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{login, register, logout};
 use routes::profile_controller::get_profile;
@@ -18,11 +18,11 @@ use std::sync::Arc;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
+// app state
 pub type TidePool = Pool<ConnectionManager<PgConnection>>;
 pub struct TideState {
     pub tide_pool : TidePool,
 }
-pub type DBConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
 // todo replace unwraps with expect
 
