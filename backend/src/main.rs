@@ -3,19 +3,28 @@ pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::PgConnection;
 use routes::auth::{login, register, logout};
 use routes::profile_controller::get_profile;
-use tide::new;
 use std::env;
 pub mod db;
 use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
 use tide::security::{CorsMiddleware, Origin};
-use tide_diesel::DieselMiddleware;
+use std::sync::Arc;
 
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
+pub type TidePool = Pool<ConnectionManager<PgConnection>>;
+pub struct TideState {
+    pub tide_pool : TidePool,
+}
+pub type DBConnection = PooledConnection<ConnectionManager<PgConnection>>;
+
+// todo replace unwraps with expect
 
 // main function
 #[async_std::main]
@@ -27,8 +36,15 @@ async fn main() -> tide::Result<()> {
     let mut conn = db::start_connection().await;
     conn.run_pending_migrations(MIGRATIONS).unwrap();
 
+    // App State
+    // Diesel
+    let database_url = env::var("DATABASE_URL").expect("No database url found");
+    let pool_manager = ConnectionManager::<PgConnection>::new(&database_url);
+    let pool = Pool::builder().build(pool_manager).expect("Failed to build connection pool");
+    let tide_state = Arc::new(TideState {tide_pool : pool});
+
     // create app
-    let mut app = tide::new();
+    let mut app = tide::with_state(tide_state);
 
     // middleware
 
@@ -60,10 +76,7 @@ async fn main() -> tide::Result<()> {
             .as_bytes(),
     ));
 
-    // Diesel Middleware
-    let database_url = env::var("DATABASE_URL").expect("No database url found");
-    app.with(DieselMiddleware::new(&database_url).unwrap());
-
+    
     // set up logging middleware, default log level is 'info'
     femme::start();
     app.with(tide::log::LogMiddleware::new());
