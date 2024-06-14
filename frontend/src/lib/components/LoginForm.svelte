@@ -46,7 +46,7 @@
       minlength={MIN_USERNAME_LENGTH}
       maxlength={MAX_USERNAME_LENGTH}
       class="peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
+      focus:outline-none focus:invalid:border-destructive focus:invalid:ring-destructive invalid:border-destructive invalid:text-destructive
       "
       required={isUsernameChanged}
       on:input={() => (isUsernameChanged = true)}

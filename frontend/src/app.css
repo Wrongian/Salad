@@ -1,82 +1,78 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(0, 0, 0, 0.87);
-  background-color: #e8ebff;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  
-}
-
-a {
-  font-weight: 500;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-/* 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-} 
-*/
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-.card {
-  padding: 2em;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-} 
-
-button {
-  border-radius: 8px;
-  border-color: #1a1a1a;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  background-color: #213547;
-  color: #f9fafb;
-}
-
-@media (prefers-color-scheme: dark) {
+ 
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    
+    --background: #FFFFFF;
+    --foreground: #050133;
+ 
+    --muted: #EFF6F9;
+    --muted-foreground:#6F7D88; 
+ 
+    --popover: #FFFFFF;
+    --popover-foreground: #050133;
+ 
+    --card: #FFFFFF;
+    --card-foreground: #050133;
+
+    --border: #D6E4EB;
+    --input: #D6E4EB;
+
+    --primary: #0A1320;
+    --primary-foreground: #FAFBFC;
+
+    --secondary: #EFF6F9;
+    --secondary-foreground: #0A1320;
+
+    --accent: #EFF6F9;
+    --accent-foreground: #0A1320;
+
+    --destructive: #D93636;
+    --destructive-foreground: #FAFBFC;
+
+    --ring: #050133
+ 
+    --radius: 0.5rem;
   }
-  a:hover {
-    color: #747bff;
+ 
+  .dark {
+    --background: #050133;
+    --foreground: #FAFBFC;
+
+    --muted: #232C39;
+    --muted-foreground: #97A6BA;
+
+    --popover: #050133;
+    --popover-foreground: #FAFBFC;
+
+    --card: #050133;
+    --card-foreground: #FAFBFC;
+
+    --border: #232C39;
+    --input: #232C39;
+    --primary: #FAFBFC;
+    --primary-foreground: #0A1320;
+
+    --secondary: #232C39;
+    --secondary-foreground: #FAFBFC;
+
+    --accent: #232C39;
+    --accent-foreground: #FAFBFC;
+
+    --destructive: #99291B;
+    --destructive-foreground: #FAFBFC;
+
+    --ring: #D6E4EB;
   }
-  button {
-    background-color: #f9f9f9;
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
