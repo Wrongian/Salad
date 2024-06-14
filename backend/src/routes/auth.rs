@@ -13,6 +13,10 @@ use tide::Response;
 use validator::{Validate, ValidateArgs, ValidationError};
 use once_cell::sync::Lazy;
 use fancy_regex::Regex;
+use diesel::pg::PgConnection;
+use crate::TideState;
+use std::sync::Arc;
+use crate::DBConnection;
 
 // password cost
 const COST: u32 = 10;
@@ -90,7 +94,7 @@ fn build_response(result: bool, err: String, status: u16) -> tide::Result {
 }
 
 // handles the requests coming into the login route and gives back an appropriate response
-pub async fn login(mut req: Request<()>) -> tide::Result {
+pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
     // process the body
     let login_params: LoginParams;
     match req.body_json().await {
@@ -132,7 +136,8 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
     }
 
     // start a connection with the database
-    let mut conn = start_connection().await;
+    let state: Arc<TideState> = req.state().clone();
+    let mut conn : DBConnection= state.tide_pool.get().unwrap();
 
     // check if the username is present in the database
     if !(check_username_present(&mut conn, &username).await) {
@@ -183,7 +188,7 @@ pub async fn login(mut req: Request<()>) -> tide::Result {
 }
 
 // handles the requests coming into the register route and gives back an appropriate response
-pub async fn register(mut req: Request<()>) -> tide::Result {
+pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
     // process the register request body
     let register_params: RegisterParams;
     match req.body_json().await {
@@ -253,7 +258,8 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
     };
 
     // start a connection with the database
-    let mut conn = start_connection().await;
+    let state: Arc<TideState> = req.state().clone();
+    let mut conn : DBConnection= state.tide_pool.get().unwrap();
 
     // check if the user already exists
     if check_user_exists(&mut conn, &username, &email).await {
@@ -273,7 +279,7 @@ pub async fn register(mut req: Request<()>) -> tide::Result {
 }
 
 // get route that logs the user out from the website
-pub async fn logout(mut req: Request<()>) -> tide::Result {
+pub async fn logout(mut req: Request<Arc<TideState>>) -> tide::Result {
     let session = req.session_mut(); 
     session.destroy();
     Ok(Redirect::new("/auth/login").into())
