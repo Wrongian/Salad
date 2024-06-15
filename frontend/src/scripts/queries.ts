@@ -9,6 +9,7 @@ import {
   type TProfileBody,
 } from "./response-validator.js";
 import { addError } from "$lib/modules/Errors.svelte";
+import type { NavigationEvent } from "@sveltejs/kit";
 
 /**
  * forms a POST query to the /login endpoint to validate and log in user
@@ -29,8 +30,15 @@ export const login = async (
       username: username,
       password: password,
     }),
+    // redirect: "manual",
   })
     .then(async (success) => {
+      // check and handle redirects
+      if (success.redirected) {
+        await goto(success.url);
+        return { status: 302, err: "" };
+      }
+
       const resBody = await success.json();
       if (!authResponseValidator(resBody))
         return Promise.reject("Obtained an invalid response body.");
@@ -46,7 +54,7 @@ export const login = async (
   } else if (response.status === 400) {
     // TODO: type validation and integration tests
     addError(response.err, response.status);
-  } else {
+  } else if (response.status > 400 && response.status <= 500) {
     // render error page on other error status codes
     blackSwanError.set({ status: response.status, message: response.err });
   }
@@ -79,6 +87,12 @@ export const register = async (
       return success;
     })
     .then(async (success) => {
+      // check and handle redirects
+      if (success.redirected) {
+        await goto(success.url);
+        return { status: 302, err: "" };
+      }
+
       const resBody = await success.json();
       if (!authResponseValidator(resBody))
         return Promise.reject("Obtained an invalid response body.");
@@ -135,7 +149,12 @@ export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
   }
 };
 
-export const getProfile = async (username: string): Promise<TProfileBody> => {
+type fetch = typeof fetch;
+
+export const getProfile = async (
+  username: string,
+  fetch: fetch
+): Promise<TProfileBody> => {
   const result: TResult<TProfileBody> = await fetch(
     `/api/profiles/${username}`,
     { method: "GET" }
