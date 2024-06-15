@@ -1,7 +1,8 @@
 use crate::models::users::{User, UserProfileView};
 use diesel::prelude::*;
 use diesel::result::Error;
-use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
+use diesel::{RunQueryDsl, SelectableHelper};
+use diesel::pg::PgConnection;
 
 // create a user with a user instance
 pub async fn create(conn: &mut PgConnection, user: &User) {
