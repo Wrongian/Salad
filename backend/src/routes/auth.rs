@@ -3,26 +3,27 @@ use crate::db::user::{
     check_user_exists, check_username_present, create, get_password_salt_from_id,
     get_user_id_from_name,
 };
+use crate::db::DBConnection;
 use crate::models::users::User;
+use crate::TideState;
 use bcrypt::hash;
 use bcrypt::verify;
+use diesel::pg::PgConnection;
+use fancy_regex::Regex;
+use once_cell::sync::Lazy;
 use std::borrow::Borrow;
-use tide::{prelude::*, Redirect};
+use std::sync::Arc;
 use tide::Request;
 use tide::Response;
+use tide::{prelude::*, Redirect};
 use validator::{Validate, ValidateArgs, ValidationError};
-use once_cell::sync::Lazy;
-use fancy_regex::Regex;
-use diesel::pg::PgConnection;
-use crate::TideState;
-use std::sync::Arc;
-use crate::db::DBConnection;
 
 // password cost
 const COST: u32 = 10;
 
 // regex for password
-const PASSWORD_REGEX: Lazy<Regex> = Lazy::new(|| {Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$")}.unwrap());
+const PASSWORD_REGEX: Lazy<Regex> =
+    Lazy::new(|| { Regex::new(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$") }.unwrap());
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 // register parameters for register route
@@ -31,11 +32,17 @@ pub struct RegisterParams {
     pub email: String,
     #[validate(length(max = 30, message = "Username must be between 5 to 30 characters"))]
     pub username: String,
-    #[validate(length(
-        min = 8,
-        max = 50,
-        message = "Password must be between 8 to 50 characters"
-    ), custom(function = "validate_password", message = "Password must have at least one letter and one number"))]
+    #[validate(
+        length(
+            min = 8,
+            max = 50,
+            message = "Password must be between 8 to 50 characters"
+        ),
+        custom(
+            function = "validate_password",
+            message = "Password must have at least one letter and one number"
+        )
+    )]
     pub password: String,
 }
 
@@ -63,8 +70,7 @@ pub struct StandardBody {
     pub err: String,
 }
 
-
-fn validate_password(value: &str) -> Result<(), ValidationError>{
+fn validate_password(value: &str) -> Result<(), ValidationError> {
     if (&*PASSWORD_REGEX).is_match(value).unwrap() {
         return Ok(());
     }
@@ -137,7 +143,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
 
     // start a connection with the database
     let state: Arc<TideState> = req.state().clone();
-    let mut conn : DBConnection= state.tide_pool.get().unwrap();
+    let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
     // check if the username is present in the database
     if !(check_username_present(&mut conn, &username).await) {
@@ -155,7 +161,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
 
     // redirect to home page if already logged in
     if is_logged_in != None {
-        return Ok(Redirect::new("/").into());
+        return Ok(Redirect::new(format!("/profiles/{}", &username)).into());
     }
 
     // verify the password is correct
@@ -259,7 +265,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
 
     // start a connection with the database
     let state: Arc<TideState> = req.state().clone();
-    let mut conn : DBConnection= state.tide_pool.get().unwrap();
+    let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
     // check if the user already exists
     if check_user_exists(&mut conn, &username, &email).await {
@@ -280,7 +286,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
 
 // get route that logs the user out from the website
 pub async fn logout(mut req: Request<Arc<TideState>>) -> tide::Result {
-    let session = req.session_mut(); 
+    let session = req.session_mut();
     session.destroy();
     Ok(Redirect::new("/auth/login").into())
 }
