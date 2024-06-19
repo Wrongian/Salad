@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR NOT NULL,
     email VARCHAR NOT NULL UNIQUE,
-    bio TEXT,
+    bio VARCHAR,
     is_private BOOLEAN NOT NULL,
     salt VARCHAR NOT NULL,
     display_name VARCHAR NOT NULL
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS links (
     link_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
-    description TEXT,
+    description VARCHAR,
     href VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
