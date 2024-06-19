@@ -3,11 +3,21 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(30) NOT NULL UNIQUE,
     password VARCHAR NOT NULL,
     email VARCHAR NOT NULL UNIQUE,
-    bio VARCHAR,
+    bio TEXT,
     is_private BOOLEAN NOT NULL,
     salt VARCHAR NOT NULL,
     display_name VARCHAR NOT NULL
 );
+
+
+CREATE TABLE IF NOT EXISTS links (
+    link_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    description TEXT,
+    href VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
