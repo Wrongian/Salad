@@ -9,6 +9,16 @@ CREATE TABLE IF NOT EXISTS users (
     display_name VARCHAR NOT NULL
 );
 
+
+CREATE TABLE IF NOT EXISTS links (
+    link_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    description VARCHAR,
+    href VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
 -- in the modified columns)
