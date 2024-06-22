@@ -15,6 +15,7 @@ pub struct User {
 }
 
 pub struct UserProfileView {
+    pub id: i32,
     pub username: String,
     pub bio: Option<String>,
     pub display_name: String,
