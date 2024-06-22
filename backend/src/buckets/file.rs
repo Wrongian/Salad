@@ -5,7 +5,6 @@ use aws_sdk_s3::{
     primitives::ByteStream,
     types::{BucketLocationConstraint, CreateBucketConfiguration},
 };
-use bytes::Bytes;
 static PROFILE_IMAGE_BUCKET: &str = "profile-images-salad";
 static LINK_IMAGE_BUCKET: &str = "link-images-salad";
 
@@ -40,7 +39,7 @@ async fn create_bucket(
 
 // one profile image per user?
 pub async fn get_profile_image(client: &s3::Client, user_id: String) -> Result<ByteStream, String> {
-    let mut get_object = client
+    let get_object = client
         .get_object()
         .bucket(PROFILE_IMAGE_BUCKET)
         .key(format!("{}", user_id))
@@ -91,7 +90,7 @@ pub async fn delete_profile_image(client: &s3::Client, user_id: String) -> Resul
     }
 }
 pub async fn get_link_image(client: &s3::Client, link_id: String) -> Result<ByteStream, &str> {
-    let mut get_object = client
+    let get_object = client
         .get_object()
         .bucket(LINK_IMAGE_BUCKET)
         .key(format!("{}", link_id))
@@ -145,7 +144,7 @@ pub async fn collect_as_bytes(stream: ByteStream) -> Result<Vec<u8>, String> {
         .collect()
         .await
         .map(|data| data.into_bytes().to_vec())
-        .map_err(|e| "failed to stream".to_string())
+        .map_err(|_| "failed to stream".to_string())
 }
 
 #[cfg(test)]
