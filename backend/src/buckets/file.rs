@@ -52,6 +52,8 @@ pub async fn get_profile_image(client: &s3::Client, user_id: String) -> Result<B
     }
 }
 
+// please perform checks before calling this method.
+// this method will not check if user_id exists in the postgres db
 pub async fn update_profile_image(
     client: &s3::Client,
     user_id: String,
@@ -140,9 +142,10 @@ pub async fn delete_link_image(client: &s3::Client, link_id: String) -> Result<(
 #[cfg(test)]
 mod unit_tests {
     use aws_config::{meta::region::RegionProviderChain, BehaviorVersion};
-    use aws_sdk_s3 as s3;
+    use aws_sdk_s3::{self as s3, primitives::ByteStream};
+    use bytes::Bytes;
 
-    use crate::buckets::file::get_profile_image;
+    use crate::buckets::file::{get_profile_image, update_profile_image};
 
     async fn create_s3_client() -> s3::Client {
         let region_provider = RegionProviderChain::default_provider().or_else("ap-southeast-2");
@@ -177,5 +180,28 @@ mod unit_tests {
 
         let content = String::from_utf8(bytes).unwrap();
         assert_eq!(content, "this is a test profile image.");
+    }
+
+    #[tokio::test]
+    async fn it_updates_profile_image() {
+        let client = create_s3_client().await;
+        let res = update_profile_image(
+            &client,
+            "test-user".to_string(),
+            ByteStream::from(Bytes::from_static(b"updated content")),
+        )
+        .await;
+        // update is successful
+        assert!(res.is_ok());
+
+        let res = update_profile_image(
+            &client,
+            "test-user".to_string(),
+            ByteStream::from(Bytes::from_static(b"old content")),
+        )
+        .await;
+
+        // update is successful
+        assert!(res.is_ok());
     }
 }
