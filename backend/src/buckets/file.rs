@@ -5,6 +5,7 @@ use aws_sdk_s3::{
     primitives::ByteStream,
     types::{BucketLocationConstraint, CreateBucketConfiguration},
 };
+use bytes::Bytes;
 static PROFILE_IMAGE_BUCKET: &str = "profile-images-salad";
 static LINK_IMAGE_BUCKET: &str = "link-images-salad";
 
@@ -137,6 +138,14 @@ pub async fn delete_link_image(client: &s3::Client, link_id: String) -> Result<(
         Ok(res) => Ok(()),
         Err(res) => Err("failed to delete link image."),
     }
+}
+
+pub async fn collect_as_bytes(stream: ByteStream) -> Result<Vec<u8>, String> {
+    stream
+        .collect()
+        .await
+        .map(|data| data.into_bytes().to_vec())
+        .map_err(|e| "failed to stream".to_string())
 }
 
 #[cfg(test)]
