@@ -1,6 +1,7 @@
 <script lang="ts">
   import Errors from "$lib/components/Errors.svelte";
-    import DropDownLink from "$lib/components/ui/dropdown/DropDownLink.svelte";
+  import DropDownLink from "$lib/components/ui/dropdown/DropDownLink.svelte";
+  import DropDownLinkNoPreload from "$lib/components/ui/dropdown/DropDownLinkNoPreload.svelte";
   import NavLink from "$lib/components/ui/navbar/NavLink.svelte";
   import "../app.css";
   import { onMount } from "svelte";
@@ -105,7 +106,7 @@
             {#if isDropdownOpen && data.isLoggedIn}
             <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                <DropDownLink linkName = "Settings" link = "/settings"></DropDownLink>
-               <DropDownLink linkName = "Logout" link = "/logout"></DropDownLink>
+               <DropDownLinkNoPreload linkName = "Logout" link = "/logout"></DropDownLinkNoPreload>
             </div>
             {/if}
           </div>
