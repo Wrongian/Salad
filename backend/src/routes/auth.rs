@@ -4,11 +4,10 @@ use crate::db::user::{
     get_user_id_from_name,
 };
 use crate::db::DBConnection;
-use crate::models::users::User;
+use crate::models::users::{GetUser, InsertUser};
 use crate::TideState;
 use bcrypt::hash;
 use bcrypt::verify;
-use diesel::pg::PgConnection;
 use fancy_regex::Regex;
 use once_cell::sync::Lazy;
 use std::borrow::Borrow;
@@ -253,7 +252,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
     }
 
     // create new user instance
-    let new_user = User {
+    let new_user = InsertUser {
         username: username.clone(),
         password: hashed_password,
         email: email.clone(),
@@ -296,8 +295,8 @@ pub async fn is_logged_in(mut req: Request<Arc<TideState>>) -> tide::Result {
     // for now use username later used is_logged_in
     let res = session.get::<String>("username");
     if res.is_some() {
-        return build_response(true, "".to_string(), 200)
+        return build_response(true, "".to_string(), 200);
     }
     // user not logged in
-    return build_response(false, "".to_string(), 400)
+    return build_response(false, "".to_string(), 400);
 }

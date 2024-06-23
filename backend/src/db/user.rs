@@ -1,17 +1,17 @@
-use crate::models::users::{User, UserProfileView};
+use crate::models::users::{GetUser, InsertUser, UserProfileView};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{RunQueryDsl, SelectableHelper};
 
 // create a user with a user instance
-pub async fn create(conn: &mut PgConnection, user: &User) {
+pub async fn create(conn: &mut PgConnection, user: &InsertUser) -> GetUser {
     use crate::schema::users;
     diesel::insert_into(users::table)
         .values(user)
-        .returning(User::as_returning())
+        .returning(GetUser::as_returning())
         .get_result(conn)
-        .expect("error");
+        .expect("error")
 }
 
 // get a user id by their name
