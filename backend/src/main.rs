@@ -10,6 +10,7 @@ use buckets::file::setup_buckets;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{is_logged_in, login, logout, register};
+use routes::links_controller::{update_link_bio, update_link_href, update_link_title};
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
@@ -115,6 +116,9 @@ async fn main() -> tide::Result<()> {
     app.at("/logged-in").get(is_logged_in);
     // profile
     app.at("/profiles/:username").get(get_profile);
+    app.at("/links/title/:link_id").get(update_link_title);
+    app.at("/links/bio/:link_id").get(update_link_bio);
+    app.at("/links/href/:link_id").get(update_link_href);
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 

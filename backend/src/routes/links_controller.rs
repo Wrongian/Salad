@@ -9,7 +9,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, sync::Arc};
 use tide::Request;
-use validator::{Validate, ValidationError, ValidationErrors};
+use validator::{Validate, ValidationErrors};
 
 use super::{auth::build_response, profile_controller::build_error};
 
@@ -23,6 +23,16 @@ struct CreateLinkParams {
 #[derive(Debug, Deserialize, Validate, Serialize)]
 struct UpdateTitlePayload {
     title: String,
+}
+
+#[derive(Debug, Deserialize, Validate, Serialize)]
+struct UpdateBioPayload {
+    bio: String,
+}
+
+#[derive(Debug, Deserialize, Validate, Serialize)]
+struct UpdateHrefPayload {
+    href: String,
 }
 
 async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
@@ -72,6 +82,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     build_response(true, "".to_string(), 200)
 }
 
+// TODO: combine update link title, bio & href into the same endpoint
 pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract link id
     let link_id = match req.param("link_id").and_then(|id| {
@@ -98,10 +109,12 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
     // check link with link_id exists
-    let link = match get_link_by_id(&mut conn, link_id).await {
-        Ok(res) => res,
-        Err(message) => return build_error("Link does not exist.".to_string(), 400),
+    match get_link_by_id(&mut conn, link_id).await {
+        Ok(res) => (),
+        Err(_) => return build_error("Link does not exist.".to_string(), 400),
     };
+
+    // update the link
     let update_link = UpdateLink {
         user_id: None,
         next_id: None,
@@ -109,6 +122,103 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
         description: None,
         title: Some(update_title.title),
         href: None,
+    };
+
+    let result = match update_link_by_id(&mut conn, &update_link, link_id).await {
+        Ok(result) => result,
+        Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
+    };
+
+    build_response(result, "".to_string(), 200)
+}
+
+pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract link id
+    let link_id = match req.param("link_id").and_then(|id| {
+        id.parse::<i32>()
+            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
+    }) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
+    // extract title payload body
+    let update_bio: UpdateBioPayload = match req.body_json().await {
+        Ok(title_obj) => title_obj,
+        Err(message) => return build_error("Bad request body.".to_string(), 400),
+    };
+
+    // validate title
+    match update_bio.validate() {
+        Err(e) => return handle_validation_errors(e).await,
+        _ => (),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+    // check link with link_id exists
+    match get_link_by_id(&mut conn, link_id).await {
+        Ok(res) => (),
+        Err(_) => return build_error("Link does not exist.".to_string(), 400),
+    };
+
+    // update the link
+    let update_bio = UpdateLink {
+        user_id: None,
+        next_id: None,
+        prev_id: None,
+        title: None,
+        description: Some(update_bio.bio),
+        href: None,
+    };
+
+    let result = match update_link_by_id(&mut conn, &update_bio, link_id).await {
+        Ok(result) => result,
+        Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
+    };
+
+    build_response(result, "".to_string(), 200)
+}
+
+pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract link id
+    let link_id = match req.param("link_id").and_then(|id| {
+        id.parse::<i32>()
+            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
+    }) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
+    // extract title payload body
+    let updated_href: UpdateHrefPayload = match req.body_json().await {
+        Ok(title_obj) => title_obj,
+        Err(message) => return build_error("Bad request body.".to_string(), 400),
+    };
+
+    // validate title
+    match updated_href.validate() {
+        Err(e) => return handle_validation_errors(e).await,
+        _ => (),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+    // check link with link_id exists
+    match get_link_by_id(&mut conn, link_id).await {
+        Ok(res) => (),
+        Err(_) => return build_error("Link does not exist.".to_string(), 400),
+    };
+    // update the link
+    let update_link = UpdateLink {
+        user_id: None,
+        next_id: None,
+        prev_id: None,
+        description: None,
+        title: None,
+        href: Some(updated_href.href),
     };
 
     let result = match update_link_by_id(&mut conn, &update_link, link_id).await {
