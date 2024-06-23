@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS links (
     next_id INT,
     prev_id INT,
     description VARCHAR,
+    title VARCHAR,
     href VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (next_id) REFERENCES links(id),
