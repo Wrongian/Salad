@@ -1,12 +1,15 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    links (link_id) {
-        link_id -> Int4,
+    links (id) {
+        id -> Int4,
         user_id -> Int4,
-        description -> Nullable<Text>,
+        next_id -> Nullable<Int4>,
+        prev_id -> Nullable<Int4>,
+        description -> Nullable<Varchar>,
+        title -> Nullable<Varchar>,
         #[max_length = 255]
-        href -> Nullable<Varchar>,
+        href -> Varchar,
     }
 }
 
@@ -17,7 +20,7 @@ diesel::table! {
         username -> Varchar,
         password -> Varchar,
         email -> Varchar,
-        bio -> Nullable<Text>,
+        bio -> Nullable<Varchar>,
         is_private -> Bool,
         salt -> Varchar,
         display_name -> Varchar,
