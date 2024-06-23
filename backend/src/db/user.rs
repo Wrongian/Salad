@@ -1,8 +1,8 @@
 use crate::models::users::{User, UserProfileView};
+use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{RunQueryDsl, SelectableHelper};
-use diesel::pg::PgConnection;
 
 // create a user with a user instance
 pub async fn create(conn: &mut PgConnection, user: &User) {
@@ -80,16 +80,17 @@ pub async fn get_user_profile_by_username(
 ) -> Result<UserProfileView, String> {
     use crate::schema::users::dsl::*;
 
-    let retrieved_obj: Result<(String, Option<String>, String), Error> = users
+    let retrieved_obj: Result<(i32, String, Option<String>, String), Error> = users
         .filter(username.eq(&name))
-        .select((username, bio, display_name))
-        .first::<(String, Option<String>, String)>(conn);
+        .select((id, username, bio, display_name))
+        .first::<(i32, String, Option<String>, String)>(conn);
 
     match retrieved_obj {
         Ok(obj) => Ok(UserProfileView {
-            username: obj.0,
-            bio: obj.1,
-            display_name: obj.2,
+            id: obj.0,
+            username: obj.1,
+            bio: obj.2,
+            display_name: obj.3,
             picture: String::from("this_picture_is_a_placeholder"), // empty placeholder for now
         }),
         Err(err) => match err {

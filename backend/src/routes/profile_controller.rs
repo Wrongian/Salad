@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use crate::buckets::file::collect_as_bytes;
+use crate::buckets::file::get_profile_image;
 use crate::db::start_connection;
 use crate::db::user::get_user_profile_by_username;
+use crate::TideState;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
-use crate::TideState;
 
 // Profile parameters struct
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -66,6 +68,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     println!("session username: {}", &session_username);
     log::info!("Obtained username in get_profile: {}", &username);
 
+    let state = req.state();
     let mut conn = start_connection().await;
 
     // get profile view from database
@@ -89,11 +92,39 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
             } else {
                 // either is_owner or not private account, either ways all fields are accessible.
                 // So return all fields.
+
+                // query for profile picture and add it to response body
+                // handling of cases
+                let byte_stream = get_profile_image(&state.s3_client, profile.id.to_string()).await;
+                if byte_stream.is_err() {
+                    log::error!("{}", "An error occurred in retrieving profile image.");
+                    return build_error(
+                        "An error occurred in retrieving profile image.".to_string(),
+                        400,
+                    );
+                }
+                let maybe_picture = collect_as_bytes(byte_stream.unwrap()).await;
+
+                if maybe_picture.is_err() {
+                    return build_error(
+                        "An error occurred in streaming profile image.".to_string(),
+                        400,
+                    );
+                }
+
+                let pic_string = String::from_utf8(maybe_picture.unwrap());
+                if pic_string.is_err() {
+                    return build_error(
+                        "An unexpected error occurred in streaming profile images".to_string(),
+                        500,
+                    );
+                }
+
                 GetProfileResponseBody {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
-                    picture: String::from("picture placeholder"),
                     is_owner,
+                    picture: pic_string.unwrap(),
                     followers: Some(0),
                     following: Some(0),
                 }
@@ -108,6 +139,9 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     build_response(res_body, 200)
 }
 
+pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
+    Ok(Response::builder(200).build())
+}
 // delete profile response builder
 pub async fn delete_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // TODO: implementation
