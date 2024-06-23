@@ -290,3 +290,14 @@ pub async fn logout(mut req: Request<Arc<TideState>>) -> tide::Result {
     session.destroy();
     Ok(Redirect::new("/auth/login").into())
 }
+
+pub async fn is_logged_in(mut req: Request<Arc<TideState>>) -> tide::Result {
+    let session = req.session_mut();
+    // for now use username later used is_logged_in
+    let res = session.get::<String>("username");
+    if res.is_some() {
+        return build_response(true, "".to_string(), 200)
+    }
+    // user not logged in
+    return build_response(false, "".to_string(), 400)
+}

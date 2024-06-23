@@ -9,7 +9,7 @@ use aws_config::BehaviorVersion;
 use buckets::file::setup_buckets;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use routes::auth::{login, logout, register};
+use routes::auth::{login, logout, register, is_logged_in};
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
@@ -112,6 +112,7 @@ async fn main() -> tide::Result<()> {
     app.at("/login").post(login);
     app.at("/register").post(register);
     app.at("/logout").post(logout);
+    app.at("/logged-in").get(is_logged_in);
     // profile
     app.at("/profiles/:username").get(get_profile);
     // attach to IP and port

@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::sync::Arc;
 
 use crate::buckets::file::collect_as_bytes;
@@ -63,6 +64,11 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
         // last match clause should not happen.
         Err(e) => return build_error(e.to_string(), 400),
     };
+    // let ses = req.session().clone().validate();
+    // println!("{}",ses.is_some());
+    // println!("{}", req.session().id());
+    // println!("{}", req.session().is_destroyed());
+    // println!("{}", req.session().is_expired());
     // get relevant username session field
     let session_username: String = req.session().get("username").unwrap_or("".to_owned());
     println!("session username: {}", &session_username);
