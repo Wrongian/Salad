@@ -44,7 +44,7 @@ fn build_response(body: impl serde::Serialize, status: u16) -> tide::Result {
 }
 
 // build an error response
-fn build_error(message: String, status: u16) -> tide::Result {
+pub fn build_error(message: String, status: u16) -> tide::Result {
     let response = Response::builder(status).body(message).build();
     Ok(response)
 }

@@ -86,7 +86,7 @@ fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &
 }
 
 // build a tide result with standard response body
-fn build_response(result: bool, err: String, status: u16) -> tide::Result {
+pub fn build_response(result: bool, err: String, status: u16) -> tide::Result {
     // build response
     let res_body = StandardBody {
         result: result,
