@@ -223,3 +223,12 @@ export const getIsLoggedIn = async (fetch: fetch) : Promise<boolean> => {
   )
   return isLoggedIn;
 }
+
+// logout route, doesnt do anything if not logged in 
+// cant really get an error logging out since its a get request
+export const logout = async (fetch: fetch) : Promise<void> => {
+  await fetch("/api/logout").catch((err) => {
+    console.log("Error logging out") 
+    console.log(err) 
+  }) 
+}
