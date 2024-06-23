@@ -1,6 +1,6 @@
 import type { TAuthResult, TResult, TUpdateProfileQuery } from "./query.d.ts";
 import { blackSwanError } from "../stores/stores.js";
-import { goto, invalidateAll } from "$app/navigation";
+import { goto, invalidateAll, replaceState } from "$app/navigation";
 import {
   TLinkBodyValidator,
   TProfileBodyValidator,
@@ -201,3 +201,25 @@ export const getLinks = async (username: string): Promise<TLinkBody> => {
     return [] as never;
   }
 };
+
+export const getIsLoggedIn = async (fetch: fetch) : Promise<boolean> => {
+  let isLoggedIn: boolean = false;
+  const response = await fetch("/api/logged-in",{
+    method: "GET",
+  }).then((success: any) => {
+    // console.log(success);
+    if (success.status === 200) {
+      isLoggedIn = true;
+    }
+    else {
+      isLoggedIn = false;
+    }
+  }).catch((err: any) => {
+    // something something error
+    // placeholder
+    console.log("error checking logged in");
+    isLoggedIn = false;
+  }
+  )
+  return isLoggedIn;
+}
