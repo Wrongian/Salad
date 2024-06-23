@@ -1,8 +1,9 @@
+pub mod link;
 pub mod user;
 use diesel::prelude::*;
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 use dotenvy::dotenv;
 use std::env;
-use diesel::r2d2::{ConnectionManager, PooledConnection};
 
 pub type DBConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
