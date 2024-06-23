@@ -8,8 +8,8 @@ import { logout } from "$lib/scripts/queries";
  * @returns an object to be pointed to by 'data' variable in +page.svelte
  */
 export const load: PageLoad = async ({fetch}) => {
-
-
+    await logout(fetch);
+    
     return {
 
     };
