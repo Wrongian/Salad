@@ -11,11 +11,15 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 CREATE TABLE IF NOT EXISTS links (
-    link_id SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
+    next_id INT,
+    prev_id INT,
     description VARCHAR,
     href VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (next_id) REFERENCES links(id),
+    FOREIGN KEY (prev_id) REFERENCES links(id)
 );
 
 
