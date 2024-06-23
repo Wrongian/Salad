@@ -1,6 +1,6 @@
 <script lang="ts">
   import { twMerge } from "tailwind-merge";
-  import { register } from "../../scripts/queries";
+  import { register } from "$lib/scripts/queries";
   import {
     MAX_PASSWORD_LENGTH,
     MAX_USERNAME_LENGTH,

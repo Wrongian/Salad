@@ -1,5 +1,5 @@
 import type { TAuthResult, TResult, TUpdateProfileQuery } from "./query.d.ts";
-import { blackSwanError } from "../stores/stores.js";
+import { blackSwanError } from "../../stores/stores.js";
 import { goto, invalidateAll, replaceState } from "$app/navigation";
 import {
   TLinkBodyValidator,

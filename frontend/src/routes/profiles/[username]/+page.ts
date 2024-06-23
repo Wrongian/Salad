@@ -1,4 +1,4 @@
-import { getProfile } from "../../../scripts/queries";
+import { getProfile } from "$lib/scripts/queries";
 import type { PageLoad } from "./$types";
 /**
  * validates and prepares the corresponding page data

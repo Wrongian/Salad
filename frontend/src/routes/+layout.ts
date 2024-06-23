@@ -1,4 +1,4 @@
-import { getIsLoggedIn } from "../scripts/queries"
+import { getIsLoggedIn } from "$lib/scripts/queries";
 
 // disable server-side rendering
 // export const ssr = false;
