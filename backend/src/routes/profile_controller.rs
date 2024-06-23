@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use crate::buckets::file::collect_as_bytes;
-use crate::buckets::file::get_profile_image;
 use crate::db::start_connection;
 use crate::db::user::get_user_profile_by_username;
 use crate::TideState;
@@ -95,36 +93,37 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
 
                 // query for profile picture and add it to response body
                 // handling of cases
-                let byte_stream = get_profile_image(&state.s3_client, profile.id.to_string()).await;
-                if byte_stream.is_err() {
-                    log::error!("{}", "An error occurred in retrieving profile image.");
-                    return build_error(
-                        "An error occurred in retrieving profile image.".to_string(),
-                        400,
-                    );
-                }
-                let maybe_picture = collect_as_bytes(byte_stream.unwrap()).await;
+                // let byte_stream = get_profile_image(&state.s3_client, profile.id.to_string()).await;
+                // if byte_stream.is_err() {
+                //     log::error!("{}", "An error occurred in retrieving profile image.");
+                //     return build_error(
+                //         "An error occurred in retrieving profile image.".to_string(),
+                //         400,
+                //     );
+                // }
+                // let maybe_picture = collect_as_bytes(byte_stream.unwrap()).await;
 
-                if maybe_picture.is_err() {
-                    return build_error(
-                        "An error occurred in streaming profile image.".to_string(),
-                        400,
-                    );
-                }
+                // if maybe_picture.is_err() {
+                //     return build_error(
+                //         "An error occurred in streaming profile image.".to_string(),
+                //         400,
+                //     );
+                // }
 
-                let pic_string = String::from_utf8(maybe_picture.unwrap());
-                if pic_string.is_err() {
-                    return build_error(
-                        "An unexpected error occurred in streaming profile images".to_string(),
-                        500,
-                    );
-                }
+                // let pic_string = String::from_utf8(maybe_picture.unwrap());
+                // if pic_string.is_err() {
+                //     return build_error(
+                //         "An unexpected error occurred in streaming profile images".to_string(),
+                //         500,
+                //     );
+                // }
 
                 GetProfileResponseBody {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
                     is_owner,
-                    picture: pic_string.unwrap(),
+                    // picture: pic_string.unwrap(),
+                    picture: String::from("placeholder"),
                     followers: Some(0),
                     following: Some(0),
                 }

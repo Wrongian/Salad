@@ -9,7 +9,7 @@ use aws_config::BehaviorVersion;
 use buckets::file::setup_buckets;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use routes::auth::{login, logout, register};
+use routes::auth::{is_logged_in, login, logout, register};
 use routes::profile_controller::get_profile;
 use std::env;
 pub mod db;
@@ -33,7 +33,7 @@ pub struct TideState {
 // todo replace unwraps with expect
 
 // main function
-#[::tokio::main]
+#[tokio::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
