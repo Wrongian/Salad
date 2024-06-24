@@ -1,5 +1,6 @@
 use diesel::{
-    query_dsl::methods::FilterDsl, ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper,
+    query_dsl::methods::FilterDsl, BoolExpressionMethods, ExpressionMethods, PgConnection,
+    RunQueryDsl, SelectableHelper,
 };
 
 use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
@@ -19,6 +20,19 @@ pub async fn get_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<Get
     use crate::schema::links::dsl::*;
     let result: Result<GetLink, diesel::result::Error> =
         links.filter(id.eq(link_id)).first::<GetLink>(conn);
+    result.map_err(|_| "Could not find the link.".to_string())
+}
+
+// get user link by id
+pub async fn get_user_link_by_id(
+    conn: &mut PgConnection,
+    link_id: i32,
+    users_id: i32,
+) -> Result<GetLink, String> {
+    use crate::schema::links::dsl::*;
+    let result: Result<GetLink, diesel::result::Error> = links
+        .filter(id.eq(link_id).and(user_id.eq(users_id)))
+        .first::<GetLink>(conn);
     result.map_err(|_| "Could not find the link.".to_string())
 }
 
@@ -66,6 +80,8 @@ mod unit_test {
         schema::users,
     };
     use diesel::prelude::*;
+    // NOTE: execute 'diesel migration run' before unit tests to ensure the tables are loaded into psql
+    // before running the unit tests.
 
     pub async fn mock_connection() -> PgConnection {
         dotenv().expect("No .env file found");
@@ -143,6 +159,23 @@ mod unit_test {
         let user = create_mock_user().await;
         let mock_link = create_mock_link(user.id).await;
         let link = db::link::get_link_by_id(&mut conn, mock_link.id).await;
+        assert!(link.is_ok());
+        if link.is_err() {
+            println!("Error in getting link: {:?}", link.err());
+        }
+
+        // deletes properly
+        assert!(db::link::delete_link_by_id(&mut conn, mock_link.id)
+            .await
+            .unwrap());
+        delete_mock_user(user.id).await;
+    }
+    #[tokio::test]
+    pub async fn it_gets_user_link_by_id() {
+        let mut conn = mock_connection().await;
+        let user = create_mock_user().await;
+        let mock_link = create_mock_link(user.id).await;
+        let link = db::link::get_user_link_by_id(&mut conn, mock_link.id, user.id).await;
         assert!(link.is_ok());
         if link.is_err() {
             println!("Error in getting link: {:?}", link.err());

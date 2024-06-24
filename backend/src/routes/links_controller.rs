@@ -1,6 +1,6 @@
 use crate::{
     db::{
-        link::{get_link_by_id, update_link_by_id},
+        link::{get_link_by_id, get_user_link_by_id, update_link_by_id},
         DBConnection,
     },
     models::links::UpdateLink,
@@ -84,6 +84,16 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
 
 // TODO: combine update link title, bio & href into the same endpoint
 pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id from session
+    let user_id = match req
+        .session()
+        .get::<i32>("user_id")
+        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
+    {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
     // extract link id
     let link_id = match req.param("link_id").and_then(|id| {
         id.parse::<i32>()
@@ -108,8 +118,9 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
-    // check link with link_id exists
-    match get_link_by_id(&mut conn, link_id).await {
+
+    // check user link with link_id exists
+    match get_user_link_by_id(&mut conn, link_id, user_id).await {
         Ok(res) => (),
         Err(_) => return build_error("Link does not exist.".to_string(), 400),
     };
@@ -133,6 +144,16 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
 }
 
 pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id from session
+    let user_id = match req
+        .session()
+        .get::<i32>("user_id")
+        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
+    {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
     // extract link id
     let link_id = match req.param("link_id").and_then(|id| {
         id.parse::<i32>()
@@ -157,8 +178,8 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
-    // check link with link_id exists
-    match get_link_by_id(&mut conn, link_id).await {
+    // check user link with link_id exists
+    match get_user_link_by_id(&mut conn, link_id, user_id).await {
         Ok(res) => (),
         Err(_) => return build_error("Link does not exist.".to_string(), 400),
     };
@@ -182,6 +203,16 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
 }
 
 pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id from session
+    let user_id = match req
+        .session()
+        .get::<i32>("user_id")
+        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
+    {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
     // extract link id
     let link_id = match req.param("link_id").and_then(|id| {
         id.parse::<i32>()
@@ -206,8 +237,8 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
-    // check link with link_id exists
-    match get_link_by_id(&mut conn, link_id).await {
+    // check user link with link_id exists
+    match get_user_link_by_id(&mut conn, link_id, user_id).await {
         Ok(res) => (),
         Err(_) => return build_error("Link does not exist.".to_string(), 400),
     };
