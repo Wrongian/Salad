@@ -1,7 +1,7 @@
-use crate::models::users::{GetUser, InsertUser, UserProfileView};
+use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
 use diesel::prelude::*;
 use diesel::result::Error;
-use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
+use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
 
 // create a user with a user instance
 pub async fn create(conn: &mut PgConnection, user: &InsertUser) -> GetUser {
@@ -105,9 +105,28 @@ pub async fn get_user_profile_by_username(
 
 pub async fn get_user_by_id(conn: &mut PgConnection, user_id: i32) -> Result<GetUser, String> {
     use crate::schema::users::dsl::*;
-    let result: Result<GetUser, diesel::result::Error> = users
+    let result: Result<GetUser, Error> = users
         .filter(id.eq(user_id))
         .select(GetUser::as_select())
         .first::<GetUser>(conn);
     result.map_err(|_| "could not find user with given id.".to_string())
+}
+
+pub async fn update_user_by_id(
+    conn: &mut PgConnection,
+    user_id: i32,
+    update_user: &UpdateUser,
+) -> Result<bool, String> {
+    use crate::schema::users::dsl::*;
+    use diesel::query_dsl::methods::FilterDsl;
+    let update_user_id: Result<i32, Error> =
+        diesel::update(FilterDsl::filter(users, id.eq(user_id)))
+            .set(update_user)
+            .returning(id)
+            .get_result::<i32>(conn);
+
+    update_user_id.map(|v| v == user_id).map_err(|e| match e {
+        Error::NotFound => String::from("User does not exist."),
+        _ => String::from("Failed to update profile."),
+    })
 }
