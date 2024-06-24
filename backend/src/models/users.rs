@@ -29,6 +29,18 @@ pub struct InsertUser {
     pub display_name: String,
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = crate::schema::users)]
+pub struct UpdateUser {
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub salt: Option<String>,
+    pub email: Option<String>,
+    pub bio: Option<String>,
+    pub is_private: Option<bool>,
+    pub display_name: Option<String>,
+}
+
 pub struct UserProfileView {
     pub id: i32,
     pub username: String,
