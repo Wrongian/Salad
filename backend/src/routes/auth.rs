@@ -1,9 +1,9 @@
-use crate::db::start_connection;
 use crate::db::user::{
     check_user_exists, check_username_present, create, get_password_salt_from_id,
     get_user_id_from_name,
 };
 use crate::db::DBConnection;
+use crate::helpers::response::build_standard_response;
 use crate::models::users::{GetUser, InsertUser};
 use crate::TideState;
 use bcrypt::hash;
@@ -13,9 +13,8 @@ use once_cell::sync::Lazy;
 use std::borrow::Borrow;
 use std::sync::Arc;
 use tide::Request;
-use tide::Response;
 use tide::{prelude::*, Redirect};
-use validator::{Validate, ValidateArgs, ValidationError};
+use validator::{Validate, ValidationError};
 
 // password cost
 const COST: u32 = 10;
@@ -62,13 +61,6 @@ pub struct LoginParams {
     pub password: String,
 }
 
-// standard response body without error
-#[derive(Debug, Serialize)]
-pub struct StandardBody {
-    pub result: bool,
-    pub err: String,
-}
-
 fn validate_password(value: &str) -> Result<(), ValidationError> {
     if (&*PASSWORD_REGEX).is_match(value).unwrap() {
         return Ok(());
@@ -85,19 +77,6 @@ fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &
         .expect("Error serializing username");
 }
 
-// build a tide result with standard response body
-pub fn build_response(result: bool, err: String, status: u16) -> tide::Result {
-    // build response
-    let res_body = StandardBody {
-        result: result,
-        err: err,
-    };
-    let response = Response::builder(status)
-        .body(tide::Body::from_json(&res_body)?)
-        .build();
-    Ok(response)
-}
-
 // handles the requests coming into the login route and gives back an appropriate response
 pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
     // process the body
@@ -107,7 +86,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
             login_params = params;
         }
         Err(e) => {
-            return build_response(false, "Bad Request Body".to_string(), 400);
+            return build_standard_response(false, "Bad Request Body".to_string(), 400);
         }
     }
 
@@ -135,7 +114,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
                 }
             }
 
-            return build_response(false, error_string, 400);
+            return build_standard_response(false, error_string, 400);
         }
         _ => (),
     }
@@ -146,7 +125,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
 
     // check if the username is present in the database
     if !(check_username_present(&mut conn, &username).await) {
-        return build_response(false, "User does not exist".to_string(), 400);
+        return build_standard_response(false, "User does not exist".to_string(), 400);
     }
 
     // get the user ID
@@ -177,17 +156,17 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
                 // insert user_id into the session
                 init_session(req.session_mut(), user_id, &username);
 
-                return build_response(true, "".to_string(), 200);
+                return build_standard_response(true, "".to_string(), 200);
             } else {
                 // password is incorrect
-                return build_response(false, "Incorrect Password".to_string(), 400);
+                return build_standard_response(false, "Incorrect Password".to_string(), 400);
             }
         }
         Err(e) => {
             // log the error
             println!("Error has occurred: {}", e.to_string());
             // Returns a response that does not expose internal implementation
-            return build_response(false, "".to_string(), 500);
+            return build_standard_response(false, "".to_string(), 500);
         }
     }
 }
@@ -202,7 +181,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
         }
         Err(e) => {
             log::error!("Error converting request body to json: {}", e);
-            return build_response(false, "Bad Request Body".to_string(), 400);
+            return build_standard_response(false, "Bad Request Body".to_string(), 400);
         }
     }
 
@@ -230,7 +209,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
                     }
                 }
             }
-            return build_response(false, error_string, 400);
+            return build_standard_response(false, error_string, 400);
         }
 
         _ => (),
@@ -247,7 +226,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
             // log the error
             println!("Error has occurred: {}", e.to_string());
             // Returns a response that does not expose internal implementation
-            return build_response(false, "".to_string(), 500);
+            return build_standard_response(false, "".to_string(), 500);
         }
     }
 
@@ -268,7 +247,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
 
     // check if the user already exists
     if check_user_exists(&mut conn, &username, &email).await {
-        return build_response(true, "Username or Email already taken".to_string(), 400);
+        return build_standard_response(true, "Username or Email already taken".to_string(), 400);
     }
 
     // create user
@@ -280,7 +259,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
     init_session(req.session_mut(), user_id, &username);
 
     // all done
-    return build_response(true, "".to_string(), 200);
+    return build_standard_response(true, "".to_string(), 200);
 }
 
 // get route that logs the user out from the website
@@ -295,8 +274,8 @@ pub async fn is_logged_in(mut req: Request<Arc<TideState>>) -> tide::Result {
     // for now use username later used is_logged_in
     let res = session.get::<String>("username");
     if res.is_some() {
-        return build_response(true, "".to_string(), 200);
+        return build_standard_response(true, "".to_string(), 200);
     }
     // user not logged in
-    return build_response(false, "".to_string(), 400);
+    return build_standard_response(false, "".to_string(), 400);
 }

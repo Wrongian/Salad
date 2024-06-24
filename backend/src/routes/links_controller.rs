@@ -3,7 +3,10 @@ use crate::{
         link::{get_link_by_id, get_user_link_by_id, update_link_by_id},
         DBConnection,
     },
-    helpers::auth::get_session_user_id,
+    helpers::{
+        auth::get_session_user_id,
+        response::{build_error, build_standard_response},
+    },
     models::links::UpdateLink,
     TideState,
 };
@@ -11,8 +14,6 @@ use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, sync::Arc};
 use tide::Request;
 use validator::{Validate, ValidationErrors};
-
-use super::{auth::build_response, profile_controller::build_error};
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 struct CreateLinkParams {
@@ -53,9 +54,8 @@ async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
         }
     }
 
-    return build_response(false, error_string, 400);
+    return build_standard_response(false, error_string, 400);
 }
-
 // POST end point for adding a link
 pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get payload
@@ -65,7 +65,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
             link_params = params;
         }
         Err(e) => {
-            return build_response(false, "Bad Request Body".to_string(), 400);
+            return build_standard_response(false, "Bad Request Body".to_string(), 400);
         }
     }
 
@@ -80,7 +80,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
     // return 200; otherwise 400
-    build_response(true, "".to_string(), 200)
+    build_standard_response(true, "".to_string(), 200)
 }
 
 // TODO: combine update link title, bio & href into the same endpoint
@@ -137,7 +137,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
         Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
     };
 
-    build_response(result, "".to_string(), 200)
+    build_standard_response(result, "".to_string(), 200)
 }
 
 pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
@@ -192,7 +192,7 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
     };
 
-    build_response(result, "".to_string(), 200)
+    build_standard_response(result, "".to_string(), 200)
 }
 
 pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result {
@@ -246,5 +246,9 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
         Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
     };
 
-    build_response(result, "".to_string(), 200)
+    build_standard_response(result, "".to_string(), 200)
 }
+
+// pub async fn update_link_picture(mut req: Request<Arc<TideState>) -> tide::Result {
+
+// }

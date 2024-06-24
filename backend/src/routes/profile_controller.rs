@@ -1,17 +1,13 @@
 use std::sync::Arc;
 
-use crate::db::start_connection;
-use crate::db::user::get_user_by_id;
-use crate::db::user::get_user_profile_by_username;
-use crate::db::user::update_user_by_id;
+use crate::db::user::{get_user_profile_by_username, update_user_by_id};
 use crate::helpers::auth::get_session_user_id;
+use crate::helpers::response::{build_error, build_response, build_standard_response};
 use crate::models::users::UpdateUser;
 use crate::TideState;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
-
-use super::auth;
 
 // Profile parameters struct
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -35,25 +31,6 @@ struct GetProfileResponseBody {
 struct UpdateDisplayProfilePayload {
     display_name: Option<String>,
     bio: Option<String>,
-}
-
-// build the standard response
-fn build_response(body: impl serde::Serialize, status: u16) -> tide::Result {
-    // build response
-    let response = Response::builder(status)
-        .body(tide::Body::from_json(&body)?)
-        .build();
-    Ok(response)
-}
-
-// build an error response
-pub fn build_error(message: String, status: u16) -> tide::Result {
-    let response = Response::builder(status).body(message).build();
-    Ok(response)
-}
-
-pub fn build_success() -> tide::Result {
-    auth::build_response(true, "".to_string(), 200)
 }
 
 // update profile response body
@@ -84,7 +61,7 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     let mut conn = state.tide_pool.get().unwrap();
     // call orm
     return match update_user_by_id(&mut conn, user_id, &update_user).await {
-        Ok(result) => auth::build_response(result, "".to_string(), 200),
+        Ok(result) => build_standard_response(result, "".to_string(), 200),
         Err(err) => build_error(err, 400),
     };
 }
@@ -107,7 +84,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     log::info!("Obtained username in get_profile: {}", &username);
 
     let state = req.state();
-    let mut conn = start_connection().await;
+    let mut conn = state.tide_pool.get().unwrap();
 
     // get profile view from database
     let profile_query_result = get_user_profile_by_username(&mut conn, &username).await;
