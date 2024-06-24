@@ -5,7 +5,7 @@ use crate::{
     },
     helpers::{
         auth::get_session_user_id,
-        response::{build_error, build_standard_response},
+        response::{build_error, build_response, build_standard_response},
     },
     models::links::UpdateLink,
     TideState,
@@ -34,6 +34,11 @@ struct UpdateBioPayload {
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
 struct UpdateHrefPayload {
+    href: String,
+}
+
+#[derive(Debug, Serialize)]
+struct UploadLinkResponseBody {
     href: String,
 }
 
@@ -249,6 +254,34 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     build_standard_response(result, "".to_string(), 200)
 }
 
-// pub async fn update_link_picture(mut req: Request<Arc<TideState>) -> tide::Result {
+pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // get user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
 
-// }
+    // get user link from link id from params
+    let link_id = match req.param("link_id").and_then(|id| {
+        id.parse::<i32>()
+            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
+    }) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+    // remove previous file; if any
+
+    // get uploaded file
+
+    // upload file to s3
+
+    // create cdn href
+
+    // update src href in db
+    build_response(
+        UploadLinkResponseBody {
+            href: "".to_string(),
+        },
+        200,
+    )
+}
