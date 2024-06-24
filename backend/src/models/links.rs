@@ -11,6 +11,7 @@ pub struct GetLink {
     pub description: Option<String>,
     pub title: Option<String>,
     pub href: String,
+    pub img_src: Option<String>,
 }
 
 #[derive(Queryable, Selectable, Insertable)]
@@ -34,4 +35,10 @@ pub struct UpdateLink {
     pub description: Option<String>,
     pub title: Option<String>,
     pub href: Option<String>,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = crate::schema::links)]
+pub struct UpdateLinkImageSource {
+    pub img_src: String,
 }

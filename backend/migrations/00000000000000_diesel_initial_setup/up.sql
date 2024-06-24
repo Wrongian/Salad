@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     bio VARCHAR,
     is_private BOOLEAN NOT NULL,
     salt VARCHAR NOT NULL,
-    display_name VARCHAR NOT NULL
+    display_name VARCHAR NOT NULL,
+    img_src VARCHAR
 );
 
 
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS links (
     description VARCHAR,
     title VARCHAR,
     href VARCHAR(255) NOT NULL,
+    img_src VARCHAR,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (next_id) REFERENCES links(id),
     FOREIGN KEY (prev_id) REFERENCES links(id)

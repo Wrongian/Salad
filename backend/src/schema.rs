@@ -10,6 +10,7 @@ diesel::table! {
         title -> Nullable<Varchar>,
         #[max_length = 255]
         href -> Varchar,
+        img_src -> Nullable<Varchar>,
     }
 }
 
@@ -24,6 +25,7 @@ diesel::table! {
         is_private -> Bool,
         salt -> Varchar,
         display_name -> Varchar,
+        img_src -> Nullable<Varchar>,
     }
 }
 
