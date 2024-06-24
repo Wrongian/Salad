@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { resetPassword } from "../../scripts/queries";
+  import { resetPassword } from "$lib/scripts/queries";
   let email: string = "";
 </script>
 

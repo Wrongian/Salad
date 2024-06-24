@@ -1,6 +1,7 @@
 <script lang="ts">
   import Errors from "$lib/components/Errors.svelte";
-    import DropDownLink from "$lib/components/ui/dropdown/DropDownLink.svelte";
+  import DropDownLink from "$lib/components/ui/dropdown/DropDownLink.svelte";
+  import DropDownLinkNoPreload from "$lib/components/ui/dropdown/DropDownLinkNoPreload.svelte";
   import NavLink from "$lib/components/ui/navbar/NavLink.svelte";
   import "../app.css";
   import { onMount } from "svelte";
@@ -8,13 +9,19 @@
   import type { PageData } from "./$types";
   export let data: PageData;
 
+
+  
+
   let doneLoad = false;
   onMount(async () => {
     // TODO: logic to render all the necessary components
-
-    doneLoad = true;
+    // previous url
+        doneLoad = true;
   });
-
+  // let next = "/";
+  // afterNavigate(({from}) => {
+  //   next = from?.url.pathname || next
+  // })
   // dropdown menu
   // default
   let isDropdownOpen : boolean = false;
@@ -24,8 +31,11 @@
   }
 
   const handleDropdownFocusLoss = ({ relatedTarget, currentTarget } : any) => {
-    // use "focusout" event to ensure that we can close the dropdown when clicking outside or when we leave the dropdown with the "Tab" button
-    if (relatedTarget instanceof HTMLElement && currentTarget.contains(relatedTarget)) return // check if the new focus target doesn't present in the dropdown tree (exclude ul\li padding area because relatedTarget, in this case, will be null) 
+    // dont remove dropdown if its the parent element 
+    if (relatedTarget instanceof HTMLElement && currentTarget.contains(relatedTarget)) 
+    {
+      return
+    }
     isDropdownOpen = false
   }
 </script>
@@ -40,7 +50,7 @@
     <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
       <div class="relative flex h-8 items-center justify-between">
         <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
-          <!-- Mobile menu button-->
+          <!-- Mobile -->
           <button type="button" class="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
             <span class="absolute -inset-0.5"></span>
             <span class="sr-only">Open main menu</span>
@@ -69,7 +79,6 @@
           </div>
         </div>
         {#if !data.isLoggedIn}
-        <!-- <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start"> -->
         <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
           <div class="hidden sm:ml-6 sm:block">
             <div class="flex space-x-4">
@@ -102,9 +111,8 @@
 
             {#if isDropdownOpen && data.isLoggedIn}
             <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-              <!-- Active: "bg-gray-100", Not Active: "" -->
                <DropDownLink linkName = "Settings" link = "/settings"></DropDownLink>
-               <DropDownLink linkName = "Logout" link = "/logout"></DropDownLink>
+               <DropDownLinkNoPreload linkName = "Logout" link = "/logout"></DropDownLinkNoPreload>
             </div>
             {/if}
           </div>
@@ -112,7 +120,7 @@
         {/if}
       </div>
     </div>
-  <!-- Mobile menu, show/hide based on menu state. -->
+    <!-- Mobile Navbar-->
     <div class="sm:hidden" id="mobile-menu">
       <div class="space-y-1 px-2 pb-3 pt-2">
         {#if data.isLoggedIn == true}
