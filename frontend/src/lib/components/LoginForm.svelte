@@ -1,6 +1,7 @@
 <script lang="ts">
   import { twMerge } from "tailwind-merge";
   import { login } from "$lib/scripts/queries";
+  import {afterNavigate} from "$app/navigation";
   import {
     MAX_PASSWORD_LENGTH,
     MAX_USERNAME_LENGTH,
@@ -10,6 +11,7 @@
   let username: string = "";
   let password: string = "";
 
+  
   let canSubmit = false;
   let isPasswordChanged = false;
   let isUsernameChanged = false;
@@ -28,6 +30,16 @@
 
     return usernameElement.validity.valid && passwordElement.validity.valid;
   };
+  let next = "";
+  afterNavigate(({from}) => {
+    next = from?.url.pathname || next
+    // change later to dynamic route
+    // or later use svelte store to do this instead in the outermost layout route
+    if (next == "/auth/login") {
+      next = "/"
+    }
+  })
+
 </script>
 
 <div class="form">
@@ -89,7 +101,7 @@
         !canSubmit && "opacity-40 pointer-events-none"
       )}
       disabled={!canSubmit}
-      on:click={() => login(username, password)}
+      on:click={() => login(username, password, next)}
     >
       <span>Submit</span>
     </button>

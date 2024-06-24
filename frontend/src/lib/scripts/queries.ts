@@ -11,6 +11,7 @@ import {
 import { addError } from "$lib/modules/Errors.svelte";
 import type { NavigationEvent } from "@sveltejs/kit";
 
+const BASEURL = "/";
 /**
  * forms a POST query to the /login endpoint to validate and log in user
  * expects: status 400 with message on error and 200 on successful login
@@ -22,7 +23,8 @@ import type { NavigationEvent } from "@sveltejs/kit";
  */
 export const login = async (
   username: string,
-  password: string
+  password: string,
+  next: string,
 ): Promise<void> => {
   const response: TAuthResult = await fetch(`/api/login`, {
     method: "POST",
@@ -48,9 +50,15 @@ export const login = async (
       return { status: 500, err: JSON.stringify(err) };
     });
 
+  await invalidateAll();
   if (response.status === 200) {
-    // code to redirect client to GET profile/:username
-    goto(`/profiles/${username}`);
+    if (next != null) {
+      goto(next);
+    }
+    else{
+      goto(BASEURL)
+    }
+
   } else if (response.status === 400) {
     // TODO: type validation and integration tests
     addError(response.err, response.status);
@@ -72,7 +80,8 @@ export const login = async (
 export const register = async (
   email: string,
   username: string,
-  password: string
+  password: string,
+  next: string,
 ): Promise<void> => {
   const response: TAuthResult = await fetch(`/api/register`, {
     method: "POST",
@@ -101,10 +110,14 @@ export const register = async (
     .catch((err) => {
       return { status: 400, err: JSON.stringify(err) };
     });
-
+  await invalidateAll();
   if (response.status === 200) {
-    // code to redirect client to GET profile/:username
-    goto(`/profiles/${username}`);
+    if (next != null) {
+      goto(next);
+    }
+    else{
+      goto(BASEURL);
+    }
   } else if (response.status === 400) {
     // TODO: flash svelte error
     addError(response.err, response.status);
@@ -126,7 +139,7 @@ export const resetPassword = async (email: string) => {
 
   if (response.status === 200) {
     // reloads the current login page
-    invalidateAll();
+    await invalidateAll();
   } else {
     // TODO: flash svelte error
   }
@@ -226,9 +239,16 @@ export const getIsLoggedIn = async (fetch: fetch) : Promise<boolean> => {
 
 // logout route, doesnt do anything if not logged in 
 // cant really get an error logging out since its a get request
-export const logout = async (fetch: fetch) : Promise<void> => {
+export const logout = async (fetch: fetch, next: string) : Promise<void> => {
   await fetch("/api/logout").catch((err) => {
     console.log("Error logging out") 
     console.log(err) 
   }) 
+  await invalidateAll();
+  if (next != null) {
+      goto(next);
+    }
+    else{
+      goto(BASEURL)
+    }
 }

@@ -7,6 +7,7 @@
     MIN_PASSWORD_LENGTH,
     MIN_USERNAME_LENGTH,
   } from "$lib/modules/Constants.svelte";
+  import {afterNavigate} from "$app/navigation";
 
   let email = "";
   let username = "";
@@ -45,6 +46,15 @@
       !!isEmailChanged
     );
   };
+  let next = "";
+  afterNavigate(({from}) => {
+    next = from?.url.pathname || next
+    // change later to dynamic route
+    if (next == "/auth/register") {
+      next = "/"
+    }
+  })
+
 </script>
 
 <div class="form">
@@ -124,7 +134,7 @@
         !canSubmit && "opacity-40 pointer-events-none"
       )}
       disabled={!canSubmit}
-      on:click={() => register(email, username, password)}
+      on:click={() => register(email, username, password, next)}
     >
       <span>Register</span>
     </button>

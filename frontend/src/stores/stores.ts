@@ -1,5 +1,5 @@
 import type { TErrorContext } from "$lib/types/ErrorTypes";
-import { writable, type Writable } from "svelte/store";
+import {get, writable, type Writable } from "svelte/store";
 
 
 export const errorStore: Writable<TErrorContext[]> = writable([])
@@ -12,3 +12,23 @@ export type TBlackSwanError = {
 export const blackSwanError = writable<TBlackSwanError | undefined>();
 
 
+
+// export const routeStore = writable({
+//     prevRoute: '/'
+// });
+
+// export const updatePageStore = () => {
+//     afterNavigate(({ to, from }) => {
+//         // console.log("to" +  to?.url.pathname)
+//         // console.log("from" + from?.url.pathname)
+//         let prevRoute = get(routeStore).prevRoute;
+//         let fromRoute = from?.url.pathname || "";
+//         if (prevRoute != fromRoute) {
+//             routeStore.set({
+//                 prevRoute : fromRoute,
+//             })
+//         } 
+//     });
+
+//     return routeStore;
+// };

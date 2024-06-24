@@ -5,7 +5,6 @@ import { getIsLoggedIn } from "$lib/scripts/queries";
 export const load = async ({fetch}) => {
 
    const isLoggedIn = await getIsLoggedIn(fetch);
-
    return {
       "isLoggedIn": isLoggedIn,
    }

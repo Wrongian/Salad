@@ -9,13 +9,19 @@
   import type { PageData } from "./$types";
   export let data: PageData;
 
+
+  
+
   let doneLoad = false;
   onMount(async () => {
     // TODO: logic to render all the necessary components
-
-    doneLoad = true;
+    // previous url
+        doneLoad = true;
   });
-
+  // let next = "/";
+  // afterNavigate(({from}) => {
+  //   next = from?.url.pathname || next
+  // })
   // dropdown menu
   // default
   let isDropdownOpen : boolean = false;
