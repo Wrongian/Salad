@@ -116,9 +116,9 @@ async fn main() -> tide::Result<()> {
     app.at("/logged-in").get(is_logged_in);
     // profile
     app.at("/profiles/:username").get(get_profile);
-    app.at("/links/title/:link_id").get(update_link_title);
-    app.at("/links/bio/:link_id").get(update_link_bio);
-    app.at("/links/href/:link_id").get(update_link_href);
+    app.at("/links/title/:link_id").put(update_link_title);
+    app.at("/links/bio/:link_id").put(update_link_bio);
+    app.at("/links/href/:link_id").put(update_link_href);
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
