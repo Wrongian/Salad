@@ -4,7 +4,7 @@ use diesel::{
 
 use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 
-use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
+use crate::models::links::{self, GetLink, InsertLink, UpdateLink, UpdateLinkImageSource};
 
 // create a link from a link model instance
 pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> GetLink {
@@ -52,6 +52,23 @@ pub async fn update_link_by_id(
             .returning(id)
             .get_result::<i32>(conn);
 
+    updated_link_id
+        .map(|v| v == link_id)
+        .map_err(|_| "Unable to update link by id.".to_string())
+}
+
+// TODO: abstract this method with above using a generic UpdateModel Type.
+pub async fn update_link_img_by_id(
+    conn: &mut PgConnection,
+    update_link_img: &UpdateLinkImageSource,
+    link_id: i32,
+) -> Result<bool, String> {
+    use crate::schema::links::dsl::*;
+    let updated_link_id: Result<i32, diesel::result::Error> =
+        diesel::update(links.filter(id.eq(link_id)))
+            .set(update_link_img)
+            .returning(id)
+            .get_result::<i32>(conn);
     updated_link_id
         .map(|v| v == link_id)
         .map_err(|_| "Unable to update link by id.".to_string())
