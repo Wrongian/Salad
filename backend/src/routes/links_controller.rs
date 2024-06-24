@@ -3,6 +3,7 @@ use crate::{
         link::{get_link_by_id, get_user_link_by_id, update_link_by_id},
         DBConnection,
     },
+    helpers::auth::get_session_user_id,
     models::links::UpdateLink,
     TideState,
 };
@@ -85,11 +86,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
 // TODO: combine update link title, bio & href into the same endpoint
 pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
-    let user_id = match req
-        .session()
-        .get::<i32>("user_id")
-        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
-    {
+    let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
         Err(err) => return Err(err),
     };
@@ -145,11 +142,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
 
 pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
-    let user_id = match req
-        .session()
-        .get::<i32>("user_id")
-        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
-    {
+    let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
         Err(err) => return Err(err),
     };
@@ -204,11 +197,7 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
 
 pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
-    let user_id = match req
-        .session()
-        .get::<i32>("user_id")
-        .ok_or_else(|| tide::Error::from_str(400, "Invalid session!"))
-    {
+    let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
         Err(err) => return Err(err),
     };

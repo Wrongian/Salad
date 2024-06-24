@@ -1,12 +1,14 @@
-use std::borrow::Borrow;
 use std::sync::Arc;
 
 use crate::db::start_connection;
 use crate::db::user::get_user_profile_by_username;
+use crate::helpers::auth::get_session_user_id;
 use crate::TideState;
 use tide::Request;
 use tide::Response;
 use validator::Validate;
+
+use super::auth;
 
 // Profile parameters struct
 #[derive(Debug, serde::Deserialize, Validate)]
@@ -26,12 +28,10 @@ struct GetProfileResponseBody {
     followers: Option<i32>,
 }
 
-// Parameters for the route to update the profile response body
-#[derive(Debug, serde::Deserialize, Validate)]
-struct UpdateProfileBody {
-    display_name: String,
-    bio: String,
-    picture: String,
+#[derive(Debug, serde::Deserialize, serde::Serialize, Validate)]
+struct UpdateProfilePayload {
+    display_name: Option<String>,
+    bio: Option<String>,
 }
 
 // build the standard response
@@ -49,10 +49,26 @@ pub fn build_error(message: String, status: u16) -> tide::Result {
     Ok(response)
 }
 
+pub fn build_success() -> tide::Result {
+    auth::build_response(true, "".to_string(), 200)
+}
+
 // update profile response body
 pub async fn update_profile(req: Request<Arc<TideState>>) -> tide::Result {
-    // TODO: implementation
-    Ok(Response::builder(200).build())
+    // extract user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+    // get json body as UpdateProfilePayload
+
+    // construct UpdateProfile model
+
+    // call orm
+
+    // return result
+
+    build_success()
 }
 
 // Get profile route
