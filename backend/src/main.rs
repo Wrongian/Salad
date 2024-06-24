@@ -12,7 +12,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{is_logged_in, login, logout, register};
 use routes::links_controller::{update_link_bio, update_link_href, update_link_title};
-use routes::profile_controller::get_profile;
+use routes::profile_controller::{get_profile, update_display_profile};
 use std::env;
 pub mod db;
 use aws_sdk_s3::{self as s3, config};
@@ -117,6 +117,7 @@ async fn main() -> tide::Result<()> {
     app.at("/logged-in").get(is_logged_in);
     // profile
     app.at("/profiles/:username").get(get_profile);
+    app.at("/profiles").put(update_display_profile);
 
     // links
     app.at("/links/title/:link_id").put(update_link_title);
@@ -135,8 +136,8 @@ mod unit_tests {
     use diesel::PgConnection;
 
     #[tokio::test]
-    async fn db_connection_test() -> tide::Result<()> {
-        let conn: PgConnection = start_connection().await;
+    async fn it_can_connect_to_db() -> tide::Result<()> {
+        start_connection().await;
         Ok(())
     }
 }

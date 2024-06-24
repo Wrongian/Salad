@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
 use crate::db::start_connection;
+use crate::db::user::get_user_by_id;
 use crate::db::user::get_user_profile_by_username;
+use crate::db::user::update_user_by_id;
 use crate::helpers::auth::get_session_user_id;
+use crate::models::users::UpdateUser;
 use crate::TideState;
 use tide::Request;
 use tide::Response;
@@ -29,7 +32,7 @@ struct GetProfileResponseBody {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Validate)]
-struct UpdateProfilePayload {
+struct UpdateDisplayProfilePayload {
     display_name: Option<String>,
     bio: Option<String>,
 }
@@ -54,21 +57,36 @@ pub fn build_success() -> tide::Result {
 }
 
 // update profile response body
-pub async fn update_profile(req: Request<Arc<TideState>>) -> tide::Result {
+pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
         Err(err) => return Err(err),
     };
     // get json body as UpdateProfilePayload
+    let update_body: UpdateDisplayProfilePayload = match req.body_json().await {
+        Ok(body) => body,
+        Err(_) => return build_error("Bad request body.".to_string(), 400),
+    };
 
     // construct UpdateProfile model
-
+    let update_user = UpdateUser {
+        username: None,
+        password: None,
+        salt: None,
+        email: None,
+        is_private: None,
+        bio: update_body.bio,
+        display_name: update_body.display_name,
+    };
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
     // call orm
-
-    // return result
-
-    build_success()
+    return match update_user_by_id(&mut conn, user_id, &update_user).await {
+        Ok(result) => auth::build_response(result, "".to_string(), 200),
+        Err(err) => build_error(err, 400),
+    };
 }
 
 // Get profile route
