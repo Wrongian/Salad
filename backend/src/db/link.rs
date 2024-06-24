@@ -1,7 +1,8 @@
 use diesel::{
-    query_dsl::methods::FilterDsl, BoolExpressionMethods, ExpressionMethods, PgConnection,
-    RunQueryDsl, SelectableHelper,
+    BoolExpressionMethods, ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper,
 };
+
+use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 
 use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
 
@@ -18,8 +19,10 @@ pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> GetLink {
 // get link by id
 pub async fn get_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<GetLink, String> {
     use crate::schema::links::dsl::*;
-    let result: Result<GetLink, diesel::result::Error> =
-        links.filter(id.eq(link_id)).first::<GetLink>(conn);
+    let result: Result<GetLink, diesel::result::Error> = links
+        .filter(id.eq(link_id))
+        .select(GetLink::as_select())
+        .first::<GetLink>(conn);
     result.map_err(|_| "Could not find the link.".to_string())
 }
 
@@ -32,6 +35,7 @@ pub async fn get_user_link_by_id(
     use crate::schema::links::dsl::*;
     let result: Result<GetLink, diesel::result::Error> = links
         .filter(id.eq(link_id).and(user_id.eq(users_id)))
+        .select(GetLink::as_select())
         .first::<GetLink>(conn);
     result.map_err(|_| "Could not find the link.".to_string())
 }
