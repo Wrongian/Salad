@@ -12,7 +12,7 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{is_logged_in, login, logout, register};
 use routes::links_controller::{
-    update_link_bio, update_link_href, update_link_picture, update_link_title,
+    delete_link_picture, update_link_bio, update_link_href, update_link_picture, update_link_title,
 };
 use routes::profile_controller::{get_profile, update_display_profile, update_profile_image};
 use std::env;
@@ -139,6 +139,8 @@ async fn main() -> tide::Result<()> {
     app.at("/links/href/:link_id").put(update_link_href);
     app.at("/links/:link_id/image/:name")
         .put(update_link_picture);
+    app.at("/links/:link_id/image").delete(delete_link_picture);
+
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 

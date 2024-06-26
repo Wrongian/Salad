@@ -2,7 +2,7 @@ use crate::{
     buckets::file::{delete_s3_link_image, update_s3_link_image},
     db::{
         image::{create_link_image, get_link_image, update_link_image},
-        link::{get_link_by_id, get_user_link_by_id, update_link_by_id},
+        link::{delete_link_by_id, get_link_by_id, get_user_link_by_id, update_link_by_id},
         DBConnection,
     },
     helpers::{
@@ -16,6 +16,7 @@ use crate::{
     TideState,
 };
 use aws_sdk_s3::primitives::ByteStream;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, env, sync::Arc};
 use tide::{
@@ -345,5 +346,59 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     match create_link_image(&mut conn, &payload).await {
         Ok(img) => build_response(UploadLinkResponseBody { href: cdn_href }, 200),
         Err(msg) => build_error(msg, 400),
+    }
+}
+
+pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // get user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return build_error("invalid session!".to_string(), 400),
+    };
+
+    // get user link from link id from params
+    let link_id = match req.param("link_id").and_then(|id| {
+        id.parse::<i32>().map_err(|e| {
+            error!("Error in parsing link_id: {} {:?}", id, e);
+            tide::Error::from_str(400, "Invalid link_id provided.")
+        })
+    }) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+    let s3_client = &state.s3_client;
+
+    // assert link_id belongs to user_id
+    match get_user_link_by_id(&mut conn, link_id, user_id).await {
+        Ok(link) => (),
+        Err(msg) => return build_error("Invalid link provided.".to_string(), 400),
+    };
+
+    // get image by id
+    let img_obj = match get_link_image(&mut conn, link_id).await {
+        Ok(img) => img,
+        Err(msg) => return build_error("Image not found.".to_string(), 400),
+    };
+
+    // delete image from db
+    match delete_link_by_id(&mut conn, link_id).await {
+        Ok(_) => (),
+        Err(msg) => {
+            warn!("Failed to delete link: {}", msg);
+            return build_error("Error occurred in deleting link image.".to_string(), 400);
+        }
+    };
+
+    // delete image from s3
+    match delete_s3_link_image(s3_client, img_obj.filename).await {
+        Ok(res) => build_standard_response(true, "".to_string(), 200),
+        Err(msg) => {
+            error!("Unable to delete link from s3: {}", msg);
+            return build_error("Error occurred in deleting link image.".to_string(), 400);
+        }
     }
 }
