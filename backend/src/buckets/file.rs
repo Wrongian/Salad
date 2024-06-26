@@ -76,11 +76,11 @@ pub async fn update_profile_image(
     }
 }
 
-pub async fn delete_profile_image(client: &s3::Client, user_id: String) -> Result<(), &str> {
+pub async fn delete_profile_image(client: &s3::Client, img_name: String) -> Result<(), &str> {
     let delete_response = client
         .delete_object()
         .bucket(PROFILE_IMAGE_BUCKET)
-        .key(format!("{}", user_id))
+        .key(format!("{}", img_name))
         .send()
         .await;
 
@@ -103,15 +103,15 @@ pub async fn get_link_image(client: &s3::Client, link_id: String) -> Result<Byte
     }
 }
 // probably not used as a middleware
-pub async fn update_link_image(
+pub async fn update_s3_link_image(
     client: &s3::Client,
-    link_id: String,
+    link_img_name: String,
     content: ByteStream,
 ) -> Result<(), &str> {
     let put_object = client
         .put_object()
         .bucket(LINK_IMAGE_BUCKET)
-        .key(format!("{}", link_id))
+        .key(format!("{}", link_img_name))
         .body(content)
         .send()
         .await;
@@ -125,17 +125,20 @@ pub async fn update_link_image(
     }
 }
 
-pub async fn delete_link_image(client: &s3::Client, link_id: String) -> Result<(), &str> {
+pub async fn delete_link_image(client: &s3::Client, img_name: String) -> Result<(), String> {
     let delete_response = client
         .delete_object()
         .bucket(LINK_IMAGE_BUCKET)
-        .key(format!("{}", link_id))
+        .key(format!("{}", img_name))
         .send()
         .await;
 
     match delete_response {
         Ok(res) => Ok(()),
-        Err(res) => Err("failed to delete link image."),
+        Err(res) => {
+            println!("delete image failed with: {:?}", res);
+            return Err(String::from("failed to delete image from aws s3"));
+        }
     }
 }
 

@@ -11,7 +11,9 @@ use buckets::file::setup_buckets;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{is_logged_in, login, logout, register};
-use routes::links_controller::{update_link_bio, update_link_href, update_link_title};
+use routes::links_controller::{
+    update_link_bio, update_link_href, update_link_picture, update_link_title,
+};
 use routes::profile_controller::{get_profile, update_display_profile};
 use std::env;
 pub mod db;
@@ -21,6 +23,8 @@ use http_types::headers::HeaderValue;
 use std::sync::Arc;
 use tide::security::{CorsMiddleware, Origin};
 
+use std::path::Path;
+use tempfile::TempDir;
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -30,6 +34,13 @@ pub type TidePool = Pool<ConnectionManager<PgConnection>>;
 pub struct TideState {
     pub tide_pool: TidePool,
     pub s3_client: s3::Client,
+    pub tempdir: TempDir,
+}
+
+impl TideState {
+    fn path(&self) -> &Path {
+        self.tempdir.path()
+    }
 }
 
 // todo replace unwraps with expect
@@ -71,6 +82,7 @@ async fn main() -> tide::Result<()> {
     let tide_state = Arc::new(TideState {
         tide_pool: pool,
         s3_client,
+        tempdir: tempfile::tempdir()?,
     });
 
     // create app
@@ -123,6 +135,8 @@ async fn main() -> tide::Result<()> {
     app.at("/links/title/:link_id").put(update_link_title);
     app.at("/links/bio/:link_id").put(update_link_bio);
     app.at("/links/href/:link_id").put(update_link_href);
+    app.at("/links/:link_id/image/:name")
+        .put(update_link_picture);
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
