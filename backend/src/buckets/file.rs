@@ -59,13 +59,13 @@ pub async fn get_s3_profile_image(
 // this method will not check if user_id exists in the postgres db
 pub async fn update_s3_profile_image(
     client: &s3::Client,
-    user_id: String,
+    profile_img_name: String,
     content: ByteStream,
 ) -> Result<(), &str> {
     let put_object = client
         .put_object()
         .bucket(PROFILE_IMAGE_BUCKET)
-        .key(format!("{}", user_id))
+        .key(format!("{}", profile_img_name))
         .body(content)
         .send()
         .await;

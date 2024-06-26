@@ -1,12 +1,16 @@
+use std::env;
 use std::sync::Arc;
 
-use crate::db::image::get_profile_image;
+use crate::buckets::file::{delete_s3_link_image, update_s3_link_image, update_s3_profile_image};
+use crate::db::image::{create_profile_image, get_profile_image};
 use crate::db::user::{get_user_profile_by_username, update_user_by_id};
 use crate::helpers::auth::get_session_user_id;
 use crate::helpers::response::{build_error, build_response, build_standard_response};
+use crate::models::images::InsertProfileImage;
 use crate::models::users::UpdateUser;
 use crate::TideState;
-use tide::log::{error, warn};
+use aws_sdk_s3::primitives::ByteStream;
+use tide::log::{error, info, warn};
 use tide::Request;
 use tide::Response;
 use validator::Validate;
@@ -33,6 +37,11 @@ struct GetProfileResponseBody {
 struct UpdateDisplayProfilePayload {
     display_name: Option<String>,
     bio: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct UploadProfileImageResponseBody {
+    href: String,
 }
 
 // update profile response body
@@ -70,7 +79,72 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
 
 pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get user_id from session
-    build_standard_response(true, "".to_string(), 200)
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return build_error("invalid session!".to_string(), 400),
+    };
+
+    // get :name from params
+    let image_name = match req.param("name") {
+        Ok(name) => name.to_string(),
+        Err(err) => return Err(err),
+    };
+
+    // process the req body as bytes
+    let bytes = req.body_bytes().await;
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+    let s3_client = &state.s3_client;
+
+    // remove previous file; if any
+    match get_profile_image(&mut conn, user_id).await {
+        Ok(img) => {
+            // remove from s3 if present
+            let result = delete_s3_link_image(s3_client, img.filename).await;
+            if result.is_err() {
+                error!("Error deleting profile image: {}", result.unwrap_err());
+            }
+        }
+        // do nothing if not found
+        Err(msg) => (),
+    }
+
+    // get uploaded file as bytes
+    if bytes.is_err() {
+        error!("failed to get bytes from request body.");
+        return build_error("Failed to get bytes from body.".to_string(), 400);
+    }
+    // upload file to s3
+    match update_s3_profile_image(
+        s3_client,
+        image_name.clone(),
+        ByteStream::from(bytes.unwrap()),
+    )
+    .await
+    {
+        Ok(()) => (),
+        Err(msg) => {
+            error!("upload to s3 failed with error: {}", msg);
+            return build_error("Failed to upload profile image".to_string(), 400);
+        }
+    }
+    // create cdn href
+    let profile_cdn_origin = env::var("PROFILE_IMAGE_CDN").expect("unable to process cdn");
+    let cdn_href = [profile_cdn_origin, image_name.clone()].join("/");
+    // create src href in db
+    let payload = InsertProfileImage {
+        img_src: cdn_href.clone(),
+        filename: image_name.clone(),
+        user_id,
+    };
+    info!("creating cdn href.. {}", cdn_href.clone());
+
+    match create_profile_image(&mut conn, &payload).await {
+        Ok(img) => build_response(UploadProfileImageResponseBody { href: cdn_href }, 200),
+        Err(msg) => build_error(msg, 400),
+    }
 }
 
 // Get profile route

@@ -127,6 +127,7 @@ async fn main() -> tide::Result<()> {
     app.at("/register").post(register);
     app.at("/logout").post(logout);
     app.at("/logged-in").get(is_logged_in);
+
     // profile
     app.at("/profiles/:username").get(get_profile);
     app.at("/profiles/display").put(update_display_profile);
