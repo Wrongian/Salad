@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     bio VARCHAR,
     is_private BOOLEAN NOT NULL,
     salt VARCHAR NOT NULL,
-    display_name VARCHAR NOT NULL,
-    img_src VARCHAR
+    display_name VARCHAR NOT NULL
 );
 
 
@@ -19,12 +18,20 @@ CREATE TABLE IF NOT EXISTS links (
     description VARCHAR,
     title VARCHAR,
     href VARCHAR(255) NOT NULL,
-    img_src VARCHAR,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (next_id) REFERENCES links(id),
     FOREIGN KEY (prev_id) REFERENCES links(id)
 );
 
+CREATE TABLE IF NOT EXISTS images (
+    id SERIAL PRIMARY KEY,
+    img_src VARCHAR NOT NULL,
+    filename VARCHAR NOT NULL,
+    user_id INT,
+    link_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (link_id) REFERENCES links(id)
+);
 
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
