@@ -16,15 +16,12 @@ use crate::{
     TideState,
 };
 use aws_sdk_s3::primitives::ByteStream;
-use diesel::PgConnection;
-use log::warn;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Borrow, env, sync::Arc};
 use tide::{
     log::{error, info},
     Request,
 };
-use tokio::fs::OpenOptions;
 use validator::{Validate, ValidationErrors};
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
