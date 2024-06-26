@@ -1,5 +1,5 @@
 use crate::{
-    buckets::file::{delete_link_image, update_s3_link_image},
+    buckets::file::{delete_s3_link_image, update_s3_link_image},
     db::{
         image::{create_link_image, get_link_image, update_link_image},
         link::{get_link_by_id, get_user_link_by_id, update_link_by_id},
@@ -306,7 +306,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     match get_link_image(&mut conn, link_id).await {
         Ok(img) => {
             // remove from s3 if present
-            let result = delete_link_image(s3_client, img.filename).await;
+            let result = delete_s3_link_image(s3_client, img.filename).await;
             if result.is_err() {
                 error!("Error deleting link image: {}", result.unwrap_err());
             }
