@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
+use crate::db::image::get_profile_image;
 use crate::db::user::{get_user_profile_by_username, update_user_by_id};
 use crate::helpers::auth::get_session_user_id;
 use crate::helpers::response::{build_error, build_response, build_standard_response};
 use crate::models::users::UpdateUser;
 use crate::TideState;
+use tide::log::{error, warn};
 use tide::Request;
 use tide::Response;
 use validator::Validate;
@@ -66,6 +68,11 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     };
 }
 
+pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // get user_id from session
+    build_standard_response(true, "".to_string(), 200)
+}
+
 // Get profile route
 pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     let username = match req.param("username") {
@@ -108,46 +115,30 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                 // either is_owner or not private account, either ways all fields are accessible.
                 // So return all fields.
 
-                // query for profile picture and add it to response body
-                // handling of cases
-                // let byte_stream = get_profile_image(&state.s3_client, profile.id.to_string()).await;
-                // if byte_stream.is_err() {
-                //     log::error!("{}", "An error occurred in retrieving profile image.");
-                //     return build_error(
-                //         "An error occurred in retrieving profile image.".to_string(),
-                //         400,
-                //     );
-                // }
-                // let maybe_picture = collect_as_bytes(byte_stream.unwrap()).await;
-
-                // if maybe_picture.is_err() {
-                //     return build_error(
-                //         "An error occurred in streaming profile image.".to_string(),
-                //         400,
-                //     );
-                // }
-
-                // let pic_string = String::from_utf8(maybe_picture.unwrap());
-                // if pic_string.is_err() {
-                //     return build_error(
-                //         "An unexpected error occurred in streaming profile images".to_string(),
-                //         500,
-                //     );
-                // }
+                // get cdn_href from db
+                let picture = get_profile_image(&mut conn, profile.id)
+                    .await
+                    .map(|img| img.img_src)
+                    .unwrap_or_else(|e| {
+                        warn!(
+                            "Error in retrieving profile picture, using default. (error: {})",
+                            e
+                        );
+                        String::from("")
+                    });
 
                 GetProfileResponseBody {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
                     is_owner,
-                    // picture: pic_string.unwrap(),
-                    picture: String::from("placeholder"),
+                    picture,
                     followers: Some(0),
                     following: Some(0),
                 }
             }
         }
         Err(message) => {
-            log::error!("{}", message);
+            error!("error in retrieving profile: {}", message);
             return build_error(message, 500);
         }
     };
