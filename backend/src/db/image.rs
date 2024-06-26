@@ -1,3 +1,4 @@
+use diesel::result::DatabaseErrorKind;
 use diesel::{
     BoolExpressionMethods, ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper,
 };
@@ -6,22 +7,46 @@ use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 
 use crate::models::images::{GetImage, InsertLinkImage, InsertProfileImage, UpdateImage};
 
-pub async fn create_profile_image(conn: &mut PgConnection, image: &InsertProfileImage) -> GetImage {
+pub async fn create_profile_image(
+    conn: &mut PgConnection,
+    image: &InsertProfileImage,
+) -> Result<GetImage, String> {
     use crate::schema::images;
-    diesel::insert_into(images::table)
+    use diesel::result::Error;
+
+    let result: Result<GetImage, Error> = diesel::insert_into(images::table)
         .values(image)
         .returning(GetImage::as_returning())
-        .get_result(conn)
-        .expect("error in creating profile image")
+        .get_result(conn);
+
+    result.map_err(|e| match e {
+        Error::DatabaseError(kind, _) => match kind {
+            DatabaseErrorKind::NotNullViolation => String::from("An internal error has occurred."),
+            _ => String::from("An error has occurred in creating profile image."),
+        },
+        _ => String::from("An error occurred when creating profile image."),
+    })
 }
 
-pub async fn create_link_image(conn: &mut PgConnection, image: &InsertLinkImage) -> GetImage {
+pub async fn create_link_image(
+    conn: &mut PgConnection,
+    image: &InsertLinkImage,
+) -> Result<GetImage, String> {
     use crate::schema::images;
-    diesel::insert_into(images::table)
+    use diesel::result::Error;
+    let result: Result<GetImage, Error> = diesel::insert_into(images::table)
         .values(image)
         .returning(GetImage::as_returning())
-        .get_result(conn)
-        .expect("error in creating profile image")
+        .get_result(conn);
+
+    // TODO: abstraction for database error handling logic
+    result.map_err(|e| match e {
+        Error::DatabaseError(kind, _) => match kind {
+            DatabaseErrorKind::NotNullViolation => String::from("An internal error has occurred."),
+            _ => String::from("An error has occurred in creating link image."),
+        },
+        _ => String::from("An error occurred when creating link image."),
+    })
 }
 
 pub async fn get_profile_image(
