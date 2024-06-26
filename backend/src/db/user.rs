@@ -1,6 +1,4 @@
-use crate::models::users::{
-    GetUser, InsertUser, UpdateUser, UpdateUserProfileImageSource, UserProfileView,
-};
+use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
@@ -124,26 +122,6 @@ pub async fn update_user_by_id(
     let update_user_id: Result<i32, Error> =
         diesel::update(FilterDsl::filter(users, id.eq(user_id)))
             .set(update_user)
-            .returning(id)
-            .get_result::<i32>(conn);
-
-    update_user_id.map(|v| v == user_id).map_err(|e| match e {
-        Error::NotFound => String::from("User does not exist."),
-        _ => String::from("Failed to update profile."),
-    })
-}
-
-// TODO: abstract with above update method using generics.
-pub async fn update_user_img_by_id(
-    conn: &mut PgConnection,
-    user_id: i32,
-    update_user_img: &UpdateUserProfileImageSource,
-) -> Result<bool, String> {
-    use crate::schema::users::dsl::*;
-    use diesel::query_dsl::methods::FilterDsl;
-    let update_user_id: Result<i32, Error> =
-        diesel::update(FilterDsl::filter(users, id.eq(user_id)))
-            .set(update_user_img)
             .returning(id)
             .get_result::<i32>(conn);
 
