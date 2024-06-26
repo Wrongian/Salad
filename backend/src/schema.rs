@@ -1,6 +1,16 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    images (id) {
+        id -> Int4,
+        img_src -> Varchar,
+        filename -> Varchar,
+        user_id -> Nullable<Int4>,
+        link_id -> Nullable<Int4>,
+    }
+}
+
+diesel::table! {
     links (id) {
         id -> Int4,
         user_id -> Int4,
@@ -10,7 +20,6 @@ diesel::table! {
         title -> Nullable<Varchar>,
         #[max_length = 255]
         href -> Varchar,
-        img_src -> Nullable<Varchar>,
     }
 }
 
@@ -25,13 +34,15 @@ diesel::table! {
         is_private -> Bool,
         salt -> Varchar,
         display_name -> Varchar,
-        img_src -> Nullable<Varchar>,
     }
 }
 
+diesel::joinable!(images -> links (link_id));
+diesel::joinable!(images -> users (user_id));
 diesel::joinable!(links -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    images,
     links,
     users,
 );
