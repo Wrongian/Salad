@@ -1,3 +1,4 @@
+pub mod image;
 pub mod link;
 pub mod user;
 use diesel::prelude::*;
