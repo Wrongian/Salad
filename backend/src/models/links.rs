@@ -1,6 +1,7 @@
 use diesel::prelude::*;
+use serde::Serialize;
 
-#[derive(Queryable, Selectable, Insertable)]
+#[derive(Queryable, Selectable, Insertable, Serialize, Debug)]
 #[diesel(table_name = crate::schema::links)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct GetLink {

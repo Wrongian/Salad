@@ -7,10 +7,11 @@ use crate::{
             delete_link_by_id, get_link_by_id, get_user_link_by_id, get_user_links_by_id,
             reorder_link, update_link_by_id,
         },
+        user::get_user_profile_by_username,
         DBConnection,
     },
     helpers::{
-        auth::get_session_user_id,
+        auth::{get_session_user_id, get_session_username},
         response::{build_error, build_response, build_standard_response},
     },
     models::{
@@ -58,7 +59,9 @@ struct UploadLinkResponseBody {
 }
 
 #[derive(Debug, Serialize)]
-struct GetLinksResponseBody {}
+struct GetLinksResponseBody {
+    links: Vec<GetLink>,
+}
 
 #[derive(Debug, Deserialize)]
 struct ReorderLinksPayload {
@@ -296,7 +299,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+        Err(err) => return Err(err),
     };
 
     // get user link from link id from params
@@ -381,7 +384,7 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+        Err(err) => return Err(err),
     };
 
     // get user link from link id from params
@@ -432,32 +435,50 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
 }
 
 pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
-    // get user id from session
-    let user_id = match get_session_user_id(&req) {
-        Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+    // get session username from session
+    let session_username = match get_session_username(&req) {
+        Ok(session_usr) => session_usr,
+        Err(err) => return Err(err),
     };
+
+    // get username from params
+    let username = match req.param("username") {
+        Ok(username) => username.to_string(),
+        Err(err) => return Err(err),
+    };
+
+    let is_owner = session_username == username;
 
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
 
-    // get all links and return
-    let user_links = match get_user_links_by_id(&mut conn, user_id).await {
-        Ok(links) => links,
+    // check if profile is private, if it is then return empty vec
+    let profile = match get_user_profile_by_username(&mut conn, &username).await {
+        Ok(data) => data,
+        Err(e) => return build_error("Error in verifying profile".to_string(), 400),
+    };
+
+    if !is_owner && profile.is_private {
+        // if origin is not owner and querying a private profile, return empty links
+        return build_response(GetLinksResponseBody { links: Vec::new() }, 200);
+    }
+    // otherwise either owner or querying a public profile.
+    // Thus, get all links and return
+    match get_user_links_by_id(&mut conn, profile.id).await {
+        Ok(links) => build_response(GetLinksResponseBody { links }, 200),
         Err(msg) => {
             error!("Error in retrieving user links by id: {}", msg);
-            return build_error("Error in getting links".to_string(), 400);
+            build_error("Error in getting links".to_string(), 400)
         }
-    };
-    build_response(GetLinksResponseBody {}, 200)
+    }
 }
 
 pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+        Err(err) => return Err(err),
     };
 
     // get link id from params
@@ -511,7 +532,7 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+        Err(err) => return Err(err),
     };
 
     // get reordering links
