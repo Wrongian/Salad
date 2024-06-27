@@ -18,9 +18,8 @@ CREATE TABLE IF NOT EXISTS links (
     description VARCHAR,
     title VARCHAR,
     href VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (next_id) REFERENCES links(id),
-    FOREIGN KEY (prev_id) REFERENCES links(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (next_id) REFERENCES links(id) 
 );
 
 CREATE TABLE IF NOT EXISTS images (
@@ -29,8 +28,8 @@ CREATE TABLE IF NOT EXISTS images (
     filename VARCHAR NOT NULL,
     user_id INT,
     link_id INT,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (link_id) REFERENCES links(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL,
 );
 
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
@@ -50,6 +49,21 @@ BEGIN
     UPDATE links SET next_id = new_next WHERE id = node_id;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION reorder_link_after_delete() RETURNS TRIGGER AS $$ 
+BEGIN 
+    UPDATE links SET next_id = OLD.next_id WHERE links.next_id = OLD.id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Subscribe the trigger to run on deletion in link table
+CREATE TRIGGER reorder_links_trigger
+AFTER DELETE on links
+FOR EACH ROW
+EXECUTE FUNCTION reorder_link_after_delete();
+
 
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
