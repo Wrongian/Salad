@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS links (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
-    next_id INT,
+    next_id INT UNIQUE,
     prev_id INT,
     description VARCHAR,
     title VARCHAR,
@@ -32,6 +32,24 @@ CREATE TABLE IF NOT EXISTS images (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (link_id) REFERENCES links(id)
 );
+
+CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
+DECLARE
+    current_next INT;
+    new_next INT;
+BEGIN
+    SELECT next_id into current_next FROM links WHERE id = node_id; 
+    UPDATE links SET next_id = NULL WHERE id = node_id;
+
+    -- set child to point to prev parent of node_id
+    UPDATE links SET next_id = current_next WHERE next_id = node_id;
+
+    SELECT next_id into new_next FROM links WHERE id = new_position_id;
+
+    UPDATE links SET next_id = node_id WHERE id = new_position_id;
+    UPDATE links SET next_id = new_next WHERE id = node_id;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included

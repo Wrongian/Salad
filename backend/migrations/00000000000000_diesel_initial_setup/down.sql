@@ -3,3 +3,4 @@ DROP TABLE IF EXISTS links;
 DROP TABLE IF EXISTS users;
 DROP FUNCTION IF EXISTS diesel_manage_updated_at(_tbl regclass);
 DROP FUNCTION IF EXISTS diesel_set_updated_at();
+DROP FUNCTION IF EXISTS reorder_link(node_id INT, new_position_id INT);
