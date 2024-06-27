@@ -2,7 +2,7 @@ use crate::{
     buckets::file::{delete_s3_link_image, update_s3_link_image},
     db::{
         self,
-        image::{create_link_image, get_link_image, update_link_image},
+        image::{create_link_image, delete_link_image, get_link_image, update_link_image},
         link::{
             delete_link_by_id, get_link_by_id, get_user_link_by_id, get_user_links_by_id,
             reorder_link, update_link_by_id,
@@ -455,6 +455,60 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
         }
     };
     build_response(GetLinksResponseBody {}, 200)
+}
+
+pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
+    // get user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return build_error("invalid session!".to_string(), 400),
+    };
+
+    // get link id from params
+    let link_id = match req.param("link_id").and_then(|id| {
+        id.parse::<i32>()
+            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
+    }) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+
+    // assert link_id belongs to user_id
+    match get_user_link_by_id(&mut conn, link_id, user_id).await {
+        Ok(_) => (),
+        Err(_) => return build_error("Invalid link provided.".to_string(), 400),
+    }
+
+    // delete image for link
+    match get_link_image(&mut conn, link_id).await {
+        Ok(link) => {
+            let delete_result = delete_s3_link_image(&state.s3_client, link.filename).await;
+            let delete_db_result = delete_link_image(&mut conn, link_id).await;
+            if delete_result.is_err() {
+                error!("Error in deleting image from s3: {:?}", delete_result.err());
+            }
+            if delete_db_result.is_err() {
+                error!(
+                    "Error in deleting image from db: {:?}",
+                    delete_db_result.err()
+                );
+            }
+        }
+        Err(_) => (),
+    }
+
+    // delete link_id
+    match delete_link_by_id(&mut conn, link_id).await {
+        Ok(res) => build_standard_response(res, "".to_string(), 200),
+        Err(msg) => {
+            error!("Error in deleting link: {}", msg);
+            return build_error("Error occurred in deleting link.".to_string(), 400);
+        }
+    }
 }
 
 pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
