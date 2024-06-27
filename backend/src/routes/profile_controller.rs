@@ -173,8 +173,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
 
     let res_body = match profile_query_result {
         Ok(profile) => {
-            // TODO: we need to update is_private to profile.is_private when DB is updated
-            let is_private = true;
+            let is_private = profile.is_private;
             if !is_owner && is_private {
                 // return object with certain fields defaulted to empty values
                 GetProfileResponseBody {
