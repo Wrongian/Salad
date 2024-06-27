@@ -5,7 +5,7 @@ use crate::{
         image::{create_link_image, get_link_image, update_link_image},
         link::{
             delete_link_by_id, get_link_by_id, get_user_link_by_id, get_user_links_by_id,
-            update_link_by_id,
+            reorder_link, update_link_by_id,
         },
         DBConnection,
     },
@@ -59,6 +59,12 @@ struct UploadLinkResponseBody {
 
 #[derive(Debug, Serialize)]
 struct GetLinksResponseBody {}
+
+#[derive(Debug, Deserialize)]
+struct ReorderLinksPayload {
+    link_id: i32,
+    new_position_id: i32,
+}
 
 async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
     let mut error_string: String = "".to_string();
@@ -449,4 +455,48 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
         }
     };
     build_response(GetLinksResponseBody {}, 200)
+}
+
+pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // get user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return build_error("invalid session!".to_string(), 400),
+    };
+
+    // get reordering links
+    let reorder_link_params: ReorderLinksPayload = match req.body_json().await {
+        Ok(body) => body,
+        Err(e) => return Err(e),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+
+    // assert both links belong to user_id
+    match get_user_link_by_id(&mut conn, reorder_link_params.link_id, user_id).await {
+        Ok(_) => (),
+        Err(_) => return build_error("Invalid link_id provided.".to_string(), 400),
+    };
+
+    match get_user_link_by_id(&mut conn, reorder_link_params.new_position_id, user_id).await {
+        Ok(_) => (),
+        Err(_) => return build_error("Invalid new_position_id provided.".to_string(), 400),
+    };
+
+    // reorder links
+    match reorder_link(
+        &mut conn,
+        reorder_link_params.link_id,
+        reorder_link_params.new_position_id,
+    )
+    .await
+    {
+        Ok(_) => build_standard_response(true, "".to_string(), 200),
+        Err(e) => {
+            error!("Error in reordering link: {}", e);
+            build_error("Error occurred in reordering link.".to_string(), 400)
+        }
+    }
 }
