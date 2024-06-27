@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS images (
     user_id INT,
     link_id INT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL
 );
 
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
