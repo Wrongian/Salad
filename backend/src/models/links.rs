@@ -13,7 +13,7 @@ pub struct GetLink {
     pub href: String,
 }
 
-#[derive(Queryable, Selectable, Insertable)]
+#[derive(Debug, Queryable, Selectable, Insertable)]
 #[diesel(table_name = crate::schema::links)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct InsertLink {

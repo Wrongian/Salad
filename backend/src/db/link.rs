@@ -1,40 +1,86 @@
+use diesel::sql_types::Integer;
 use diesel::{
-    BoolExpressionMethods, ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper,
+    BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, RunQueryDsl,
+    SelectableHelper,
 };
 
 use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
+use diesel::result::Error;
 
 use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
 
 // create a link from a link model instance
-pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> GetLink {
+pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> Result<GetLink, String> {
     use crate::schema::links;
     diesel::insert_into(links::table)
         .values(link)
         .returning(GetLink::as_returning())
         .get_result(conn)
-        .expect("error in creating link")
+        .map_err(|e| match e {
+            Error::DatabaseError(kind, _) => match kind {
+                _ => String::from("An error has occurred in reordering link images."),
+            },
+            _ => String::from("An error occurred when reordering link image."),
+        })
+}
+
+pub async fn reorder_link(
+    conn: &mut PgConnection,
+    curr_link_id: i32,
+    new_position_id: i32,
+) -> Result<(), String> {
+    let result = conn.transaction(|c| {
+        diesel::sql_query("SELECT reorder_link($1, $2)")
+            .bind::<Integer, _>(curr_link_id)
+            .bind::<Integer, _>(new_position_id)
+            .execute(c)
+    });
+
+    result.map(|_| ()).map_err(|e| match e {
+        Error::DatabaseError(kind, _) => match kind {
+            _ => String::from("An error has occurred in reordering link images."),
+        },
+        _ => String::from("An error occurred when reordering link image."),
+    })
 }
 
 // get link by id
 pub async fn get_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<GetLink, String> {
     use crate::schema::links::dsl::*;
-    let result: Result<GetLink, diesel::result::Error> = links
+    let result: Result<GetLink, Error> = links
         .filter(id.eq(link_id))
         .select(GetLink::as_select())
         .first::<GetLink>(conn);
     result.map_err(|_| "Could not find the link.".to_string())
 }
 
+// get all user links
+pub async fn get_user_links_by_id(
+    conn: &mut PgConnection,
+    userid: i32,
+) -> Result<Vec<GetLink>, String> {
+    use crate::schema::links::dsl::*;
+    let result: Result<Vec<GetLink>, Error> = links
+        .filter(user_id.eq(userid))
+        .select(GetLink::as_select())
+        .load::<GetLink>(conn);
+    return result.map_err(|e| match e {
+        Error::DatabaseError(kind, _) => match kind {
+            _ => String::from("An error has occurred in getting the link images."),
+        },
+        _ => String::from("An error occurred when getting link image."),
+    });
+}
+
 // get user link by id
 pub async fn get_user_link_by_id(
     conn: &mut PgConnection,
     link_id: i32,
-    users_id: i32,
+    userid: i32,
 ) -> Result<GetLink, String> {
     use crate::schema::links::dsl::*;
-    let result: Result<GetLink, diesel::result::Error> = links
-        .filter(id.eq(link_id).and(user_id.eq(users_id)))
+    let result: Result<GetLink, Error> = links
+        .filter(id.eq(link_id).and(user_id.eq(userid)))
         .select(GetLink::as_select())
         .first::<GetLink>(conn);
     result.map_err(|_| "Could not find the link.".to_string())
@@ -46,11 +92,10 @@ pub async fn update_link_by_id(
     link_id: i32,
 ) -> Result<bool, String> {
     use crate::schema::links::dsl::*;
-    let updated_link_id: Result<i32, diesel::result::Error> =
-        diesel::update(links.filter(id.eq(link_id)))
-            .set(update_link)
-            .returning(id)
-            .get_result::<i32>(conn);
+    let updated_link_id: Result<i32, Error> = diesel::update(links.filter(id.eq(link_id)))
+        .set(update_link)
+        .returning(id)
+        .get_result::<i32>(conn);
 
     updated_link_id
         .map(|v| v == link_id)
@@ -59,7 +104,7 @@ pub async fn update_link_by_id(
 
 pub async fn delete_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<bool, String> {
     use crate::schema::links::dsl::*;
-    let result: Result<i32, diesel::result::Error> = diesel::delete(links.filter(id.eq(link_id)))
+    let result: Result<i32, Error> = diesel::delete(links.filter(id.eq(link_id)))
         .returning(id)
         .get_result::<i32>(conn);
     return result
@@ -132,7 +177,7 @@ mod unit_test {
             title: None,
             href: "http://test-mock.com".to_string(),
         };
-        db::link::create(&mut conn, &link).await
+        db::link::create(&mut conn, &link).await.unwrap()
     }
 
     #[tokio::test]
@@ -149,10 +194,10 @@ mod unit_test {
             href: "http://test-mock.com".to_string(),
         };
         let link = db::link::create(&mut conn, &link).await;
-        assert!(true);
+        assert!(link.is_ok());
 
         // deletes properly
-        assert!(db::link::delete_link_by_id(&mut conn, link.id)
+        assert!(db::link::delete_link_by_id(&mut conn, link.unwrap().id)
             .await
             .unwrap());
         delete_mock_user(user.id).await;
