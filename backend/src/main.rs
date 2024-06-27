@@ -12,7 +12,8 @@ use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use routes::auth::{is_logged_in, login, logout, register};
 use routes::links_controller::{
-    delete_link_picture, update_link_bio, update_link_href, update_link_picture, update_link_title,
+    add_link, delete_link_picture, update_link_bio, update_link_href, update_link_picture,
+    update_link_title,
 };
 use routes::profile_controller::{get_profile, update_display_profile, update_profile_image};
 use std::env;
@@ -134,6 +135,7 @@ async fn main() -> tide::Result<()> {
     app.at("/profiles/image/:name").put(update_profile_image);
 
     // links
+    app.at("/links").post(add_link);
     app.at("/links/title/:link_id").put(update_link_title);
     app.at("/links/bio/:link_id").put(update_link_bio);
     app.at("/links/href/:link_id").put(update_link_href);

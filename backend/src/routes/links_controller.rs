@@ -1,8 +1,12 @@
 use crate::{
     buckets::file::{delete_s3_link_image, update_s3_link_image},
     db::{
+        self,
         image::{create_link_image, get_link_image, update_link_image},
-        link::{delete_link_by_id, get_link_by_id, get_user_link_by_id, update_link_by_id},
+        link::{
+            delete_link_by_id, get_link_by_id, get_user_link_by_id, get_user_links_by_id,
+            update_link_by_id,
+        },
         DBConnection,
     },
     helpers::{
@@ -11,7 +15,7 @@ use crate::{
     },
     models::{
         images::{GetImage, InsertLinkImage, UpdateImage},
-        links::UpdateLink,
+        links::{GetLink, InsertLink, UpdateLink},
     },
     TideState,
 };
@@ -30,6 +34,7 @@ struct CreateLinkParams {
     title: Option<String>,
     bio: Option<String>,
     href: String,
+    parent_id: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
@@ -52,6 +57,9 @@ struct UploadLinkResponseBody {
     href: String,
 }
 
+#[derive(Debug, Serialize)]
+struct GetLinksResponseBody {}
+
 async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
     let mut error_string: String = "".to_string();
     let validations = e.field_errors();
@@ -73,6 +81,11 @@ async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
 }
 // POST end point for adding a link
 pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return Err(err),
+    };
     // get payload
     let link_params: CreateLinkParams;
     match req.body_json().await {
@@ -80,7 +93,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
             link_params = params;
         }
         Err(e) => {
-            return build_standard_response(false, "Bad Request Body".to_string(), 400);
+            return build_error("Bad Request Body".to_string(), 400);
         }
     }
 
@@ -93,9 +106,22 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     // add to database
     let state = req.state();
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
+    let insert_link = InsertLink {
+        user_id,
+        next_id: link_params.parent_id,
+        prev_id: None,
+        description: link_params.bio,
+        title: link_params.title,
+        href: link_params.href,
+    };
 
-    // return 200; otherwise 400
-    build_standard_response(true, "".to_string(), 200)
+    match db::link::create(&mut conn, &insert_link).await {
+        Ok(_) => build_standard_response(true, "".to_string(), 200),
+        Err(e) => {
+            error!("Error creating link. {:?}, Error: {}", insert_link, e);
+            return build_error("Error occurred while creating link.".to_string(), 400);
+        }
+    }
 }
 
 // TODO: combine update link title, bio & href into the same endpoint
@@ -401,4 +427,26 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
             return build_error("Error occurred in deleting link image.".to_string(), 400);
         }
     }
+}
+
+pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
+    // get user id from session
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(err) => return build_error("invalid session!".to_string(), 400),
+    };
+
+    // get connection state
+    let state = req.state();
+    let mut conn = state.tide_pool.get().unwrap();
+
+    // get all links and return
+    let user_links = match get_user_links_by_id(&mut conn, user_id).await {
+        Ok(links) => links,
+        Err(msg) => {
+            error!("Error in retrieving user links by id: {}", msg);
+            return build_error("Error in getting links".to_string(), 400);
+        }
+    };
+    build_response(GetLinksResponseBody {}, 200)
 }
