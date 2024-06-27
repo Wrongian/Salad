@@ -115,7 +115,6 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     let insert_link = InsertLink {
         user_id,
         next_id: link_params.parent_id,
-        prev_id: None,
         description: link_params.bio,
         title: link_params.title,
         href: link_params.href,
@@ -173,7 +172,6 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     let update_link = UpdateLink {
         user_id: None,
         next_id: None,
-        prev_id: None,
         description: None,
         title: Some(update_title.title),
         href: None,
@@ -228,7 +226,6 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     let update_bio = UpdateLink {
         user_id: None,
         next_id: None,
-        prev_id: None,
         title: None,
         description: Some(update_bio.bio),
         href: None,
@@ -282,7 +279,6 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     let update_link = UpdateLink {
         user_id: None,
         next_id: None,
-        prev_id: None,
         description: None,
         title: None,
         href: Some(updated_href.href),

@@ -7,7 +7,6 @@ pub struct GetLink {
     pub id: i32,
     pub user_id: i32,
     pub next_id: Option<i32>,
-    pub prev_id: Option<i32>,
     pub description: Option<String>,
     pub title: Option<String>,
     pub href: String,
@@ -19,7 +18,6 @@ pub struct GetLink {
 pub struct InsertLink {
     pub user_id: i32,
     pub next_id: Option<i32>,
-    pub prev_id: Option<i32>,
     pub description: Option<String>,
     pub title: Option<String>,
     pub href: String,
@@ -30,7 +28,6 @@ pub struct InsertLink {
 pub struct UpdateLink {
     pub user_id: Option<i32>,
     pub next_id: Option<i32>,
-    pub prev_id: Option<i32>,
     pub description: Option<String>,
     pub title: Option<String>,
     pub href: Option<String>,

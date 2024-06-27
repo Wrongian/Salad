@@ -15,7 +15,6 @@ diesel::table! {
         id -> Int4,
         user_id -> Int4,
         next_id -> Nullable<Int4>,
-        prev_id -> Nullable<Int4>,
         description -> Nullable<Varchar>,
         title -> Nullable<Varchar>,
         #[max_length = 255]

@@ -220,9 +220,6 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     build_response(res_body, 200)
 }
 
-pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
-    Ok(Response::builder(200).build())
-}
 // delete profile response builder
 pub async fn delete_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // TODO: implementation

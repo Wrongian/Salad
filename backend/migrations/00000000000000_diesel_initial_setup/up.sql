@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS links (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     next_id INT UNIQUE,
-    prev_id INT,
     description VARCHAR,
     title VARCHAR,
     href VARCHAR(255) NOT NULL,

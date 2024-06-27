@@ -172,7 +172,6 @@ mod unit_test {
         let link = InsertLink {
             user_id,
             next_id: None,
-            prev_id: None,
             description: None,
             title: None,
             href: "http://test-mock.com".to_string(),
@@ -188,7 +187,6 @@ mod unit_test {
         let link = InsertLink {
             user_id: user.id,
             next_id: None,
-            prev_id: None,
             description: None,
             title: None,
             href: "http://test-mock.com".to_string(),
