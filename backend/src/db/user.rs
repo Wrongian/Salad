@@ -79,28 +79,15 @@ pub async fn get_user_profile_by_username(
 ) -> Result<UserProfileView, String> {
     use crate::schema::users::dsl::*;
 
-    let retrieved_obj: Result<(i32, String, Option<String>, String), Error> = users
+    let retrieved_obj: Result<UserProfileView, Error> = users
         .filter(username.eq(&name))
-        .select((id, username, bio, display_name))
-        .first::<(i32, String, Option<String>, String)>(conn);
+        .select(UserProfileView::as_select())
+        .first::<UserProfileView>(conn);
 
-    match retrieved_obj {
-        Ok(obj) => Ok(UserProfileView {
-            id: obj.0,
-            username: obj.1,
-            bio: obj.2,
-            display_name: obj.3,
-            picture: String::from("this_picture_is_a_placeholder"), // empty placeholder for now
-        }),
-        Err(err) => match err {
-            Error::NotFound => Err(String::from(
-                "Unable to find user profile with the given username.",
-            )),
-            _ => Err(String::from(
-                "Error occurred in querying database for user profile.",
-            )),
-        },
-    }
+    retrieved_obj.map_err(|e| match e {
+        Error::NotFound => String::from("Unable to find user profile with the given username."),
+        _ => String::from("Error occurred in querying database for user profile."),
+    })
 }
 
 pub async fn get_user_by_id(conn: &mut PgConnection, user_id: i32) -> Result<GetUser, String> {
