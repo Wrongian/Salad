@@ -50,7 +50,7 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
     // get json body as UpdateProfilePayload
     let update_body: UpdateDisplayProfilePayload = match req.body_json().await {

@@ -95,7 +95,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
     // get payload
     let link_params: CreateLinkParams;
@@ -104,6 +104,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
             link_params = params;
         }
         Err(e) => {
+            error!("Error occurred in parsing: {:?}", e);
             return build_error("Bad Request Body".to_string(), 400);
         }
     }
@@ -148,7 +149,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // extract link id
@@ -203,7 +204,7 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // extract link id
@@ -257,7 +258,7 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // extract link id
@@ -310,7 +311,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // get user link from link id from params
@@ -395,7 +396,7 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // get user link from link id from params
@@ -449,7 +450,7 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     // get session username from session
     let session_username = match get_session_username(&req) {
         Ok(session_usr) => session_usr,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // get username from params
@@ -494,7 +495,7 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // get link id from params
@@ -548,7 +549,7 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(_) => return build_error("invalid session!".to_string(), 400),
     };
 
     // get reordering links
