@@ -6,6 +6,7 @@ use diesel::{
 
 use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 use diesel::result::Error;
+use log::error;
 
 use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
 
@@ -107,9 +108,10 @@ pub async fn delete_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<
     let result: Result<i32, Error> = diesel::delete(links.filter(id.eq(link_id)))
         .returning(id)
         .get_result::<i32>(conn);
-    return result
-        .map(|res| res == link_id)
-        .map_err(|_| "Error occurred in deleting the link.".to_string());
+    return result.map(|res| res == link_id).map_err(|e| {
+        error!("Error in deleting: {:?}", e);
+        "Error occurred in deleting the link.".to_string()
+    });
 }
 
 #[cfg(test)]

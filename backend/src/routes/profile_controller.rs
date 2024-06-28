@@ -162,8 +162,8 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // println!("{}", req.session().is_expired());
     // get relevant username session field
     let session_username: String = req.session().get("username").unwrap_or("".to_owned());
-    println!("session username: {}", &session_username);
-    log::info!("Obtained username in get_profile: {}", &username);
+    info!("session username: {}", &session_username);
+    info!("Obtained username in get_profile: {}", &username);
 
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
