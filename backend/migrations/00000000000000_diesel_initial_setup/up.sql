@@ -17,8 +17,7 @@ CREATE TABLE IF NOT EXISTS links (
     description VARCHAR,
     title VARCHAR,
     href VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (next_id) REFERENCES links(id) 
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS images (
