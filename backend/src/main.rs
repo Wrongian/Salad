@@ -132,7 +132,7 @@ async fn main() -> tide::Result<()> {
     // profile
     app.at("/profiles/:username").get(get_profile);
     app.at("/profiles/display").put(update_display_profile);
-    app.at("/profiles/image/:name").put(update_profile_image);
+    app.at("/profiles/image/:ext").put(update_profile_image);
 
     // links
     app.at("/links/:username").get(get_links);
@@ -141,7 +141,7 @@ async fn main() -> tide::Result<()> {
     app.at("/links/title/:link_id").put(update_link_title);
     app.at("/links/bio/:link_id").put(update_link_bio);
     app.at("/links/href/:link_id").put(update_link_href);
-    app.at("/links/:link_id/image/:name")
+    app.at("/links/:link_id/image/:ext")
         .put(update_link_picture);
     app.at("/links/:link_id/image").delete(delete_link_picture);
     app.at("/links/:link_id").delete(delete_links);
