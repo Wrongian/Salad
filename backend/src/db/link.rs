@@ -8,7 +8,10 @@ use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 use diesel::result::Error;
 use log::error;
 
+use crate::models::images::GetImage;
 use crate::models::links::{self, GetLink, InsertLink, UpdateLink};
+use crate::schema;
+use crate::schema::links::id;
 
 // create a link from a link model instance
 pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> Result<GetLink, String> {
@@ -59,12 +62,15 @@ pub async fn get_link_by_id(conn: &mut PgConnection, link_id: i32) -> Result<Get
 pub async fn get_user_links_by_id(
     conn: &mut PgConnection,
     userid: i32,
-) -> Result<Vec<GetLink>, String> {
+) -> Result<Vec<(GetLink, Option<GetImage>)>, String> {
+    use crate::schema::images::dsl;
     use crate::schema::links::dsl::*;
-    let result: Result<Vec<GetLink>, Error> = links
-        .filter(user_id.eq(userid))
-        .select(GetLink::as_select())
-        .load::<GetLink>(conn);
+    use diesel::query_dsl::methods::DistinctOnDsl;
+    let result: Result<Vec<(GetLink, Option<GetImage>)>, Error> =
+        diesel::QueryDsl::left_join(links.filter(user_id.eq(userid)), dsl::images)
+            .select((GetLink::as_select(), Option::<GetImage>::as_select()))
+            .distinct_on(schema::links::id)
+            .load::<(GetLink, Option<GetImage>)>(conn);
     return result.map_err(|e| match e {
         Error::DatabaseError(kind, _) => match kind {
             _ => String::from("An error has occurred in getting the link images."),

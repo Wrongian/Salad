@@ -1,12 +1,12 @@
-use crate::models::links::GetLink;
+use crate::routes::links_controller::GetImagedLink;
 use priority_queue::PriorityQueue;
 use std::{cmp::Reverse, collections::HashMap};
 
 // we assume each GetLink element is unique (i.e link.id is unique) in the vector.
-pub fn linearise(links: &Vec<GetLink>) -> Vec<GetLink> {
-    let mut link_map = HashMap::<i32, GetLink>::new();
+pub fn linearise(links: &Vec<GetImagedLink>) -> Vec<GetImagedLink> {
+    let mut link_map = HashMap::<i32, GetImagedLink>::new();
     let mut pq = PriorityQueue::<i32, Reverse<i32>>::new();
-    let mut linearised = Vec::<GetLink>::new();
+    let mut linearised = Vec::<GetImagedLink>::new();
 
     for link in links {
         link_map.insert(link.id, link.clone());
@@ -36,53 +36,58 @@ pub fn linearise(links: &Vec<GetLink>) -> Vec<GetLink> {
 
 #[cfg(test)]
 mod unit_tests {
-    use crate::models::links::GetLink;
+    use crate::{models::links::GetLink, routes::links_controller::GetImagedLink};
 
     use super::linearise;
 
     #[test]
     pub fn it_should_return_linearised() {
         // 3 -> 4 -> 2 -> 1 -> 0
-        let unique_links = Vec::<GetLink>::from([
-            GetLink {
+        let unique_links = Vec::<GetImagedLink>::from([
+            GetImagedLink {
                 id: 0,
                 user_id: 0,
                 next_id: None,
                 description: None,
                 title: None,
                 href: "".to_string(),
+                img_src: None,
             },
-            GetLink {
+            GetImagedLink {
                 id: 1,
                 user_id: 0,
                 next_id: Some(0),
                 description: None,
                 title: None,
                 href: "".to_string(),
+                img_src: None,
             },
-            GetLink {
+            GetImagedLink {
                 id: 2,
                 user_id: 0,
                 next_id: Some(1),
                 description: None,
                 title: None,
                 href: "".to_string(),
+                img_src: None,
             },
-            GetLink {
+            GetImagedLink {
                 id: 3,
                 user_id: 0,
                 next_id: Some(4),
                 description: None,
                 title: None,
                 href: "".to_string(),
+                img_src: None,
             },
-            GetLink {
+            GetImagedLink {
                 id: 4,
                 user_id: 0,
                 next_id: Some(2),
                 description: None,
                 title: None,
                 href: "".to_string(),
+                img_src: None,
             },
         ]);
         let result_ids: Vec<i32> = linearise(&unique_links)

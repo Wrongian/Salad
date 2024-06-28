@@ -7,6 +7,8 @@ pub struct GetImage {
     pub id: i32,
     pub img_src: String,
     pub filename: String,
+    pub user_id: Option<i32>,
+    pub link_id: Option<i32>,
 }
 
 #[derive(Queryable, Insertable)]
