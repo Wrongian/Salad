@@ -12,6 +12,7 @@ use crate::{
     },
     helpers::{
         auth::{get_session_user_id, get_session_username},
+        links::linearise,
         response::{build_error, build_response, build_standard_response},
     },
     models::{
@@ -475,7 +476,12 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     // otherwise either owner or querying a public profile.
     // Thus, get all links and return
     match get_user_links_by_id(&mut conn, profile.id).await {
-        Ok(links) => build_response(GetLinksResponseBody { links }, 200),
+        Ok(links) => build_response(
+            GetLinksResponseBody {
+                links: linearise(&links),
+            },
+            200,
+        ),
         Err(msg) => {
             error!("Error in retrieving user links by id: {}", msg);
             build_error("Error in getting links".to_string(), 400)
