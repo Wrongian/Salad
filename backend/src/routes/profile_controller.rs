@@ -13,6 +13,7 @@ use aws_sdk_s3::primitives::ByteStream;
 use tide::log::{error, info, warn};
 use tide::Request;
 use tide::Response;
+use uuid::Uuid;
 use validator::Validate;
 
 // Profile parameters struct
@@ -85,8 +86,8 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
     };
 
     // get :name from params
-    let image_name = match req.param("name") {
-        Ok(name) => name.to_string(),
+    let image_name = match req.param("ext") {
+        Ok(ext) => [Uuid::new_v4().to_string(), ext.to_string()].join("."),
         Err(err) => return Err(err),
     };
 

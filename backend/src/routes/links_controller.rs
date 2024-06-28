@@ -29,6 +29,7 @@ use tide::{
     log::{error, info},
     Request,
 };
+use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
@@ -322,8 +323,8 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     };
 
     // get :name from params
-    let image_name = match req.param("name") {
-        Ok(name) => name.to_string(),
+    let image_name = match req.param("ext") {
+        Ok(ext) => [Uuid::new_v4().to_string(), ext.to_string()].join("."),
         Err(err) => return Err(err),
     };
 
