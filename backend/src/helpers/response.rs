@@ -10,10 +10,7 @@ pub struct StandardBody {
 // build a tide result with standard response body
 pub fn build_standard_response(result: bool, err: String, status: u16) -> tide::Result {
     // build response
-    let res_body = StandardBody {
-        result: result,
-        err: err,
-    };
+    let res_body = StandardBody { result, err };
     let response = Response::builder(status)
         .body(tide::Body::from_json(&res_body)?)
         .build();
@@ -30,7 +27,13 @@ pub fn build_response(body: impl serde::Serialize, status: u16) -> tide::Result 
 
 // build an error response
 pub fn build_error(message: String, status: u16) -> tide::Result {
-    let response = Response::builder(status).body(message).build();
+    let err_body = StandardBody {
+        result: false,
+        err: message,
+    };
+    let response = Response::builder(status)
+        .body(tide::Body::from_json(&err_body)?)
+        .build();
     Ok(response)
 }
 
