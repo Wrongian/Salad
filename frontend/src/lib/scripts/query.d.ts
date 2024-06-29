@@ -5,10 +5,21 @@ export type TUpdateProfileQuery = {
   is_private?: boolean;
 };
 
+export type TUpdateProfile = {
+  display_name?: string;
+  bio?: string;
+};
+
 export type TAuthResult = {
   status: number;
   err: string;
 };
+
+export type TCreateLinkPayload = {
+  title?: string,
+  bio?: string,
+  href: string
+}
 
 export type TResponseBody = {
   result: boolean;
