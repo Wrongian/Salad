@@ -45,9 +45,9 @@
   <title>Welcome to Saladify!</title>
 </svelte:head>
 <Errors />
-<div class="h-screen">
-  <nav class="bg-lime-100">
-    <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+<div class="h-screen bg-lime-50">
+  <nav class="bg-lime-200">
+    <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8">
       <div class="relative flex h-8 items-center justify-between">
         <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
           <!-- Mobile -->
@@ -73,6 +73,7 @@
 
               {#if data.isLoggedIn}
               <NavLink linkName={`My Profile`} link={`/profiles`}></NavLink>
+              <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
               {/if}
               <NavLink linkName={`Search`} link = {`/search`}></NavLink>
             </div>
@@ -110,7 +111,7 @@
             </div>
 
             {#if isDropdownOpen && data.isLoggedIn}
-            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+            <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-lime-50 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                <DropDownLink linkName = "Settings" link = "/settings"></DropDownLink>
                <DropDownLinkNoPreload linkName = "Logout" link = "/logout"></DropDownLinkNoPreload>
             </div>
@@ -125,6 +126,7 @@
       <div class="space-y-1 px-2 pb-3 pt-2">
         {#if data.isLoggedIn == true}
         <NavLink linkName={`My Profile`} link={`/profiles`}></NavLink>
+        <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
         {/if}
         <NavLink linkName={`Search`} link = {`/search`}></NavLink>
       </div>
