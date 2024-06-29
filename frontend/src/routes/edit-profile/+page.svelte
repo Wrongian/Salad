@@ -7,6 +7,7 @@
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
   import { updateTextProfile } from "$lib/scripts/queries";
   import type { TLink } from "$lib/scripts/response-validator";
+  import { updateProfilePicture } from "$lib/scripts/queries";
   export let data: PageData;
   export let links : TLink[] = data.links;
 
@@ -24,7 +25,7 @@
   } 
   // placeholder for now
   const submitBio = () => {
-    updateTextProfile({bio: bioData}) 
+    updateTextProfile({bio: displayNameData}) 
   }
 
 
@@ -90,6 +91,6 @@
     {/if}
 </div> 
 {#if isModalShown}
-<PictureModal modalText = "Upload Profile Picture" bind:isModalShown> 
+<PictureModal imageSubmitFunction={updateProfilePicture} modalText = "Upload Profile Picture" bind:isModalShown> 
 </PictureModal>
 {/if}

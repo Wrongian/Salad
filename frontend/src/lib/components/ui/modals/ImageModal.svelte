@@ -1,11 +1,22 @@
 <script lang="ts">
+    import type { ImageSubmitFunction } from "$lib/types/Callback";
     export let isModalShown: boolean = false;
     export let modalText : string = "";
+    export let imageSubmitFunction: ImageSubmitFunction;
     let files : FileList;
-
+    const ALLOWEDFILETYPES = ["image/png", "image/jpeg", "image/jpg"]; 
     // placeholder for now
-    const submitPicture = () => {
-
+    const submitPicture = async () => {
+        if (files && files[0]) {
+            let file: File = files[0];
+            let mimetype: string = file.type
+            let filetypeArray: string[] = mimetype.split("/");
+            let filetype :string = filetypeArray[filetypeArray.length - 1];
+            if (ALLOWEDFILETYPES.includes(mimetype)) {
+                // let arrayBuffer :ArrayBuffer = await files[0].arrayBuffer()
+                await imageSubmitFunction(file, filetype);
+            }
+        }
     } 
 
     // todo
@@ -43,19 +54,22 @@
                                         <p class="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-600">
                                             Upload Image</p>
                                     </div>
-                                    <input on:change={() => {}} accept="image/png, image/jpeg" type="file" class="opacity-0" bind:files />
+                                    <input bind:files on:change={async () => {await submitPicture()}} accept="image/png, image/jpeg, image/jpg" type="file" class="opacity-0"  />
                                 </label>
                             </div>
                         </div>
                 </div>
             </div> 
-                <!--Loading Bar--> 
-                <div class="m-8 bg-lime-200 rounded-full h-3 mt-4">
+                <!--WIP Loading Bar--> 
+                <!-- <div class="m-8 bg-lime-200 rounded-full h-3 mt-4">
                     <div class="bg-lime-500 h-3 rounded-full" style="width: 30%">
                     </div>
-                </div>
+                </div> -->
+                <div class="m-8 h-3 mt-4 text-gray-500 font-small">
+                    <span>Allowed file types: png, jpeg, jpg</span>
+                    </div>
             </div>
         </div>
-    </div>
+    </div >
 </div> 
 
