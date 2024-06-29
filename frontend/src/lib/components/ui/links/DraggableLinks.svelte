@@ -2,8 +2,9 @@
     import type { LinkData } from "$lib/types/Profile";
     import Link from "./Link.svelte";
     import type { ListData } from "$lib/types/Profile";
+    import type { TLink } from "$lib/scripts/response-validator";
     import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
-    export let links : LinkData[];
+    export let links : TLink[];
     let list : ListData[] = [];
     let currentlyDragged:number | null = null;
     let overIndex : number | null = null;

@@ -1,10 +1,11 @@
 <script lang="ts">
-    import type { LinkData, ListData } from "$lib/types/Profile";
+    import type { ListData } from "$lib/types/Profile";
+    import type { TLink } from "$lib/scripts/response-validator";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import type { Callback } from "$lib/types/Callback";
     export let modalCallback : Callback;
     export let listData : ListData;
-    let link: LinkData;
+    let link: TLink;
     let isFocused = false;
     $: link = listData.linkData;
     $: dragClass = listData.isDragged ? "opacity-0" : "";
@@ -29,7 +30,7 @@
             <div class="px-4 pt-2 relative">
         <button  on:click={() => {modalCallback()}} >
         <Avatar.Root class="w-[100px] h-[100px] ring-2 ring-lime-300 ">
-            <Avatar.Image class="z-4 hover:brightness-50 peer-hover/image" src={link.imageLink} alt="">
+            <Avatar.Image class="z-4 hover:brightness-50 peer-hover/image" src={link.href} alt="">
             </Avatar.Image>
             <Avatar.Fallback></Avatar.Fallback>
         </Avatar.Root>
@@ -49,7 +50,7 @@
             <div class="mb-1 py-1 w-[1100px]">
                 <!--Might need validation for URL -->
                 <label for="change-url-{link.id}" class="block mb-2 font-medium text-xl text-gray-900">Change Link URL:</label>
-                <input on:focus={() => {isFocused = true}} on:focusout={() => {submitURL(link.id)}} type="text" id="change-url-{link.id}" bind:value={link.url} class="block font-medium px-0 w-full text-2xl text-gray-900 border-lime-300 bg-transparent border-b-2 focus:outline-none focus:ring-0 focus:border-lime-600" placeholder="" />
+                <input on:focus={() => {isFocused = true}} on:focusout={() => {submitURL(link.id)}} type="text" id="change-url-{link.id}" bind:value={link.href} class="block font-medium px-0 w-full text-2xl text-gray-900 border-lime-300 bg-transparent border-b-2 focus:outline-none focus:ring-0 focus:border-lime-600" placeholder="" />
             </div>
             <label for="change-description-{link.id}" class="block mb-2 font-medium text-xl text-gray-900">Change Description:</label>
             <textarea on:focus={() => {isFocused = true}} on:focusout={() => {submitDescription(link.id)}} bind:value={link.description} id="change-description-{link.id}" class="block w-[1100px] h-[100px] py-2 px-2 "/>

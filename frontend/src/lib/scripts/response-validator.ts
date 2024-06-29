@@ -24,20 +24,26 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
   is_private: Joi.boolean(),
 }).unknown();
 
-export type TLinkBody = Array<{
-  link_id: string;
-  title: string;
+export type TLink = {
+  id: number;
+  user_id: number;
+  next_id: number | undefined
+  title: string | undefined;
   href: string;
-  description: string;
-  picture: string;
-}>;
+  description: string | undefined;
+  img_src: string | undefined;
+}
 
-export const TLinkBodyValidator = Joi.array<TLinkBody>().items(
-  Joi.object({
-    link_id: Joi.string(),
-    title: Joi.string(),
-    href: Joi.string(),
-    description: Joi.string(),
-    picture: Joi.string(),
-  })
-);
+export const TLinkBodyValidator = Joi.object<{links: TLink[]}>({
+  links: Joi.array<TLink[]>().items(
+          Joi.object({
+            id: Joi.number(),
+            user_id: Joi.number().required(),
+            next_id: Joi.number().optional(),
+            href: Joi.string().required(),
+            title: Joi.string().optional(),
+            description: Joi.string().optional(),
+            img_src: Joi.string().optional(),
+          })
+        ).min(0)
+});
