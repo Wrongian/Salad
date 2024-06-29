@@ -1,14 +1,20 @@
 <script lang="ts">
     import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
+    import { addLinks } from "$lib/scripts/queries";
 
     let isModalShown = false;
     let linkName = "";
     let linkUrl = "";
     let linkDescription = "";
 
-    const submitLink = () => {
+    const submitLink = async () => {
 
+        await addLinks({
+            href: linkUrl,
+            title: linkName ?? undefined,
+            bio: linkName ?? undefined
+        })
     }
 </script>
 
@@ -33,6 +39,6 @@
 <button on:click={() => {submitLink()}} type="button" class="text-white bg-green-600 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none ">Submit</button>
 </div>
 {#if isModalShown}
-<PictureModal modalText="Upload Link Picture" bind:isModalShown> 
+<PictureModal imageSubmitFunction={async (a,b) => {}} modalText="Upload Link Picture" bind:isModalShown> 
 </PictureModal>
 {/if}
