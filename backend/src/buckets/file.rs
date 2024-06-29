@@ -38,7 +38,10 @@ async fn create_bucket(
 }
 
 // one profile image per user?
-pub async fn get_profile_image(client: &s3::Client, user_id: String) -> Result<ByteStream, String> {
+pub async fn get_s3_profile_image(
+    client: &s3::Client,
+    user_id: String,
+) -> Result<ByteStream, String> {
     let get_object = client
         .get_object()
         .bucket(PROFILE_IMAGE_BUCKET)
@@ -54,15 +57,15 @@ pub async fn get_profile_image(client: &s3::Client, user_id: String) -> Result<B
 
 // please perform checks before calling this method.
 // this method will not check if user_id exists in the postgres db
-pub async fn update_profile_image(
+pub async fn update_s3_profile_image(
     client: &s3::Client,
-    user_id: String,
+    profile_img_name: String,
     content: ByteStream,
 ) -> Result<(), &str> {
     let put_object = client
         .put_object()
         .bucket(PROFILE_IMAGE_BUCKET)
-        .key(format!("{}", user_id))
+        .key(format!("{}", profile_img_name))
         .body(content)
         .send()
         .await;
@@ -76,11 +79,11 @@ pub async fn update_profile_image(
     }
 }
 
-pub async fn delete_profile_image(client: &s3::Client, user_id: String) -> Result<(), &str> {
+pub async fn delete_s3_profile_image(client: &s3::Client, img_name: String) -> Result<(), &str> {
     let delete_response = client
         .delete_object()
         .bucket(PROFILE_IMAGE_BUCKET)
-        .key(format!("{}", user_id))
+        .key(format!("{}", img_name))
         .send()
         .await;
 
@@ -89,7 +92,7 @@ pub async fn delete_profile_image(client: &s3::Client, user_id: String) -> Resul
         Err(res) => Err("failed to delete profile image."),
     }
 }
-pub async fn get_link_image(client: &s3::Client, link_id: String) -> Result<ByteStream, &str> {
+pub async fn get_s3_link_image(client: &s3::Client, link_id: String) -> Result<ByteStream, &str> {
     let get_object = client
         .get_object()
         .bucket(LINK_IMAGE_BUCKET)
@@ -103,15 +106,15 @@ pub async fn get_link_image(client: &s3::Client, link_id: String) -> Result<Byte
     }
 }
 // probably not used as a middleware
-pub async fn update_link_image(
+pub async fn update_s3_link_image(
     client: &s3::Client,
-    link_id: String,
+    link_img_name: String,
     content: ByteStream,
 ) -> Result<(), &str> {
     let put_object = client
         .put_object()
         .bucket(LINK_IMAGE_BUCKET)
-        .key(format!("{}", link_id))
+        .key(format!("{}", link_img_name))
         .body(content)
         .send()
         .await;
@@ -125,17 +128,20 @@ pub async fn update_link_image(
     }
 }
 
-pub async fn delete_link_image(client: &s3::Client, link_id: String) -> Result<(), &str> {
+pub async fn delete_s3_link_image(client: &s3::Client, img_name: String) -> Result<(), String> {
     let delete_response = client
         .delete_object()
         .bucket(LINK_IMAGE_BUCKET)
-        .key(format!("{}", link_id))
+        .key(format!("{}", img_name))
         .send()
         .await;
 
     match delete_response {
         Ok(res) => Ok(()),
-        Err(res) => Err("failed to delete link image."),
+        Err(res) => {
+            println!("delete image failed with: {:?}", res);
+            return Err(String::from("failed to delete image from aws s3"));
+        }
     }
 }
 
@@ -153,7 +159,7 @@ mod unit_tests {
     use aws_sdk_s3::{self as s3, primitives::ByteStream};
     use bytes::Bytes;
 
-    use crate::buckets::file::{get_profile_image, update_profile_image};
+    use crate::buckets::file::{get_s3_profile_image, update_s3_profile_image};
 
     async fn create_s3_client() -> s3::Client {
         let region_provider = RegionProviderChain::default_provider().or_else("ap-southeast-2");
@@ -166,14 +172,14 @@ mod unit_tests {
     #[tokio::test]
     async fn it_fails_to_get_non_existent_profile_image() {
         let client = create_s3_client().await;
-        let res = get_profile_image(&client, "-123".to_string()).await;
+        let res = get_s3_profile_image(&client, "-123".to_string()).await;
         assert!(!res.is_ok());
     }
 
     #[tokio::test]
     async fn it_gets_existing_profile_image() {
         let client = create_s3_client().await;
-        let res = get_profile_image(&client, "test-profile-image-1.txt".to_string()).await;
+        let res = get_s3_profile_image(&client, "test-profile-image-1.txt".to_string()).await;
 
         let bytes = res
             .map_err(|e: String| {
@@ -193,7 +199,7 @@ mod unit_tests {
     #[tokio::test]
     async fn it_updates_profile_image() {
         let client = create_s3_client().await;
-        let res = update_profile_image(
+        let res = update_s3_profile_image(
             &client,
             "test-user".to_string(),
             ByteStream::from(Bytes::from_static(b"updated content")),
@@ -202,7 +208,7 @@ mod unit_tests {
         // update is successful
         assert!(res.is_ok());
 
-        let res = update_profile_image(
+        let res = update_s3_profile_image(
             &client,
             "test-user".to_string(),
             ByteStream::from(Bytes::from_static(b"old content")),

@@ -1,5 +1,6 @@
 pub mod buckets;
 pub mod funcs;
+pub mod helpers;
 pub mod models;
 pub mod routes;
 pub mod schema;
@@ -9,8 +10,12 @@ use aws_config::BehaviorVersion;
 use buckets::file::setup_buckets;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use routes::auth::{login, logout, register, is_logged_in};
-use routes::profile_controller::get_profile;
+use routes::auth::{is_logged_in, login, logout, register};
+use routes::links_controller::{
+    add_link, delete_link_picture, delete_links, get_links, reorder_links, update_link_bio,
+    update_link_href, update_link_picture, update_link_title,
+};
+use routes::profile_controller::{get_profile, update_display_profile, update_profile_image};
 use std::env;
 pub mod db;
 use aws_sdk_s3::{self as s3, config};
@@ -19,6 +24,8 @@ use http_types::headers::HeaderValue;
 use std::sync::Arc;
 use tide::security::{CorsMiddleware, Origin};
 
+use std::path::Path;
+use tempfile::TempDir;
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -28,12 +35,19 @@ pub type TidePool = Pool<ConnectionManager<PgConnection>>;
 pub struct TideState {
     pub tide_pool: TidePool,
     pub s3_client: s3::Client,
+    pub tempdir: TempDir,
+}
+
+impl TideState {
+    fn path(&self) -> &Path {
+        self.tempdir.path()
+    }
 }
 
 // todo replace unwraps with expect
 
 // main function
-#[::tokio::main]
+#[tokio::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
@@ -69,6 +83,7 @@ async fn main() -> tide::Result<()> {
     let tide_state = Arc::new(TideState {
         tide_pool: pool,
         s3_client,
+        tempdir: tempfile::tempdir()?,
     });
 
     // create app
@@ -113,8 +128,24 @@ async fn main() -> tide::Result<()> {
     app.at("/register").post(register);
     app.at("/logout").get(logout);
     app.at("/logged-in").get(is_logged_in);
+
     // profile
     app.at("/profiles/:username").get(get_profile);
+    app.at("/profiles/display").put(update_display_profile);
+    app.at("/profiles/image/:ext").put(update_profile_image);
+
+    // links
+    app.at("/links/:username").get(get_links);
+    app.at("/links").post(add_link);
+    app.at("/links/reorder").post(reorder_links);
+    app.at("/links/title/:link_id").put(update_link_title);
+    app.at("/links/bio/:link_id").put(update_link_bio);
+    app.at("/links/href/:link_id").put(update_link_href);
+    app.at("/links/:link_id/image/:ext")
+        .put(update_link_picture);
+    app.at("/links/:link_id/image").delete(delete_link_picture);
+    app.at("/links/:link_id").delete(delete_links);
+
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
@@ -128,8 +159,8 @@ mod unit_tests {
     use diesel::PgConnection;
 
     #[tokio::test]
-    async fn db_connection_test() -> tide::Result<()> {
-        let conn: PgConnection = start_connection().await;
+    async fn it_can_connect_to_db() -> tide::Result<()> {
+        start_connection().await;
         Ok(())
     }
 }

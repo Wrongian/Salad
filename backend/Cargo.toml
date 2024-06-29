@@ -22,3 +22,7 @@ tokio = { version = "1", features = ["full"] }
 aws-sdk-s3 = "1.37.0"
 aws-config = "1.5.2"
 bytes = "1.6.0"
+random-string = "1.1.0"
+tempfile = "3.10.1"
+priority-queue = "2.0.3"
+uuid = {version = "1.9.1", features = ["v4", "fast-rng"]}
