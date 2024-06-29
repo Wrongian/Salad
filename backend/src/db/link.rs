@@ -1,4 +1,4 @@
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Nullable};
 use diesel::{
     BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, RunQueryDsl,
     SelectableHelper,
@@ -27,7 +27,7 @@ pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> Result<GetLin
         })
         .map_err(|e| match e {
             Error::DatabaseError(kind, _) => match kind {
-                _ => String::from("An error has occurred in reordering link images."),
+                _ => String::from("An error has occurred in reordering links"),
             },
             _ => String::from("An error occurred when reordering link image."),
         })
@@ -36,21 +36,27 @@ pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> Result<GetLin
 pub async fn reorder_link(
     conn: &mut PgConnection,
     curr_link_id: i32,
-    new_position_id: i32,
+    new_position_id: Option<i32>,
 ) -> Result<(), String> {
     let result = conn.transaction(|c| {
         diesel::sql_query("SELECT reorder_link($1, $2)")
             .bind::<Integer, _>(curr_link_id)
-            .bind::<Integer, _>(new_position_id)
+            .bind::<Nullable<Integer>, _>(new_position_id)
             .execute(c)
     });
 
-    result.map(|_| ()).map_err(|e| match e {
-        Error::DatabaseError(kind, _) => match kind {
-            _ => String::from("An error has occurred in reordering link images."),
-        },
-        _ => String::from("An error occurred when reordering link image."),
-    })
+    result
+        .map(|_| ())
+        .map_err(|e| {
+            error!("An error has occurred: {:?}", e);
+            e
+        })
+        .map_err(|e| match e {
+            Error::DatabaseError(kind, _) => match kind {
+                _ => String::from("An error has occurred in reordering links."),
+            },
+            _ => String::from("An error occurred when reordering link image."),
+        })
 }
 
 // get link by id
