@@ -80,7 +80,8 @@
               <NavLink linkName={`My Profile`} link={profileRoute}></NavLink>
               <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
               {/if}
-              <NavLink linkName={`Search`} link = {`/search`}></NavLink>
+              <!--No implementation now so comment out-->
+              <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
             </div>
           </div>
         </div>
@@ -133,7 +134,8 @@
         <NavLink linkName={`My Profile`} link={profileRoute}></NavLink>
         <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
         {/if}
-        <NavLink linkName={`Search`} link = {`/search`}></NavLink>
+        <!--No implementation yet-->
+        <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
       </div>
     </div>
   </nav>
