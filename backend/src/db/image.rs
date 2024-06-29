@@ -5,6 +5,8 @@ use diesel::{
 
 use diesel::query_dsl::methods::{FilterDsl, SelectDsl};
 
+use tide::log::{error};
+
 use crate::models::images::{GetImage, InsertLinkImage, InsertProfileImage, UpdateImage};
 
 pub async fn create_profile_image(
@@ -122,6 +124,10 @@ pub async fn delete_profile_image(
         diesel::delete(images.filter(user_id.eq(user_id_query))).execute(conn);
     return result
         .map(|_| ())
+        .map_err(|e| {
+            error!("Error in deleting profile image in db: {:?}", e);
+            e
+        })
         .map_err(|_| "Error occurred in deleting the link.".to_string());
 }
 
@@ -132,5 +138,9 @@ pub async fn delete_link_image(conn: &mut PgConnection, link_id_query: i32) -> R
         diesel::delete(images.filter(link_id.eq(link_id_query))).execute(conn);
     return result
         .map(|_| ())
+        .map_err(|e| {
+            error!("Error in deleting link image: {:?}", e);
+            e
+        })
         .map_err(|_| "Error occurred in deleting the link.".to_string());
 }
