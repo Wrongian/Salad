@@ -20,6 +20,11 @@ pub async fn create(conn: &mut PgConnection, link: &InsertLink) -> Result<GetLin
         .values(link)
         .returning(GetLink::as_returning())
         .get_result(conn)
+        .map_err(|e| {
+            // logging
+            error!("Error in creating link: {:?}", e);
+            e
+        })
         .map_err(|e| match e {
             Error::DatabaseError(kind, _) => match kind {
                 _ => String::from("An error has occurred in reordering link images."),

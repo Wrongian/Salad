@@ -36,7 +36,7 @@ pub fn linearise(links: &Vec<GetImagedLink>) -> Vec<GetImagedLink> {
 
 #[cfg(test)]
 mod unit_tests {
-    use crate::{models::links::GetLink, routes::links_controller::GetImagedLink};
+    use crate::routes::links_controller::GetImagedLink;
 
     use super::linearise;
 

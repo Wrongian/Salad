@@ -37,7 +37,6 @@ struct CreateLinkParams {
     title: Option<String>,
     bio: Option<String>,
     href: String,
-    parent_id: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, Serialize)]
@@ -129,18 +128,10 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     let state = req.state();
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
-    // check if parent_id belongs to user_id
-    if link_params.parent_id.is_some() {
-        match get_user_link_by_id(&mut conn, link_params.parent_id.unwrap(), user_id).await {
-            Ok(_) => (),
-            Err(_) => return build_error("Invalid parent id provided.".to_string(), 400),
-        }
-    }
-
     // add to database
     let insert_link = InsertLink {
         user_id,
-        next_id: link_params.parent_id,
+        next_id: None,
         description: link_params.bio,
         title: link_params.title,
         href: link_params.href,
