@@ -9,7 +9,16 @@
   import type { PageData } from "./$types";
   export let data: PageData;
 
-
+  let username = ""
+  try {
+    let username : string | null = window.localStorage.getItem("username");
+  } catch {
+    }
+  
+  if (username == null) {
+    username = "";
+  }
+  
   
 
   let doneLoad = false;
@@ -125,7 +134,7 @@
     <div class="sm:hidden" id="mobile-menu">
       <div class="space-y-1 px-2 pb-3 pt-2">
         {#if data.isLoggedIn == true}
-        <NavLink linkName={`My Profile`} link={`/profiles`}></NavLink>
+        <NavLink linkName={`My Profile`} link={`/profiles/` + {username}}></NavLink>
         <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
         {/if}
         <NavLink linkName={`Search`} link = {`/search`}></NavLink>

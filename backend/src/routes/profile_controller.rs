@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::buckets::file::{delete_s3_link_image, update_s3_link_image, update_s3_profile_image};
 use crate::db::image::{create_profile_image, get_profile_image};
 use crate::db::user::{get_user_profile_by_username, update_user_by_id};
-use crate::helpers::auth::get_session_user_id;
+use crate::helpers::auth::{get_session_user_id, get_session_username};
 use crate::helpers::response::{build_error, build_response, build_standard_response};
 use crate::models::images::InsertProfileImage;
 use crate::models::users::UpdateUser;
@@ -45,6 +45,10 @@ struct UploadProfileImageResponseBody {
     href: String,
 }
 
+#[derive(Debug, serde::Serialize)]
+struct UsernameResponseBody {
+    username: String,
+}
 // update profile response body
 pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
@@ -225,3 +229,16 @@ pub async fn delete_profile(req: Request<Arc<TideState>>) -> tide::Result {
     // TODO: implementation
     Ok(Response::builder(200).build())
 }
+
+// Gets the session username
+pub async fn get_username(req: Request<Arc<TideState>>) -> tide::Result {
+    // get session username from session
+    let session_username = match get_session_username(&req) {
+        Ok(session_usr) => session_usr,
+        Err(_) => return build_error("invalid session!".to_string(), 400),
+    };
+    return build_response( UsernameResponseBody{username : session_username}, 200)
+}
+
+
+
