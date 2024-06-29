@@ -34,6 +34,9 @@ CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURN
 DECLARE
     current_next INT;
 BEGIN
+    IF node_id = new_position_id THEN 
+        RETURN;
+    END IF;
     SELECT next_id into current_next FROM links WHERE id = node_id; 
     UPDATE links SET next_id = NULL WHERE id = node_id;
 
