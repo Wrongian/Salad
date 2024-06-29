@@ -252,3 +252,22 @@ export const logout = async (fetch: fetch, next: string) : Promise<void> => {
       goto(BASEURL)
     }
 }
+
+// get username route
+export const getUsername = async (fetch :fetch) : Promise<string> => {
+    let response = await fetch("/api/get-username")
+    .then(async (success) => {
+      const payload = await success.json();
+      return {
+        payload: payload,
+        status: success.status,
+      }
+    }).catch((error) => {
+      return { status: 400, payload: error }
+    })
+    if (response.status === 200) {
+      return response.payload.username
+    }
+    return "";
+    
+}
