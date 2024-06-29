@@ -53,7 +53,6 @@
                 list.splice(addIndex, 0, oldEle);
 
                 // offset currentlyDragged
-                console.log(list)
                 // if (index > currentlyDragged) {
                     
                 // }

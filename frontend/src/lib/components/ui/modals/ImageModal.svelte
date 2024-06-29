@@ -2,9 +2,7 @@
     export let isModalShown: boolean = false;
     export let modalText : string = "";
     let files : FileList;
-    $: if (files && files[0]) {
-        console.log(files);
-    }
+
     // placeholder for now
     const submitPicture = () => {
 
