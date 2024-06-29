@@ -1,8 +1,9 @@
 export type LinkData = {
     id: number,
     title: string,
-    bio: string,
+    description: string,
     imageLink: string,
+    url: string,
 }
 
 export type LinkArray = {
