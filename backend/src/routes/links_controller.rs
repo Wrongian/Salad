@@ -78,7 +78,7 @@ pub struct GetImagedLink {
 #[derive(Debug, Deserialize)]
 struct ReorderLinksPayload {
     link_id: i32,
-    new_position_id: i32,
+    new_position_id: Option<i32>,
 }
 
 async fn handle_validation_errors(e: ValidationErrors) -> tide::Result {
@@ -583,10 +583,18 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(_) => return build_error("Invalid link_id provided.".to_string(), 400),
     };
 
-    match get_user_link_by_id(&mut conn, reorder_link_params.new_position_id, user_id).await {
-        Ok(_) => (),
-        Err(_) => return build_error("Invalid new_position_id provided.".to_string(), 400),
-    };
+    if reorder_link_params.new_position_id.is_some() {
+        match get_user_link_by_id(
+            &mut conn,
+            reorder_link_params.new_position_id.unwrap(),
+            user_id,
+        )
+        .await
+        {
+            Ok(_) => (),
+            Err(_) => return build_error("Invalid new_position_id provided.".to_string(), 400),
+        };
+    }
 
     // reorder links
     match reorder_link(

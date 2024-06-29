@@ -33,18 +33,19 @@ CREATE TABLE IF NOT EXISTS images (
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
 DECLARE
     current_next INT;
-    new_next INT;
 BEGIN
     SELECT next_id into current_next FROM links WHERE id = node_id; 
     UPDATE links SET next_id = NULL WHERE id = node_id;
 
-    -- set child to point to prev parent of node_id
     UPDATE links SET next_id = current_next WHERE next_id = node_id;
 
-    SELECT next_id into new_next FROM links WHERE id = new_position_id;
+    IF new_position_id IS NULL THEN
+        UPDATE links SET next_id = node_id WHERE next_id IS NULL AND id != node_id;
+    ELSE
+        UPDATE links SET next_id = node_id WHERE next_id = new_position_id;
+        UPDATE links SET next_id = new_position_id WHERE id = node_id;
+    END IF;
 
-    UPDATE links SET next_id = node_id WHERE id = new_position_id;
-    UPDATE links SET next_id = new_next WHERE id = node_id;
 END;
 $$ LANGUAGE plpgsql;
 
