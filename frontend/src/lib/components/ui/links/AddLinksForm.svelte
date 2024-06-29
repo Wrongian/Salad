@@ -2,8 +2,8 @@
     import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import { addLinks } from "$lib/scripts/queries";
+    import { invalidate, invalidateAll } from "$app/navigation";
 
-    let isModalShown = false;
     let linkName = "";
     let linkUrl = "";
     let linkDescription = "";
@@ -15,6 +15,10 @@
             title: linkName ?? undefined,
             bio: linkName ?? undefined
         })
+        linkName = "";
+        linkUrl = "";
+        linkDescription = "";
+        // await invalidateAll();
         location.reload();
     }
 </script>
@@ -39,7 +43,3 @@
 <div class = "mx-8 justify-end flex">
 <button on:click={() => {submitLink()}} type="button" class="text-white bg-green-600 hover:bg-green-800 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none ">Submit</button>
 </div>
-{#if isModalShown}
-<PictureModal imageSubmitFunction={async (a,b) => {}} modalText="Upload Link Picture" bind:isModalShown> 
-</PictureModal>
-{/if}
