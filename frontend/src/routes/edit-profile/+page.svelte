@@ -2,8 +2,9 @@
   import Tab from "$lib/components/ui/tabs/Tab.svelte"
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
+  import AddLinksForm from "$lib/components/ui/links/AddLinksForm.svelte";
   import type { PageData } from "./$types";
-  import type { LinkData, LinkArray } from "$lib/types/Profile";
+  import type { LinkData } from "$lib/types/Profile";
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
   export let data: PageData;
   export let links : LinkData[] = data.links;
@@ -11,7 +12,7 @@
   let displayNameData = data.displayName || "";
   let bioData = data.bio || "";
   let imageURL = data.imageURL ?? "";
-  let tabSelector: number = 2;
+  let tabSelector: number = 1;
 
   // modal
   let isModalShown = false;
@@ -39,6 +40,7 @@
       <ul class="relative flex flex-wrap justify-start p-1 list-none rounded-xl" data-tabs="tabs" role="list">
         <Tab tabCallback = {() => {tabSelector = 1}} icon="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" name="Profile"></Tab>
         <Tab tabCallback = {() => {tabSelector = 2}} icon="M9 8h10M9 12h10M9 16h10M4.99 8H5m-.02 4h.01m0 4H5" name="Links"></Tab>
+        <Tab tabCallback = {() => {tabSelector = 3}} icon="M5 12h14m-7 7V5" name="Add Links"></Tab>
       </ul>
     </div>
   </div>
@@ -72,6 +74,7 @@
         <label for="change-bio" class="block mb-2 font-medium text-xl text-gray-900">Change your Bio:</label>
         <textarea  bind:value={bioData} id="change-bio" rows="6" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-lime-300 focus:ring-lime-600 outline-lime-600 focus:border-lime-600 border-solid" placeholder=""></textarea>
       </div>
+
     </div>
   </div>
     {/if}
@@ -79,7 +82,10 @@
     {#if tabSelector == 2}
      <DraggableLinks links={links}></DraggableLinks>
     {/if}
- 
+
+    {#if tabSelector == 3} 
+      <AddLinksForm></AddLinksForm> 
+    {/if}
 </div> 
 {#if isModalShown}
 <PictureModal modalText = "Upload Profile Picture" bind:isModalShown> 
