@@ -3,7 +3,6 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as Card from "$lib/components/ui/card";
   export let data: PageData;
-  $: image_data = data.picture ?? "";
   $: links = data.links ?? [];
 </script>
 
@@ -12,7 +11,7 @@
     <div class="flex space-y-5 px-2 space-x-2">
       <Avatar.Root class="w-[150px] h-[150px] ring-2">
         <!-- TODO: use CDN hosted link instead of b64 string -->
-        <Avatar.Image src={`data:image/png;base64,${image_data}`} alt="" />
+        <Avatar.Image src={data.picture} alt="" />
         <Avatar.Fallback></Avatar.Fallback>
       </Avatar.Root>
       <div class="pl-2">
@@ -47,7 +46,7 @@
                 <Avatar.Root class="w-[50px] h-[50px] ring-2">
                   <!-- TODO: use CDN hosted link instead of b64 string -->
                   <Avatar.Image
-                    src={`data:image/png;base64,${link.picture}`}
+                    src={link.img_src}
                     alt=""
                   />
                   <Avatar.Fallback></Avatar.Fallback>
