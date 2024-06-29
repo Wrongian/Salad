@@ -97,4 +97,44 @@ mod unit_tests {
         println!("got linearised ids: {:?}", result_ids);
         assert_eq!(result_ids, [3, 4, 2, 1, 0]);
     }
+
+    #[test]
+    pub fn it_should_return_linearised_2() {
+        //
+        let unique_links = Vec::<GetImagedLink>::from([
+            GetImagedLink {
+                id: 1,
+                user_id: 1,
+                next_id: Some(3),
+                description: None,
+                title: None,
+                href: "".to_string(),
+                img_src: None,
+            },
+            GetImagedLink {
+                id: 2,
+                user_id: 1,
+                next_id: Some(1),
+                description: None,
+                title: None,
+                href: "".to_string(),
+                img_src: None,
+            },
+            GetImagedLink {
+                id: 3,
+                user_id: 1,
+                next_id: None,
+                description: None,
+                title: None,
+                href: "".to_string(),
+                img_src: None,
+            },
+        ]);
+        let result_ids: Vec<i32> = linearise(&unique_links)
+            .iter()
+            .map(|link| link.id)
+            .collect();
+        println!("got linearised ids: {:?}", result_ids);
+        assert_eq!(result_ids, [2, 1, 3]);
+    }
 }

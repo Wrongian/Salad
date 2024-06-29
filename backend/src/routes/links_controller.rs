@@ -482,18 +482,20 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     match get_user_links_by_id(&mut conn, profile.id).await {
         Ok(links) => build_response(
             GetLinksResponseBody {
-                links: links
-                    .into_iter()
-                    .map(|link| GetImagedLink {
-                        id: link.0.id,
-                        user_id: link.0.user_id,
-                        next_id: link.0.next_id,
-                        description: link.0.description,
-                        title: link.0.title,
-                        href: link.0.href,
-                        img_src: link.1.map(|img| img.img_src),
-                    })
-                    .collect(),
+                links: linearise(
+                    &links
+                        .into_iter()
+                        .map(|link| GetImagedLink {
+                            id: link.0.id,
+                            user_id: link.0.user_id,
+                            next_id: link.0.next_id,
+                            description: link.0.description,
+                            title: link.0.title,
+                            href: link.0.href,
+                            img_src: link.1.map(|img| img.img_src),
+                        })
+                        .collect::<Vec<GetImagedLink>>(),
+                ),
             },
             200,
         ),
