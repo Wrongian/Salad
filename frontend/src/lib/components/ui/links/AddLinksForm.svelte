@@ -15,6 +15,7 @@
             title: linkName ?? undefined,
             bio: linkName ?? undefined
         })
+        location.reload();
     }
 </script>
 

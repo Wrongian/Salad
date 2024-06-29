@@ -15,6 +15,7 @@
             if (ALLOWEDFILETYPES.includes(mimetype)) {
                 // let arrayBuffer :ArrayBuffer = await files[0].arrayBuffer()
                 await imageSubmitFunction(file, filetype);
+                location.reload()
             }
         }
     } 
