@@ -4,14 +4,15 @@
   import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
   import AddLinksForm from "$lib/components/ui/links/AddLinksForm.svelte";
   import type { PageData } from "./$types";
-  import type { LinkData } from "$lib/types/Profile";
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
+  import { updateTextProfile } from "$lib/scripts/queries";
+  import type { TLink } from "$lib/scripts/response-validator";
   export let data: PageData;
-  export let links : LinkData[] = data.links;
+  export let links : TLink[] = data.links;
 
-  let displayNameData = data.displayName || "";
+  let displayNameData = data.display_name || "";
   let bioData = data.bio || "";
-  let imageURL = data.imageURL ?? "";
+  let imageURL = data.picture ?? "";
   let tabSelector: number = 1;
 
   // modal
@@ -19,10 +20,11 @@
 
   // placeholder for now
   const submitDisplayName = () => {
-
+    updateTextProfile({display_name: displayNameData}) 
   } 
   // placeholder for now
   const submitBio = () => {
+    updateTextProfile({bio: bioData}) 
   }
 
 
