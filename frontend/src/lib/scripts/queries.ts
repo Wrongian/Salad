@@ -4,9 +4,11 @@ import { goto, invalidateAll, replaceState } from "$app/navigation";
 import {
   TLinkBodyValidator,
   TProfileBodyValidator,
+  UpdateImageResponseBodyValidator,
   standardResponseValidator,
   type TLink,
   type TProfileBody,
+  type TUpdateImageResponseBody,
 } from "./response-validator.js";
 import {addError} from "$lib/modules/Errors.svelte";
 import type { NavigationEvent } from "@sveltejs/kit";
@@ -14,11 +16,14 @@ import type { NavigationEvent } from "@sveltejs/kit";
 const MASKED_ERROR_MESSAGE = "/Oh no! Looks like something went wrong. Please try again later."
 
 const BASEURL = "/";
+const UPDATE_PROFILE_IMAGE_ENDPOINT = "/api/profiles/image"
 const UPDATE_LINK_TITLE_ENDPOINT = "/api/links/title"
 const UPDATE_LINK_BIO_ENDPOINT = "/api/links/bio"
 const UPDATE_LINK_HREF_ENDPOINT = "/api/links/href"
 const REORDER_LINK_ENDPOINT = "/api/links/reorder"
 const DELETE_LINK_ENDPOINT = "/api/links"
+
+const BLACKSWAN_ERROR_STATUS_CODE = 500
 
 
 
@@ -186,31 +191,48 @@ type fetch = typeof fetch;
 export const getProfile = async (
   username: string,
   fetch: fetch
-): Promise<TProfileBody> => {
+): Promise<TProfileBody | undefined> => {
   const result: TResult<TProfileBody> = await fetch(
     `/api/profiles/${username}`,
     { method: "GET" }
   )
     .then(async (success) => {
       const body = await success.json();
-      const payload = await TProfileBodyValidator.validateAsync(body).catch(e => {
-        console.log(e)
+      if (success.ok) {
+        const payload = await TProfileBodyValidator.validateAsync(body).catch(e => {
+          console.log(e)
+          return Promise.reject(MASKED_ERROR_MESSAGE)
+        });
+        return {
+          payload,
+          success: true as const,
+        };
+      } 
+
+      // if response not ok check error body type
+      if (!standardResponseValidator(body)) {
+        // this is unexpected
         return Promise.reject(MASKED_ERROR_MESSAGE)
-      });
+      }
+
       return {
-        payload,
-        success: true as const,
-      };
+        success: false as const,
+        status: success.status,
+        err: body.err
+      }
     })
     .catch((err) => {
-      return { status: 400, err: JSON.stringify(err), success: false as const };
+      return { status: 500, err: JSON.stringify(err), success: false as const };
     });
+
+
   if (result.success) {
     return result.payload;
+  } else if (result.status < BLACKSWAN_ERROR_STATUS_CODE) {
+    addError(result.err, result.status)
   } else {
     // something really bad happened here
     blackSwanError.set({ status: result.status, message: result.err });
-    return result as never;
   }
 };
 
@@ -219,25 +241,43 @@ export const getLinks = async (username: string, fetch: fetch): Promise<TLink[]>
     method: "GET",
   })
     .then(async (success) => {
-        const payload = await TLinkBodyValidator.validateAsync(await success.json()).then(v => v.links).catch(e => {
+      const body = await success.json();
+      if (success.ok) {
+        const payload = await TLinkBodyValidator.validateAsync(body).then(v => v.links).catch(e => {
           console.log(e)
+          // this is unexpected
           return Promise.reject(MASKED_ERROR_MESSAGE)
         });
         return {
           payload,
           success: true as const,
         };
+      } else {
+        if (!standardResponseValidator(body)) {
+          // this is unexpected
+          return Promise.reject(MASKED_ERROR_MESSAGE)
+        }
+        return {
+          success: false as const,
+          status: success.status,
+          err: body.err
+        }
+      }
+        
     })
     .catch((err) => {
-      return { status: 400, err: JSON.stringify(err), success: false as const };
+      return { status: BLACKSWAN_ERROR_STATUS_CODE, err: JSON.stringify(err), success: false as const };
     });
 
   if (result.success) {
     return result.payload;
+  } else if (result.status < BLACKSWAN_ERROR_STATUS_CODE) {
+    addError(result.err, result.status)
+    return [];
   } else {
     // something really bad happened here
     blackSwanError.set({ status: result.status, message: result.err });
-    return [] as never;
+    return [];
   }
 };
 
@@ -246,7 +286,6 @@ export const getIsLoggedIn = async (fetch: fetch) : Promise<boolean> => {
   const response = await fetch("/api/logged-in",{
     method: "GET",
   }).then((success: any) => {
-    // console.log(success);
     if (success.status === 200) {
       isLoggedIn = true;
     }
@@ -344,28 +383,6 @@ export const addLinks = async (query: TCreateLinkPayload) : Promise<void> => {
     blackSwanError.set({ status: response.status, message: "Error occurred in updating links" });
   }
 }
-
-export const updateProfilePicture = async (image: Blob, filetype: String) : Promise<void> => {
-  let response = await fetch("/api/profiles/image/" + filetype, {
-    method: "PUT",
-    body: image,
-  }).then(async success => {
-    const body = await success.json()
-    return { status: success.status, err: "" }
-  }).catch(err => {
-      return { status: 400, err }
-  }); 
-
-  if (response.status === 200) {
-    await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating profile picture" });
-  }
-}
-
-
 
 export const updateLinkTitle = async (query: TUpdateLinkTitlePayload, link_id: number) => {
   let response = await fetch(`${UPDATE_LINK_TITLE_ENDPOINT}/${link_id}`, {
@@ -481,22 +498,73 @@ export const reorderLink = async (query: TReorderPayload) => {
   }
 }
 
-export const updateLinkPicture = async (image: Blob, filetype: String, id : number) : Promise<void> => {
-  let response = await fetch("/api/links/" + id.toString() + "/image/" + filetype, {
+export const updateLinkPicture = async (image: Blob, filetype: String, id : number) : Promise<TUpdateImageResponseBody> => {
+  let response: TResult<TUpdateImageResponseBody> = await fetch("/api/links/" + id.toString() + "/image/" + filetype, {
     method: "PUT",
     body: image,
   }).then(async success => {
     const body = await success.json()
-    return { status: success.status, err: "" }
+    const validatedBody = await UpdateImageResponseBodyValidator.validateAsync(body).catch(e => {
+      console.error(e);
+      throw new Error(MASKED_ERROR_MESSAGE);
+    });
+    
+    return {
+      payload: validatedBody,
+      success: true as const
+    }
   }).catch(err => {
-      return { status: 400, err }
+    return {
+      success: false as const,
+      err: JSON.stringify(err),
+      status: 400
+    }
   }); 
 
-  if (response.status === 200) {
+  if (response.success) {
     await invalidateAll();
+    return response.payload;
   } else if (response.status === 400) {
     addError(response.err, response.status);
+    return { result: false, err: response.err, href: "" }
+  } else {
+    blackSwanError.set({ status: response.status, message: "Error occurred in updating link picture" });
+    return {} as never
+  }
+}
+
+export const updateProfilePicture = async (image: Blob, filetype: String) : Promise<TUpdateImageResponseBody> => {
+  let response: TResult<TUpdateImageResponseBody> = await fetch(`${UPDATE_PROFILE_IMAGE_ENDPOINT}/${filetype}`, {
+    method: "PUT",
+    body: image,
+  }).then(async success => {
+      const body = await success.json()
+      const validatedBody = await UpdateImageResponseBodyValidator.validateAsync(body).catch(e => {
+        console.error(e);
+        throw new Error(MASKED_ERROR_MESSAGE);
+      });
+
+      return {
+        payload: validatedBody,
+        success: true as const
+      }
+  }).catch(err => {
+      return {
+        success: false as const,
+        err: JSON.stringify(err),
+        status: 400
+      }
+  }); 
+
+  if (response.success) {
+    await invalidateAll();
+    return response.payload;
+  } else if (response.status === 400) {
+    addError(response.err, response.status);
+    return { result: false, err: response.err, href: "" }
   } else {
     blackSwanError.set({ status: response.status, message: "Error occurred in updating profile picture" });
+    return {} as never
   }
+ 
 }
