@@ -10,7 +10,7 @@
   export let data: PageData;
 
   let profileRoute: string;
-  if (data.username === "") {
+  $: if (data.username === "") {
     // go to normal login page
     profileRoute = "/auth/login"
   } else {
@@ -67,7 +67,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+        <div class="z-10 flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
           <div class="flex flex-shrink-0 items-center">
             <a href = "/">
             <img class="h-6 w-auto" src={favicon} alt = "app icon">
