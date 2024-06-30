@@ -4,7 +4,7 @@
 
 <div class="">
     <header>
-        <div class="container">
+        <div class="p-4 container">
             <h1>Salad main landing page</h1>
         </div>
     </header>
