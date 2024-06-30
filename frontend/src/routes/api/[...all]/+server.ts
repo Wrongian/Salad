@@ -15,6 +15,7 @@ export const fallback: RequestHandler = async ({
   request.headers.delete("content-length"); // handled by fetch API
   request.headers.delete("host"); // not needed; we already specify the url in fetch
   request.headers.delete("connection"); // handled by fetch API
+  console.log(`fetching to: ${SERVER_IP_ADDR}/${tailURL}`);
 
   return await fetch(`${SERVER_IP_ADDR}/${tailURL}`, {
     body: request.body,
