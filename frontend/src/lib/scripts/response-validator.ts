@@ -16,8 +16,8 @@ export type TProfileBody = {
 };
 
 export const TProfileBodyValidator = Joi.object<TProfileBody>({
-  display_name: Joi.string().required(),
-  bio: Joi.string().min(0),
+  display_name: Joi.string().min(0).required(),
+  bio: Joi.string().allow(null).min(0),
   picture: Joi.string().min(0),
   following: Joi.number().optional(),
   followers: Joi.number().optional(),
@@ -40,9 +40,9 @@ export const TLinkBodyValidator = Joi.object<{links: TLink[]}>({
             id: Joi.number(),
             user_id: Joi.number().required(),
             next_id: Joi.number().allow(null).optional(),
-            href: Joi.string().required(),
-            title: Joi.string().allow(null).optional(),
-            description: Joi.string().allow(null).optional(),
+            href: Joi.string().min(0).required(),
+            title: Joi.string().min(0).allow(null).optional(),
+            description: Joi.string().min(0).allow(null).optional(),
             img_src: Joi.string().allow(null).optional(),
           })
         ).min(0)
