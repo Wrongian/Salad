@@ -6,6 +6,7 @@ export const standardResponseValidator = (res: any): res is TResponseBody => {
   return typeof res.result === "boolean" && typeof res.err === "string";
 };
 
+
 export type TProfileBody = {
   display_name: string;
   bio: string;
@@ -47,3 +48,12 @@ export const TLinkBodyValidator = Joi.object<{links: TLink[]}>({
           })
         ).min(0)
 });
+
+
+export type TUpdateImageResponseBody = TResponseBody & { href: string }
+
+export const UpdateImageResponseBodyValidator = Joi.object<TUpdateImageResponseBody>({
+  result: Joi.boolean().optional(),
+  err: Joi.string().optional().allow(""),
+  href: Joi.string().allow("")
+})
