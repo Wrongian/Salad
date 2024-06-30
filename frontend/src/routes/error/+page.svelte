@@ -20,6 +20,9 @@
     <div class="flex items-center justify-center h-16">
       {#if $blackSwanError}
         <div class="p-4">Status Code: {$blackSwanError.status}</div>
+        <div class="py-8 overflow-auto">
+          <p>Reason: {$blackSwanError.message}</p>
+        </div>
       {/if}
     </div>
   </div>

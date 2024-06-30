@@ -8,3 +8,6 @@ data/*
 
 #rustdocs
 backend/docs/doc/*
+
+#backups
+/backups

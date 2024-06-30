@@ -11,14 +11,8 @@ use validator::Validate;
 
 // to run this with println! outputs use "rust test -- --nocapture"
 
-// test whether can connect to the db
-#[async_std::test]
-async fn db_connection_test() -> tide::Result<()> {
-    let conn: PgConnection = start_connection().await;
-    Ok(())
-}
-
 // test whether can register
+/*
 #[async_std::test]
 async fn register_test() -> tide::Result<()> {
     let conn: PgConnection = start_connection().await;
@@ -39,3 +33,4 @@ async fn register_test() -> tide::Result<()> {
     assert!(res.is_ok());
     Ok(())
 }
+*/

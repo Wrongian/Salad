@@ -9,6 +9,80 @@ CREATE TABLE IF NOT EXISTS users (
     display_name VARCHAR NOT NULL
 );
 
+
+CREATE TABLE IF NOT EXISTS links (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    next_id INT UNIQUE,
+    description VARCHAR,
+    title VARCHAR,
+    href VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS images (
+    id SERIAL PRIMARY KEY,
+    img_src VARCHAR NOT NULL,
+    filename VARCHAR NOT NULL,
+    user_id INT,
+    link_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE SET NULL
+);
+
+CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
+DECLARE
+    current_next INT;
+BEGIN
+    IF node_id = new_position_id THEN 
+        RETURN;
+    END IF;
+    SELECT next_id into current_next FROM links WHERE id = node_id; 
+    UPDATE links SET next_id = NULL WHERE id = node_id;
+
+    UPDATE links SET next_id = current_next WHERE next_id = node_id;
+
+    IF new_position_id IS NULL THEN
+        UPDATE links SET next_id = node_id WHERE next_id IS NULL AND id != node_id;
+    ELSE
+        UPDATE links SET next_id = node_id WHERE next_id = new_position_id;
+        UPDATE links SET next_id = new_position_id WHERE id = node_id;
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- trigger to set newly inserted link as the new leaf node
+CREATE OR REPLACE FUNCTION reorder_link_after_create() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.next_id IS NULL THEN
+        UPDATE links SET next_id = NEW.id WHERE links.next_id IS NULL AND links.id != NEW.id;
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION reorder_link_after_delete() RETURNS TRIGGER AS $$ 
+BEGIN 
+    UPDATE links SET next_id = OLD.next_id WHERE links.next_id = OLD.id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Subscribe the trigger to run on deletion in link table
+CREATE TRIGGER reorder_links_trigger
+AFTER DELETE on links
+FOR EACH ROW
+EXECUTE FUNCTION reorder_link_after_delete();
+
+-- Subscribe the trigger to run on create in link table
+CREATE TRIGGER reorder_links_on_create_trigger
+AFTER INSERT on links
+FOR EACH ROW
+EXECUTE FUNCTION reorder_link_after_create();
+
 -- Sets up a trigger for the given table to automatically set a column called
 -- `updated_at` whenever the row is modified (unless `updated_at` was included
 -- in the modified columns)

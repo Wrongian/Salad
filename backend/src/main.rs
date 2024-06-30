@@ -1,23 +1,53 @@
+pub mod buckets;
 pub mod funcs;
+pub mod helpers;
 pub mod models;
 pub mod routes;
 pub mod schema;
 pub mod tests;
-use routes::auth::login;
-use routes::auth::register;
-use routes::profile_controller::get_profile;
+use aws_config::meta::region::RegionProviderChain;
+use aws_config::BehaviorVersion;
+use buckets::file::setup_buckets;
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::PgConnection;
+use routes::auth::{is_logged_in, login, logout, register};
+use routes::links_controller::{
+    add_link, delete_link_picture, delete_links, get_links, reorder_links, update_link_bio,
+    update_link_href, update_link_picture, update_link_title,
+};
+use routes::profile_controller::{get_profile, get_username, update_display_profile, update_profile_image};
 use std::env;
 pub mod db;
+use aws_sdk_s3::{self as s3, config};
 use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
+use std::sync::Arc;
 use tide::security::{CorsMiddleware, Origin};
 
+use std::path::Path;
+use tempfile::TempDir;
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
+// app state
+pub type TidePool = Pool<ConnectionManager<PgConnection>>;
+pub struct TideState {
+    pub tide_pool: TidePool,
+    pub s3_client: s3::Client,
+    pub tempdir: TempDir,
+}
+
+impl TideState {
+    fn path(&self) -> &Path {
+        self.tempdir.path()
+    }
+}
+
+// todo replace unwraps with expect
+
 // main function
-#[async_std::main]
+#[tokio::main]
 async fn main() -> tide::Result<()> {
     // load dotenv
     dotenv().expect("No .env file found");
@@ -26,10 +56,38 @@ async fn main() -> tide::Result<()> {
     let mut conn = db::start_connection().await;
     conn.run_pending_migrations(MIGRATIONS).unwrap();
 
-    // create app
-    let mut app = tide::new();
+    // setup aws s3 client
+    let region_provider = RegionProviderChain::default_provider().or_else("ap-southeast-2");
+    let config = aws_config::defaults(BehaviorVersion::latest())
+        .region(region_provider)
+        .load()
+        .await;
+    let s3_client = s3::Client::new(&config);
 
-    // middleware
+    // configure s3 buckets
+    setup_buckets(
+        &s3_client,
+        env::var("AWS_REGION")
+            .expect("No aws region found")
+            .as_str(),
+    )
+    .await;
+
+    // App State
+    // Diesel
+    let database_url = env::var("DATABASE_URL").expect("No database url found");
+    let pool_manager = ConnectionManager::<PgConnection>::new(&database_url);
+    let pool = Pool::builder()
+        .build(pool_manager)
+        .expect("Failed to build connection pool");
+    let tide_state = Arc::new(TideState {
+        tide_pool: pool,
+        s3_client,
+        tempdir: tempfile::tempdir()?,
+    });
+
+    // create app
+    let mut app = tide::with_state(tide_state);
 
     // CORS middleware
     let whitelist_urls = env::var::<&str>("CORS_WHITELIST_URLS")
@@ -64,13 +122,48 @@ async fn main() -> tide::Result<()> {
     app.with(tide::log::LogMiddleware::new());
 
     // setup routes
+
+    // auth
     app.at("/login").post(login);
     app.at("/register").post(register);
-    app.at("/profile/:username").get(get_profile);
+    app.at("/logout").get(logout);
+    app.at("/logged-in").get(is_logged_in);
+
+    // profile
+    app.at("/profiles/:username").get(get_profile);
+    app.at("/profiles/display").put(update_display_profile);
+    app.at("/profiles/image/:ext").put(update_profile_image);
+
+    // links
+    app.at("/links/:username").get(get_links);
+    app.at("/links").post(add_link);
+    app.at("/links/reorder").post(reorder_links);
+    app.at("/links/title/:link_id").put(update_link_title);
+    app.at("/links/bio/:link_id").put(update_link_bio);
+    app.at("/links/href/:link_id").put(update_link_href);
+    app.at("/links/:link_id/image/:ext")
+        .put(update_link_picture);
+    app.at("/links/:link_id/image").delete(delete_link_picture);
+    app.at("/links/:link_id").delete(delete_links);
+
+    // misc
+    app.at("get-username").get(get_username);
 
     // attach to IP and port
     app.listen(funcs::get_url()).await?;
 
     // return
     Ok(())
+}
+
+#[cfg(test)]
+mod unit_tests {
+    use crate::db::start_connection;
+    use diesel::PgConnection;
+
+    #[tokio::test]
+    async fn it_can_connect_to_db() -> tide::Result<()> {
+        start_connection().await;
+        Ok(())
+    }
 }
