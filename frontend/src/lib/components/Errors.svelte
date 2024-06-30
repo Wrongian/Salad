@@ -5,7 +5,7 @@
   import { removeAt } from "$lib/modules/Errors.svelte";
 </script>
 
-<div class="fixed left-2 top-2">
+<div class="z-50 fixed left-2 top-2">
   {#each $errorStore as error (error.id)}
     <ErrorFlashCard
       message={error.message}
