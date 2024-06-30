@@ -225,7 +225,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
         }
         Err(message) => {
             error!("error in retrieving profile: {}", message);
-            return build_error(message, 500);
+            return build_error("Profile not found.".to_string(), 404);
         }
     };
 

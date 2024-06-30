@@ -456,11 +456,8 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
 }
 
 pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
-    // get session username from session
-    let session_username = match get_session_username(&req) {
-        Ok(session_usr) => session_usr,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
-    };
+    // get session username from session or default to "" 
+    let session_username = get_session_username(&req).unwrap_or("".to_string());
 
     // get username from params
     let username = match req.param("username") {
