@@ -1,5 +1,5 @@
 export type TErrorContext = {
-    id: number,
+    id: string,
     statusCode: number,
     message: string
 }
