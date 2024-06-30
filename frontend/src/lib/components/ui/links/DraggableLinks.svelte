@@ -17,7 +17,6 @@
     let modalLinkId: number| null = null;
     
     // todo scrolls to the top everytume elements are inserted
-
     links.forEach(ele => {
         let listElement : ListData = {
             isDragged : false,
@@ -30,11 +29,41 @@
         modalLinkId = id;
     }
 
-    const modalSubmitFunction = async (image: Blob, filetype: string) => {
-        if (modalLinkId != null) {
-            await updateLinkPicture(image, filetype, modalLinkId)
+    const deleteCallback = (index: number) => {
+        // make sure its within the list
+        if (index >= 0 && index < list.length) {
+            list.splice(index, 1)
+            // only update if there is a change
+            list = list
         }
     }
+
+    const updateLinkImage = async (image: Blob, filetype: string) => {
+        if (modalLinkId != null) {
+            const payload = await updateLinkPicture(image, filetype, modalLinkId)
+
+            // skip if updating the link picture failed
+            if (!payload.result) {
+                return
+            }
+
+            // TODO: make this O(1)
+            // update the list element in the array with the new img_src
+            list = list.map(listElement => {
+                const {img_src: _, ...rest } = listElement.linkData;
+                const updatedListElement = {
+                    isDragged: listElement.isDragged,
+                    linkData:  (listElement.linkData.id === modalLinkId ? {
+                        ...rest,
+                        img_src: payload.href 
+                    } : listElement.linkData) as TLink
+                }
+                
+                return updatedListElement 
+            })
+        }
+    }
+
     const startDrag = (e : DragEvent, listData: ListData, index: number) => {
         // sneaky way of seeing the dragged list
         currentlyDraggedIndex = index
@@ -135,13 +164,13 @@
     title={link.title} bio={link.bio} imageLink={link.imageLink}></EditableLink> --> 
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div id ="linkdiv-{listData.linkData.id}" on:dragover|preventDefault={(e) => {dragOver(e, listData, index)}} on:dragend={async (e) => {await endDrag(e, listData, index)}} on:dragstart={(e) => {startDrag(e, listData, index)} }>
-    <Link modalCallback={modalCallback} listData={listData}> </Link>
+    <Link index = {index} deleteCallback = {deleteCallback} modalCallback={modalCallback} listData={listData}> </Link>
     </div>
     {/each}
     </ul>
 </div>
 
 {#if isModalShown}
-<PictureModal bind:isModalShown imageSubmitFunction={modalSubmitFunction} modalText="Upload Link Picture" > 
+<PictureModal bind:isModalShown imageSubmitFunction={updateLinkImage} modalText="Upload Link Picture" > 
 </PictureModal>
 {/if}

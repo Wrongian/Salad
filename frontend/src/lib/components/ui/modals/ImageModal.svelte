@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { invalidate } from "$app/navigation";
     import type { ImageSubmitFunction } from "$lib/types/Callback";
     export let isModalShown: boolean = false;
     export let modalText : string = "";
@@ -15,7 +16,6 @@
             if (ALLOWEDFILETYPES.includes(mimetype)) {
                 // let arrayBuffer :ArrayBuffer = await files[0].arrayBuffer()
                 await imageSubmitFunction(file, filetype);
-                location.reload()
             }
         }
     } 
