@@ -2,7 +2,7 @@ import type { TErrorContext } from "$lib/types/ErrorTypes";
 import {get, writable, type Writable } from "svelte/store";
 
 
-export const errorStore: Writable<TErrorContext[]> = writable([])
+export const errorStore: Writable<Map<string, TErrorContext>> = writable(new Map<string, TErrorContext>())
 
 export type TBlackSwanError = {
     status: number,
