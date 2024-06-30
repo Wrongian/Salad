@@ -15,7 +15,7 @@ use routes::links_controller::{
     add_link, delete_link_picture, delete_links, get_links, reorder_links, update_link_bio,
     update_link_href, update_link_picture, update_link_title,
 };
-use routes::profile_controller::{get_profile, update_display_profile, update_profile_image};
+use routes::profile_controller::{get_profile, get_username, update_display_profile, update_profile_image};
 use std::env;
 pub mod db;
 use aws_sdk_s3::{self as s3, config};
@@ -145,6 +145,9 @@ async fn main() -> tide::Result<()> {
         .put(update_link_picture);
     app.at("/links/:link_id/image").delete(delete_link_picture);
     app.at("/links/:link_id").delete(delete_links);
+
+    // misc
+    app.at("get-username").get(get_username);
 
     // attach to IP and port
     app.listen(funcs::get_url()).await?;

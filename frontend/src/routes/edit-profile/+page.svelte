@@ -4,25 +4,39 @@
   import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
   import AddLinksForm from "$lib/components/ui/links/AddLinksForm.svelte";
   import type { PageData } from "./$types";
-  import type { LinkData } from "$lib/types/Profile";
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
+  import { updateTextProfile } from "$lib/scripts/queries";
+  import type { TLink } from "$lib/scripts/response-validator";
+  import { updateProfilePicture } from "$lib/scripts/queries";
+  import { invalidateAll } from "$app/navigation";
   export let data: PageData;
-  export let links : LinkData[] = data.links;
+  export let links : TLink[] = data.links;
+  $: links = data.links
+  
 
-  let displayNameData = data.displayName || "";
+  let displayNameData = data.display_name || "";
   let bioData = data.bio || "";
-  let imageURL = data.imageURL ?? "";
+  let imageURL = data.picture ?? "";
   let tabSelector: number = 1;
-
   // modal
   let isModalShown = false;
 
   // placeholder for now
   const submitDisplayName = () => {
-
+    updateTextProfile({display_name: displayNameData}) 
   } 
   // placeholder for now
   const submitBio = () => {
+    updateTextProfile({bio: bioData}) 
+  }
+
+  const updateProfileImage = async (image: Blob, filetype: string) => {
+    const payload = await updateProfilePicture(image, filetype);
+    // skip if updating profile image failed
+    if (!payload.result) {
+      return;
+    }
+    imageURL = payload.href
   }
 
 
@@ -88,6 +102,6 @@
     {/if}
 </div> 
 {#if isModalShown}
-<PictureModal modalText = "Upload Profile Picture" bind:isModalShown> 
+<PictureModal imageSubmitFunction={updateProfileImage} modalText = "Upload Profile Picture" bind:isModalShown> 
 </PictureModal>
 {/if}

@@ -1,19 +1,22 @@
 <script lang="ts">
-    import type { LinkData } from "$lib/types/Profile";
     import Link from "./Link.svelte";
     import type { ListData } from "$lib/types/Profile";
+    import type { TLink } from "$lib/scripts/response-validator";
     import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
-    export let links : LinkData[];
+    import { reorderLink } from "$lib/scripts/queries";
+    import { updateLinkPicture } from "$lib/scripts/queries";
+    export let links : TLink[];
     let list : ListData[] = [];
-    let currentlyDragged:number | null = null;
+    let currentlyDraggedIndex:number | null = null;
     let overIndex : number | null = null;
     let isModalShown = false;
     // difference between mouse and mid of screen
     let diff : number = 0;
     const SMOOTH_SCROLL = 0.05
+
+    let modalLinkId: number| null = null;
     
     // todo scrolls to the top everytume elements are inserted
-
     links.forEach(ele => {
         let listElement : ListData = {
             isDragged : false,
@@ -21,12 +24,49 @@
         };
         list.push(listElement);
     });
-    const modalCallback = () => {
+    const modalCallback = (id: number) => {
         isModalShown = true;
+        modalLinkId = id;
     }
+
+    const deleteCallback = (index: number) => {
+        // make sure its within the list
+        if (index >= 0 && index < list.length) {
+            list.splice(index, 1)
+            // only update if there is a change
+            list = list
+        }
+    }
+
+    const updateLinkImage = async (image: Blob, filetype: string) => {
+        if (modalLinkId != null) {
+            const payload = await updateLinkPicture(image, filetype, modalLinkId)
+
+            // skip if updating the link picture failed
+            if (!payload.result) {
+                return
+            }
+
+            // TODO: make this O(1)
+            // update the list element in the array with the new img_src
+            list = list.map(listElement => {
+                const {img_src: _, ...rest } = listElement.linkData;
+                const updatedListElement = {
+                    isDragged: listElement.isDragged,
+                    linkData:  (listElement.linkData.id === modalLinkId ? {
+                        ...rest,
+                        img_src: payload.href 
+                    } : listElement.linkData) as TLink
+                }
+                
+                return updatedListElement 
+            })
+        }
+    }
+
     const startDrag = (e : DragEvent, listData: ListData, index: number) => {
         // sneaky way of seeing the dragged list
-        currentlyDragged = index
+        currentlyDraggedIndex = index
         overIndex = null;
         setTimeout(() => {
             listData.isDragged = true;
@@ -35,39 +75,53 @@
         }, 0)
     }
 
-    const endDrag = (e : DragEvent, listData: ListData, index: number) => {
+    const endDrag = async (e : DragEvent, listData: ListData, index: number) => {
         listData.isDragged = false;
         // for object reactivity
-        if (currentlyDragged != null && overIndex != null) { 
-            if (currentlyDragged != overIndex) {
-                // switch
+        if (currentlyDraggedIndex != null && overIndex != null) { 
+            if (currentlyDraggedIndex != overIndex) {
                 // this is ok since we cap total list elements
-                let oldEle = list[currentlyDragged];
+                let oldElements = list[currentlyDraggedIndex];
                 // delete
-                list.splice(currentlyDragged, 1)
+                list.splice(currentlyDraggedIndex, 1)
                 let addIndex = overIndex;
-                // offset
-                // if (addIndex > currentlyDragged){
-                //     addIndex -= 1;
-                // }
-                list.splice(addIndex, 0, oldEle);
+                list.splice(addIndex, 0, oldElements);
+                
+                let new_pos : number | null = null;
+                // new index 
+                if (currentlyDraggedIndex > overIndex) {
+                    new_pos = overIndex;
+                }
+                else if (overIndex == links.length - 1) {
+                    new_pos = null;
+                }
+                else {
+                    new_pos = overIndex + 1;
+                }
 
-                // offset currentlyDragged
-                // if (index > currentlyDragged) {
-                    
-                // }
-
-
-                // update
+                
+                if (new_pos != null) {
+                    await reorderLink({
+                    link_id : links[currentlyDraggedIndex].id,
+                    new_position_id: links[overIndex].id,
+                    })
+                }
+                else {
+                    await reorderLink({
+                    link_id : links[currentlyDraggedIndex].id,
+                    new_position_id: null,
+                    })
+                }
+                
             }
         }
-        currentlyDragged = null;
+        currentlyDraggedIndex = null;
         overIndex = null;
         list = list
     }
 
     const dragOver = (e : DragEvent, listData: ListData, index: number) => {
-            if (currentlyDragged != null && currentlyDragged != index) {
+            if (currentlyDraggedIndex != null && currentlyDraggedIndex != index) {
                 overIndex = index    
             }
             
@@ -94,7 +148,7 @@
 
     window.setInterval(() => {
         // if something is being dragged
-        if (currentlyDragged != null)  {
+        if (currentlyDraggedIndex != null)  {
             window.scrollBy(0,diff * SMOOTH_SCROLL);
         }
     },10)
@@ -107,16 +161,16 @@
     
     {#each list as listData, index (listData)}
     <!-- <EditableLink 
-    title={link.title} bio={link.bio} imageLink={link.imageLink}></EditableLink> -->
+    title={link.title} bio={link.bio} imageLink={link.imageLink}></EditableLink> --> 
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div id ="linkdiv-{listData.linkData.id}" on:dragover|preventDefault={(e) => {dragOver(e, listData, index)}} on:dragend={(e) => {endDrag(e, listData, index)}} on:dragstart={(e) => {startDrag(e, listData, index)} }>
-    <Link modalCallback={modalCallback} listData={listData}> </Link>
+    <div id ="linkdiv-{listData.linkData.id}" on:dragover|preventDefault={(e) => {dragOver(e, listData, index)}} on:dragend={async (e) => {await endDrag(e, listData, index)}} on:dragstart={(e) => {startDrag(e, listData, index)} }>
+    <Link index = {index} deleteCallback = {deleteCallback} modalCallback={modalCallback} listData={listData}> </Link>
     </div>
     {/each}
     </ul>
 </div>
 
 {#if isModalShown}
-<PictureModal modalText="Upload Link Picture" bind:isModalShown> 
+<PictureModal bind:isModalShown imageSubmitFunction={updateLinkImage} modalText="Upload Link Picture" > 
 </PictureModal>
 {/if}

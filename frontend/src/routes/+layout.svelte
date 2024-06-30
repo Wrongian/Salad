@@ -9,8 +9,13 @@
   import type { PageData } from "./$types";
   export let data: PageData;
 
-
-  
+  let profileRoute: string;
+  $: if (data.username === "") {
+    // go to normal login page
+    profileRoute = "/auth/login"
+  } else {
+    profileRoute = `/profiles/`+ data.username
+  }
 
   let doneLoad = false;
   onMount(async () => {
@@ -62,7 +67,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+        <div class="z-10 flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
           <div class="flex flex-shrink-0 items-center">
             <a href = "/">
             <img class="h-6 w-auto" src={favicon} alt = "app icon">
@@ -72,10 +77,11 @@
             <div class="flex space-x-4">
 
               {#if data.isLoggedIn}
-              <NavLink linkName={`My Profile`} link={`/profiles`}></NavLink>
+              <NavLink linkName={`My Profile`} link={profileRoute}></NavLink>
               <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
               {/if}
-              <NavLink linkName={`Search`} link = {`/search`}></NavLink>
+              <!--No implementation now so comment out-->
+              <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
             </div>
           </div>
         </div>
@@ -125,10 +131,11 @@
     <div class="sm:hidden" id="mobile-menu">
       <div class="space-y-1 px-2 pb-3 pt-2">
         {#if data.isLoggedIn == true}
-        <NavLink linkName={`My Profile`} link={`/profiles`}></NavLink>
+        <NavLink linkName={`My Profile`} link={profileRoute}></NavLink>
         <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
         {/if}
-        <NavLink linkName={`Search`} link = {`/search`}></NavLink>
+        <!--No implementation yet-->
+        <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
       </div>
     </div>
   </nav>

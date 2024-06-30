@@ -82,7 +82,10 @@ pub async fn get_user_links_by_id(
             .select((GetLink::as_select(), Option::<GetImage>::as_select()))
             .distinct_on(schema::links::id)
             .load::<(GetLink, Option<GetImage>)>(conn);
-    return result.map_err(|e| match e {
+    return result.map_err(|e| {
+        error!("Error in getting user links by id: {:?}", e);
+        e
+    }).map_err(|e| match e {
         Error::DatabaseError(kind, _) => match kind {
             _ => String::from("An error has occurred in getting the link images."),
         },

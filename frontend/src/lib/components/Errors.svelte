@@ -3,10 +3,14 @@
   import ErrorFlashCard from "./ErrorFlashCard.svelte";
   import { errorStore } from "../../stores/stores";
   import { removeAt } from "$lib/modules/Errors.svelte";
+
+  let errors: TErrorContext[] = []
+  $: errors = Array.from($errorStore.values())
+
 </script>
 
-<div class="fixed left-2 top-2">
-  {#each $errorStore as error (error.id)}
+<div class="z-50 fixed left-2 top-2">
+  {#each errors as error (error.id)}
     <ErrorFlashCard
       message={error.message}
       status={error.statusCode}

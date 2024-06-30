@@ -57,6 +57,8 @@ struct UpdateHrefPayload {
 #[derive(Debug, Serialize)]
 struct UploadLinkResponseBody {
     href: String,
+    result: bool,
+    err: String
 }
 
 #[derive(Debug, Serialize)]
@@ -350,8 +352,13 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
         Ok(img) => {
             // remove from s3 if present
             let result = delete_s3_link_image(s3_client, img.filename).await;
+            let result_db = delete_link_image(&mut conn, link_id).await;
             if result.is_err() {
                 error!("Error deleting link image: {}", result.unwrap_err());
+            }
+
+            if result_db.is_err() {
+                error!("Error deleting link image: {:?}", result_db.err());
             }
         }
         // do nothing if not found
@@ -389,7 +396,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_link_image(&mut conn, &payload).await {
-        Ok(img) => build_response(UploadLinkResponseBody { href: cdn_href }, 200),
+        Ok(img) => build_response(UploadLinkResponseBody { href: cdn_href, result: true, err: "".to_string()}, 200),
         Err(msg) => build_error(msg, 400),
     }
 }
@@ -449,11 +456,8 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
 }
 
 pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
-    // get session username from session
-    let session_username = match get_session_username(&req) {
-        Ok(session_usr) => session_usr,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
-    };
+    // get session username from session or default to "" 
+    let session_username = get_session_username(&req).unwrap_or("".to_string());
 
     // get username from params
     let username = match req.param("username") {

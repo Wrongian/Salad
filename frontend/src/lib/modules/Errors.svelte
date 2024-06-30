@@ -3,11 +3,27 @@
   import { goto } from "$app/navigation";
   import type { TErrorContext } from "$lib/types/ErrorTypes";
   import { blackSwanError, errorStore } from "../../stores/stores";
+  import {v4 as uuidv4 } from 'uuid';
+
+  const ERROR_TIMEOUT_MS = 5000;
 
   export function addError(message: string, statusCode: number) {
+
     errorStore.update((errs) => {
-      return [...errs, { id: errs.length, message, statusCode }];
+      const errorHash = uuidv4();
+
+      setTimeout(() => {
+        removeAt(errorHash)
+      }, ERROR_TIMEOUT_MS)
+
+      return errs.set(errorHash, {
+        id: errorHash,
+        statusCode,
+        message
+      })
     });
+
+    
   }
   // blackswan error logic hook here (on client only)
   if (browser) {
@@ -21,16 +37,12 @@
   /**
    * removes the stored error in the queue at position index
    * NOOP if index is out of bounds
-   * @param index
+   * @param errorId
    */
-  export function removeAt(index: number) {
+  export function removeAt(errorHash: string) {
     errorStore.update((errors) => {
-      const newErrs: TErrorContext[] = [];
-      if (index < 0 || index >= errors.length) return errors;
-      errors.forEach((el, id) => {
-        if (id != index) newErrs.push({ ...el, id: newErrs.length });
-      });
-      return newErrs;
+      errors.delete(errorHash);
+      return errors
     });
   }
 </script>
