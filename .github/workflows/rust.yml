@@ -28,3 +28,16 @@ jobs:
         run: cd backend && cargo build --verbose
       - name: Run tests
         run: cd backend && cargo test --verbose
+    env:
+      IP_ADDRESS: 0.0.0.0
+      BACKEND_PORT: 8080
+      ENVIRONMENT: TESTING
+      CORS_WHITELIST_URLS: http://localhost:3000,http://localhost:5173,http://saladify.duckdns.org:3000,http://139.59.193.27:3000,http://143.198.198.122:3000
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+      TIDE_SECRET: ${{secrets.TIDE_SECRET}}
+      FRONTEND_PORT: 5000
+      AWS_ACCESS_KEY_ID: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+      AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_ACCESS_KEY_ID}}
+      AWS_REGION: ap-southeast-2
+      LINK_IMAGE_CDN: https://d2xqzxe0g5zkvy.cloudfront.net
+      PROFILE_IMAGE_CDN: https://d3rsj2uc69kj5w.cloudfront.net
