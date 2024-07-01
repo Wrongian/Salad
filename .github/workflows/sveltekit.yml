@@ -2,9 +2,9 @@ name: Sveltekit
 
 on:
   push:
-    branches: ["dev/setup-eslint"]
+    branches: ["main"]
   pull_request:
-    branches: ["dev/setup-eslint"]
+    branches: ["main"]
 
 jobs:
   build:
