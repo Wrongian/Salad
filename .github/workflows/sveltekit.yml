@@ -1,0 +1,17 @@
+name: Sveltekit
+
+on:
+  push:
+    branches: ["dev/setup-eslint"]
+  pull-request:
+    branches: ["dev/setup-eslint"]
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cd frontend && npm run build
+      - name: Run linter
+        run: cd frontend &&

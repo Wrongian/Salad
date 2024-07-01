@@ -1,17 +1,16 @@
 import type { TErrorContext } from "$lib/types/ErrorTypes";
-import {get, writable, type Writable } from "svelte/store";
+import { get, writable, type Writable } from "svelte/store";
 
-
-export const errorStore: Writable<Map<string, TErrorContext>> = writable(new Map<string, TErrorContext>())
+export const errorStore: Writable<Map<string, TErrorContext>> = writable(
+  new Map<string, TErrorContext>(),
+);
 
 export type TBlackSwanError = {
-    status: number,
-    message: string
-}
+  status: number;
+  message: string;
+};
 
 export const blackSwanError = writable<TBlackSwanError | undefined>();
-
-
 
 // export const routeStore = writable({
 //     prevRoute: '/'
@@ -27,7 +26,7 @@ export const blackSwanError = writable<TBlackSwanError | undefined>();
 //             routeStore.set({
 //                 prevRoute : fromRoute,
 //             })
-//         } 
+//         }
 //     });
 
 //     return routeStore;
