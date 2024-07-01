@@ -1,73 +1,70 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    
-    --background: #FFFFFF;
+    --background: #ffffff;
     --foreground: #050133;
- 
-    --muted: #EFF6F9;
-    --muted-foreground:#6F7D88; 
- 
-    --popover: #FFFFFF;
+
+    --muted: #eff6f9;
+    --muted-foreground: #6f7d88;
+
+    --popover: #ffffff;
     --popover-foreground: #050133;
- 
-    --card: #FFFFFF;
+
+    --card: #ffffff;
     --card-foreground: #050133;
 
-    --border: #D6E4EB;
-    --input: #D6E4EB;
+    --border: #d6e4eb;
+    --input: #d6e4eb;
 
-    --primary: #0A1320;
-    --primary-foreground: #FAFBFC;
+    --primary: #0a1320;
+    --primary-foreground: #fafbfc;
 
-    --secondary: #EFF6F9;
-    --secondary-foreground: #0A1320;
+    --secondary: #eff6f9;
+    --secondary-foreground: #0a1320;
 
-    --accent: #EFF6F9;
-    --accent-foreground: #0A1320;
+    --accent: #eff6f9;
+    --accent-foreground: #0a1320;
 
-    --destructive: #D93636;
-    --destructive-foreground: #FAFBFC;
+    --destructive: #d93636;
+    --destructive-foreground: #fafbfc;
 
-    --ring: #050133
- 
-    --radius: 0.5rem;
+    --ring: #050133 --radius: 0.5rem;
   }
- 
+
   .dark {
     --background: #050133;
-    --foreground: #FAFBFC;
+    --foreground: #fafbfc;
 
-    --muted: #232C39;
-    --muted-foreground: #97A6BA;
+    --muted: #232c39;
+    --muted-foreground: #97a6ba;
 
     --popover: #050133;
-    --popover-foreground: #FAFBFC;
+    --popover-foreground: #fafbfc;
 
     --card: #050133;
-    --card-foreground: #FAFBFC;
+    --card-foreground: #fafbfc;
 
-    --border: #232C39;
-    --input: #232C39;
-    --primary: #FAFBFC;
-    --primary-foreground: #0A1320;
+    --border: #232c39;
+    --input: #232c39;
+    --primary: #fafbfc;
+    --primary-foreground: #0a1320;
 
-    --secondary: #232C39;
-    --secondary-foreground: #FAFBFC;
+    --secondary: #232c39;
+    --secondary-foreground: #fafbfc;
 
-    --accent: #232C39;
-    --accent-foreground: #FAFBFC;
+    --accent: #232c39;
+    --accent-foreground: #fafbfc;
 
-    --destructive: #99291B;
-    --destructive-foreground: #FAFBFC;
+    --destructive: #99291b;
+    --destructive-foreground: #fafbfc;
 
-    --ring: #D6E4EB;
+    --ring: #d6e4eb;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;

@@ -1,0 +1,23 @@
+{
+  "ignorePatterns": [
+        "node_modules/",
+        "build/",
+        "dist/",
+        ".svelte-kit/",
+        "*.config.js",
+        "index.js"
+  ],
+  "overrides": [
+    {
+      "files": ["src/**/*.svelte"],
+      "parser": "svelte-eslint-parser",
+      "parserOptions": {
+        "sourceType": "module",
+        "parser": {
+          "ts": "@typescript-eslint/parser",
+          "typescript": "@typescript-eslint/parser"
+        }
+      }
+    }
+  ]
+}

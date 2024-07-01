@@ -14,16 +14,16 @@
     "allowJs": true,
     "checkJs": true,
     "isolatedModules": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     /**
-     * Arguments below are to integrate sveltejs with 
-     * sveltekit. 
+     * Arguments below are to integrate sveltejs with
+     * sveltekit.
      */
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"strict": true,
-		"moduleResolution": "bundler"
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
   "references": [{ "path": "./tsconfig.node.json" }]

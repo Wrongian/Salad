@@ -4,7 +4,6 @@
   import * as Card from "$lib/components/ui/card";
   export let data: PageData;
   $: links = data.links ?? [];
-
 </script>
 
 <div class="p-2 flex flex-col">
@@ -46,16 +45,17 @@
               <div>
                 <Avatar.Root class="w-[50px] h-[50px] ring-2">
                   <!-- TODO: use CDN hosted link instead of b64 string -->
-                  <Avatar.Image
-                    src={link.img_src}
-                    alt=""
-                  />
+                  <Avatar.Image src={link.img_src} alt="" />
                   <Avatar.Fallback></Avatar.Fallback>
                 </Avatar.Root>
               </div>
 
               <div class="flex-1">
-                <a href={"//" + link.href} data-sveltekit-preload-data="tap" class="font-semibold">{link.title}</a>
+                <a
+                  href={"//" + link.href}
+                  data-sveltekit-preload-data="tap"
+                  class="font-semibold">{link.title}</a
+                >
                 <Card.Description class="overflow-y-auto line-clamp-2"
                   >{link.description}</Card.Description
                 >

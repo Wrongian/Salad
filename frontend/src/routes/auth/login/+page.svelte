@@ -4,9 +4,7 @@
   import type { PageData } from "./$types";
   export let data: PageData;
   $: reset = data.reset;
-  
 </script>
-   
 
 <svelte:head>
   <title>Login</title>
