@@ -16,27 +16,27 @@ export type TAuthResult = {
 };
 
 export type TCreateLinkPayload = {
-  title?: string,
-  bio?: string,
-  href: string
-}
+  title?: string;
+  bio?: string;
+  href: string;
+};
 
 export type TUpdateLinkTitlePayload = {
-  title: string
-}
+  title: string;
+};
 
 export type TUpdateLinkBioPayload = {
-  bio: string
-}
+  bio: string;
+};
 
 export type TUpdateLinkHrefPayload = {
-  href: string
-}
+  href: string;
+};
 
 export type TReorderPayload = {
-  link_id: number,
-  new_position_id: number | null 
-}
+  link_id: number;
+  new_position_id: number | null;
+};
 
 export type TResponseBody = {
   result: boolean;

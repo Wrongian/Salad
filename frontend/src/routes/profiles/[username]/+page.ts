@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ data, route, fetch, params }) => {
   const profileData = await getProfile(params.username, fetch);
   if (!profileData) {
     error(404, {
-      message: 'Profile not found'
+      message: "Profile not found",
     });
   }
   let links = await getLinks(params.username, fetch);

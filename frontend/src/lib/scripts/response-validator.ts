@@ -6,7 +6,6 @@ export const standardResponseValidator = (res: any): res is TResponseBody => {
   return typeof res.result === "boolean" && typeof res.err === "string";
 };
 
-
 export type TProfileBody = {
   display_name: string;
   bio: string;
@@ -28,32 +27,34 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
 export type TLink = {
   id: number;
   user_id: number;
-  next_id: number | null 
+  next_id: number | null;
   title: string | null;
   href: string;
   description: string | null;
   img_src: string | null;
-}
+};
 
-export const TLinkBodyValidator = Joi.object<{links: TLink[]}>({
-  links: Joi.array<TLink[]>().items(
-          Joi.object({
-            id: Joi.number(),
-            user_id: Joi.number().required(),
-            next_id: Joi.number().allow(null).optional(),
-            href: Joi.string().min(0).required(),
-            title: Joi.string().min(0).allow(null).optional(),
-            description: Joi.string().min(0).allow(null).optional(),
-            img_src: Joi.string().allow(null).optional(),
-          })
-        ).min(0)
+export const TLinkBodyValidator = Joi.object<{ links: TLink[] }>({
+  links: Joi.array<TLink[]>()
+    .items(
+      Joi.object({
+        id: Joi.number(),
+        user_id: Joi.number().required(),
+        next_id: Joi.number().allow(null).optional(),
+        href: Joi.string().min(0).required(),
+        title: Joi.string().min(0).allow(null).optional(),
+        description: Joi.string().min(0).allow(null).optional(),
+        img_src: Joi.string().allow(null).optional(),
+      }),
+    )
+    .min(0),
 });
 
+export type TUpdateImageResponseBody = TResponseBody & { href: string };
 
-export type TUpdateImageResponseBody = TResponseBody & { href: string }
-
-export const UpdateImageResponseBodyValidator = Joi.object<TUpdateImageResponseBody>({
-  result: Joi.boolean().optional(),
-  err: Joi.string().optional().allow(""),
-  href: Joi.string().allow("")
-})
+export const UpdateImageResponseBodyValidator =
+  Joi.object<TUpdateImageResponseBody>({
+    result: Joi.boolean().optional(),
+    err: Joi.string().optional().allow(""),
+    href: Joi.string().allow(""),
+  });
