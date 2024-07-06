@@ -26,3 +26,4 @@ random-string = "1.1.0"
 tempfile = "3.10.1"
 priority-queue = "2.0.3"
 uuid = {version = "1.9.1", features = ["v4", "fast-rng"]}
+thiserror = "1.0.61"
