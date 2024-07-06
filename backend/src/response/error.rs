@@ -25,6 +25,10 @@ pub enum Error {
     InvalidResponseError(),
     #[error("{0}")]
     UploadImageError(String),
+    #[error("Unable to get connection pool")]
+    ConnectionPoolError(),
+    #[error("{0}")]
+    DBAssociationError(#[from] AssociationError),
 }
 
 impl Error {
@@ -35,6 +39,7 @@ impl Error {
             Error::ConnectionDBError(_) => StatusCode::InternalServerError,
             Error::HashError(_) => StatusCode::InternalServerError,
             Error::InvalidResponseError() => StatusCode::InternalServerError,
+            Error::ConnectionPoolError() => StatusCode::InternalServerError,
 
             // 4XX errors (These are checked)
             Error::ValidationError(_) => StatusCode::BadRequest,
@@ -44,6 +49,9 @@ impl Error {
             Error::InvalidSessionError() => StatusCode::BadRequest,
             Error::UploadImageError(_) => StatusCode::BadRequest,
             Error::InvalidRequestError() => StatusCode::BadRequest,
+            Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError) => {
+                StatusCode::BadRequest
+            }
         }
     }
 
@@ -63,4 +71,10 @@ impl Error {
             self.get_client_message(),
         ))
     }
+}
+#[derive(thiserror::Error, Debug)]
+#[error("...")]
+pub enum AssociationError {
+    #[error("Link provided does not belong to the user.")]
+    LinkDoesNotBelongToUserError,
 }

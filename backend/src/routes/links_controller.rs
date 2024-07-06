@@ -5,7 +5,7 @@ use crate::{
         image::{create_link_image, delete_link_image, get_link_image, update_link_image},
         link::{
             delete_link_by_id, get_link_by_id, get_user_link_by_id, get_user_links_by_id,
-            reorder_link, update_link_by_id,
+            link_id_belongs_to_user, reorder_link, update_link_by_id,
         },
         user::get_user_profile_by_username,
         DBConnection,
@@ -13,12 +13,14 @@ use crate::{
     helpers::{
         auth::{get_session_user_id, get_session_username},
         links::linearise,
+        params::extract_link_id_from_params,
         response::{build_error, build_response, build_standard_response},
     },
     models::{
         images::{GetImage, InsertLinkImage, UpdateImage},
         links::{GetLink, InsertLink, UpdateLink},
     },
+    response::error::{AssociationError, Error},
     TideState,
 };
 use aws_sdk_s3::primitives::ByteStream;
@@ -58,7 +60,7 @@ struct UpdateHrefPayload {
 struct UploadLinkResponseBody {
     href: String,
     result: bool,
-    err: String
+    err: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -107,7 +109,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
     // get payload
     let link_params: CreateLinkParams;
@@ -117,7 +119,7 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
         }
         Err(e) => {
             error!("Error occurred in parsing: {:?}", e);
-            return build_error("Bad Request Body".to_string(), 400);
+            return Error::InvalidRequestError().into_response();
         }
     }
 
@@ -142,8 +144,9 @@ pub async fn add_link(mut req: Request<Arc<TideState>>) -> tide::Result {
     match db::link::create(&mut conn, &insert_link).await {
         Ok(_) => build_standard_response(true, "".to_string(), 200),
         Err(e) => {
+            // failed to create link
             error!("Error creating link. {:?}, Error: {}", insert_link, e);
-            return build_error("Error occurred while creating link.".to_string(), 400);
+            return Error::DieselError(e).into_response();
         }
     }
 }
@@ -153,7 +156,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // extract link id
@@ -168,7 +171,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     // extract title payload body
     let update_title: UpdateTitlePayload = match req.body_json().await {
         Ok(title_obj) => title_obj,
-        Err(message) => return build_error("Bad request body.".to_string(), 400),
+        _ => return Error::InvalidRequestError().into_response(),
     };
 
     // validate title
@@ -181,10 +184,15 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
 
-    // check user link with link_id exists
-    match get_user_link_by_id(&mut conn, link_id, user_id).await {
-        Ok(res) => (),
-        Err(_) => return build_error("Link does not exist.".to_string(), 400),
+    // assert user link with link_id exists
+    match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
+        Ok(result) => {
+            if !result {
+                return Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError)
+                    .into_response();
+            }
+        }
+        Err(e) => return Error::DieselError(e).into_response(),
     };
 
     // update the link
@@ -198,7 +206,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
 
     let result = match update_link_by_id(&mut conn, &update_link, link_id).await {
         Ok(result) => result,
-        Err(message) => return build_error("Failed to update the provided link.".to_string(), 400),
+        Err(e) => return Error::DieselError(e).into_response(),
     };
 
     build_standard_response(result, "".to_string(), 200)
@@ -208,22 +216,19 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // extract link id
-    let link_id = match req.param("link_id").and_then(|id| {
-        id.parse::<i32>()
-            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
-    }) {
+    let link_id = match extract_link_id_from_params(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(e) => return e,
     };
 
     // extract title payload body
     let update_bio: UpdateBioPayload = match req.body_json().await {
         Ok(title_obj) => title_obj,
-        Err(message) => return build_error("Bad request body.".to_string(), 400),
+        _ => return Error::InvalidRequestError().into_response(),
     };
 
     // validate title
@@ -238,7 +243,7 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
     // check user link with link_id exists
     match get_user_link_by_id(&mut conn, link_id, user_id).await {
         Ok(res) => (),
-        Err(_) => return build_error("Link does not exist.".to_string(), 400),
+        _ => return Error::NotFoundError(String::from("Link")).into_response(),
     };
 
     // update the link
@@ -262,22 +267,19 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // extract link id
-    let link_id = match req.param("link_id").and_then(|id| {
-        id.parse::<i32>()
-            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
-    }) {
+    let link_id = match extract_link_id_from_params(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(e) => return e,
     };
 
     // extract title payload body
     let updated_href: UpdateHrefPayload = match req.body_json().await {
         Ok(title_obj) => title_obj,
-        Err(message) => return build_error("Bad request body.".to_string(), 400),
+        _ => return Error::InvalidRequestError().into_response(),
     };
 
     // validate title
@@ -289,11 +291,13 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
+
     // check user link with link_id exists
     match get_user_link_by_id(&mut conn, link_id, user_id).await {
-        Ok(res) => (),
-        Err(_) => return build_error("Link does not exist.".to_string(), 400),
+        Ok(_) => (),
+        _ => return Error::NotFoundError(String::from("Link")).into_response(),
     };
+
     // update the link
     let update_link = UpdateLink {
         user_id: None,
@@ -315,7 +319,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // get user link from link id from params
@@ -342,9 +346,14 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     let s3_client = &state.s3_client;
 
     // assert link_id belongs to user_id
-    match get_user_link_by_id(&mut conn, link_id, user_id).await {
-        Ok(link) => (),
-        Err(msg) => return build_error("Invalid link provided.".to_string(), 400),
+    match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
+        Ok(is_user_link) => {
+            if !is_user_link {
+                return Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError)
+                    .into_response();
+            }
+        }
+        Err(e) => return Error::DieselError(e).into_response(),
     }
 
     // remove previous file; if any
@@ -396,8 +405,15 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_link_image(&mut conn, &payload).await {
-        Ok(img) => build_response(UploadLinkResponseBody { href: cdn_href, result: true, err: "".to_string()}, 200),
-        Err(msg) => build_error(msg, 400),
+        Ok(img) => build_response(
+            UploadLinkResponseBody {
+                href: cdn_href,
+                result: true,
+                err: "".to_string(),
+            },
+            200,
+        ),
+        Err(e) => Error::DieselError(e).into_response(),
     }
 }
 
@@ -405,7 +421,7 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // get user link from link id from params
@@ -425,10 +441,15 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     let s3_client = &state.s3_client;
 
     // assert link_id belongs to user_id
-    match get_user_link_by_id(&mut conn, link_id, user_id).await {
-        Ok(link) => (),
-        Err(msg) => return build_error("Invalid link provided.".to_string(), 400),
-    };
+    match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
+        Ok(is_user_link) => {
+            if !is_user_link {
+                return Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError)
+                    .into_response();
+            }
+        }
+        Err(e) => return Error::DieselError(e).into_response(),
+    }
 
     // get image by id
     let img_obj = match get_link_image(&mut conn, link_id).await {
@@ -456,13 +477,13 @@ pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
 }
 
 pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
-    // get session username from session or default to "" 
+    // get session username from session or default to ""
     let session_username = get_session_username(&req).unwrap_or("".to_string());
 
     // get username from params
     let username = match req.param("username") {
         Ok(username) => username.to_string(),
-        Err(err) => return Err(err),
+        Err(err) => return Error::InvalidSessionError().into_response(),
     };
 
     let is_owner = session_username == username;
@@ -474,7 +495,7 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     // check if profile is private, if it is then return empty vec
     let profile = match get_user_profile_by_username(&mut conn, &username).await {
         Ok(data) => data,
-        Err(e) => return build_error("Error in verifying profile".to_string(), 400),
+        Err(e) => return Error::DieselError(e).into_response(),
     };
 
     if !is_owner && profile.is_private {
@@ -514,7 +535,7 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // get link id from params
@@ -531,9 +552,14 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn = state.tide_pool.get().unwrap();
 
     // assert link_id belongs to user_id
-    match get_user_link_by_id(&mut conn, link_id, user_id).await {
-        Ok(_) => (),
-        Err(_) => return build_error("Invalid link provided.".to_string(), 400),
+    match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
+        Ok(is_user_link) => {
+            if !is_user_link {
+                return Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError)
+                    .into_response();
+            }
+        }
+        Err(e) => return Error::DieselError(e).into_response(),
     }
 
     // delete image for link
@@ -557,9 +583,9 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     // delete link_id
     match delete_link_by_id(&mut conn, link_id).await {
         Ok(res) => build_standard_response(res, "".to_string(), 200),
-        Err(msg) => {
-            error!("Error in deleting link: {}", msg);
-            return build_error("Error occurred in deleting link.".to_string(), 400);
+        Err(e) => {
+            error!("Error in deleting link: {:?}", e);
+            Error::DieselError(e).into_response()
         }
     }
 }
@@ -568,13 +594,13 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // get reordering links
     let reorder_link_params: ReorderLinksPayload = match req.body_json().await {
         Ok(body) => body,
-        Err(e) => return Err(e),
+        Err(_) => return Error::InvalidRequestError().into_response(),
     };
 
     // get connection state
@@ -582,21 +608,33 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn = state.tide_pool.get().unwrap();
 
     // assert both links belong to user_id
-    match get_user_link_by_id(&mut conn, reorder_link_params.link_id, user_id).await {
-        Ok(_) => (),
-        Err(_) => return build_error("Invalid link_id provided.".to_string(), 400),
-    };
+    match link_id_belongs_to_user(&mut conn, reorder_link_params.link_id, user_id).await {
+        Ok(is_user_link) => {
+            if !is_user_link {
+                return Error::DBAssociationError(AssociationError::LinkDoesNotBelongToUserError)
+                    .into_response();
+            }
+        }
+        Err(e) => return Error::DieselError(e).into_response(),
+    }
 
     if reorder_link_params.new_position_id.is_some() {
-        match get_user_link_by_id(
+        match link_id_belongs_to_user(
             &mut conn,
             reorder_link_params.new_position_id.unwrap(),
             user_id,
         )
         .await
         {
-            Ok(_) => (),
-            Err(_) => return build_error("Invalid new_position_id provided.".to_string(), 400),
+            Ok(is_user_link) => {
+                if !is_user_link {
+                    return Error::DBAssociationError(
+                        AssociationError::LinkDoesNotBelongToUserError,
+                    )
+                    .into_response();
+                }
+            }
+            Err(e) => return Error::DieselError(e).into_response(),
         };
     }
 
@@ -609,9 +647,6 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     .await
     {
         Ok(_) => build_standard_response(true, "".to_string(), 200),
-        Err(e) => {
-            error!("Error in reordering link: {}", e);
-            build_error("Error occurred in reordering link.".to_string(), 400)
-        }
+        Err(e) => Error::DieselError(e).into_response(),
     }
 }

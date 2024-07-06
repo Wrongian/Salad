@@ -2,12 +2,13 @@ use std::env;
 use std::sync::Arc;
 
 use crate::buckets::file::{delete_s3_profile_image, update_s3_profile_image};
-use crate::db::image::{create_profile_image, get_profile_image, delete_profile_image};
+use crate::db::image::{create_profile_image, delete_profile_image, get_profile_image};
 use crate::db::user::{get_user_profile_by_username, update_user_by_id};
 use crate::helpers::auth::{get_session_user_id, get_session_username};
 use crate::helpers::response::{build_error, build_response, build_standard_response};
 use crate::models::images::InsertProfileImage;
 use crate::models::users::UpdateUser;
+use crate::response::error::Error;
 use crate::TideState;
 use aws_sdk_s3::primitives::ByteStream;
 use tide::log::{error, info, warn};
@@ -44,7 +45,7 @@ struct UpdateDisplayProfilePayload {
 struct UploadProfileImageResponseBody {
     href: String,
     result: bool,
-    err: String
+    err: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -56,12 +57,12 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     // extract user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
     // get json body as UpdateProfilePayload
     let update_body: UpdateDisplayProfilePayload = match req.body_json().await {
         Ok(body) => body,
-        Err(_) => return build_error("Bad request body.".to_string(), 400),
+        _ => return Error::InvalidRequestError().into_response(),
     };
 
     // construct UpdateProfile model
@@ -80,7 +81,7 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     // call orm
     return match update_user_by_id(&mut conn, user_id, &update_user).await {
         Ok(result) => build_standard_response(result, "".to_string(), 200),
-        Err(err) => build_error(err, 400),
+        Err(err) => Error::DieselError(err).into_response(),
     };
 }
 
@@ -88,7 +89,7 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
     // get user_id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
-        Err(err) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
 
     // get :name from params
@@ -155,8 +156,15 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_profile_image(&mut conn, &payload).await {
-        Ok(img) => build_response(UploadProfileImageResponseBody { href: cdn_href, result: true, err: "".to_string()}, 200),
-        Err(msg) => build_error(msg, 400),
+        Ok(img) => build_response(
+            UploadProfileImageResponseBody {
+                href: cdn_href,
+                result: true,
+                err: "".to_string(),
+            },
+            200,
+        ),
+        Err(e) => Error::DieselError(e).into_response(),
     }
 }
 
@@ -243,10 +251,12 @@ pub async fn get_username(req: Request<Arc<TideState>>) -> tide::Result {
     // get session username from session
     let session_username = match get_session_username(&req) {
         Ok(session_usr) => session_usr,
-        Err(_) => return build_error("invalid session!".to_string(), 400),
+        Err(e) => return e,
     };
-    return build_response( UsernameResponseBody{username : session_username}, 200)
+    return build_response(
+        UsernameResponseBody {
+            username: session_username,
+        },
+        200,
+    );
 }
-
-
-
