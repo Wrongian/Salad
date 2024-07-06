@@ -2,6 +2,7 @@ pub mod buckets;
 pub mod funcs;
 pub mod helpers;
 pub mod models;
+pub mod response;
 pub mod routes;
 pub mod schema;
 pub mod tests;
@@ -15,7 +16,9 @@ use routes::links_controller::{
     add_link, delete_link_picture, delete_links, get_links, reorder_links, update_link_bio,
     update_link_href, update_link_picture, update_link_title,
 };
-use routes::profile_controller::{get_profile, get_username, update_display_profile, update_profile_image};
+use routes::profile_controller::{
+    get_profile, get_username, update_display_profile, update_profile_image,
+};
 use std::env;
 pub mod db;
 use aws_sdk_s3::{self as s3, config};
