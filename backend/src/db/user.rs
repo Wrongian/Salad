@@ -1,6 +1,5 @@
 use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
 use diesel::prelude::*;
-use diesel::result::Error;
 use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
 
 // create a user with a user instance
@@ -76,44 +75,37 @@ pub async fn check_username_present(conn: &mut PgConnection, name: &String) -> b
 pub async fn get_user_profile_by_username(
     conn: &mut PgConnection,
     name: &String,
-) -> Result<UserProfileView, String> {
+) -> Result<UserProfileView, diesel::result::Error> {
     use crate::schema::users::dsl::*;
 
-    let retrieved_obj: Result<UserProfileView, Error> = users
+    users
         .filter(username.eq(&name))
         .select(UserProfileView::as_select())
-        .first::<UserProfileView>(conn);
-
-    retrieved_obj.map_err(|e| match e {
-        Error::NotFound => String::from("Unable to find user profile with the given username."),
-        _ => String::from("Error occurred in querying database for user profile."),
-    })
+        .first::<UserProfileView>(conn)
 }
 
-pub async fn get_user_by_id(conn: &mut PgConnection, user_id: i32) -> Result<GetUser, String> {
+pub async fn get_user_by_id(
+    conn: &mut PgConnection,
+    user_id: i32,
+) -> Result<GetUser, diesel::result::Error> {
     use crate::schema::users::dsl::*;
-    let result: Result<GetUser, Error> = users
+    users
         .filter(id.eq(user_id))
         .select(GetUser::as_select())
-        .first::<GetUser>(conn);
-    result.map_err(|_| "could not find user with given id.".to_string())
+        .first::<GetUser>(conn)
 }
 
 pub async fn update_user_by_id(
     conn: &mut PgConnection,
     user_id: i32,
     update_user: &UpdateUser,
-) -> Result<bool, String> {
+) -> Result<bool, diesel::result::Error> {
     use crate::schema::users::dsl::*;
     use diesel::query_dsl::methods::FilterDsl;
-    let update_user_id: Result<i32, Error> =
-        diesel::update(FilterDsl::filter(users, id.eq(user_id)))
-            .set(update_user)
-            .returning(id)
-            .get_result::<i32>(conn);
 
-    update_user_id.map(|v| v == user_id).map_err(|e| match e {
-        Error::NotFound => String::from("User does not exist."),
-        _ => String::from("Failed to update profile."),
-    })
+    diesel::update(FilterDsl::filter(users, id.eq(user_id)))
+        .set(update_user)
+        .returning(id)
+        .get_result::<i32>(conn)
+        .map(|v| v == user_id)
 }
