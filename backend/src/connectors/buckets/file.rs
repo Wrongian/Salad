@@ -159,7 +159,7 @@ mod unit_tests {
     use aws_sdk_s3::{self as s3, primitives::ByteStream};
     use bytes::Bytes;
 
-    use crate::buckets::file::{get_s3_profile_image, update_s3_profile_image};
+    use crate::connectors::buckets::file::{get_s3_profile_image, update_s3_profile_image};
 
     async fn create_s3_client() -> s3::Client {
         let region_provider = RegionProviderChain::default_provider().or_else("ap-southeast-2");

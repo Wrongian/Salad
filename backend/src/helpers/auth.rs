@@ -1,18 +1,17 @@
+use crate::types::{error::Error, state::TideState};
 use std::sync::Arc;
-
-use crate::response::error::Error;
 use tide::Request;
 
-use crate::TideState;
+// functions related to authentication
 
-pub fn get_session_user_id(req: &Request<Arc<TideState>>) -> Result<i32, tide::Result> {
+pub fn get_session_user_id(req: &Request<Arc<TideState>>) -> Result<i32, Error> {
     req.session()
         .get::<i32>("user_id")
-        .ok_or_else(|| Error::InvalidSessionError().into_response())
+        .ok_or_else(|| Error::InvalidSessionError())
 }
 
-pub fn get_session_username(req: &Request<Arc<TideState>>) -> Result<String, tide::Result> {
+pub fn get_session_username(req: &Request<Arc<TideState>>) -> Result<String, Error> {
     req.session()
         .get("username")
-        .ok_or_else(|| Error::InvalidSessionError().into_response())
+        .ok_or_else(|| Error::InvalidSessionError())
 }

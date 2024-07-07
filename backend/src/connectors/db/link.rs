@@ -118,14 +118,12 @@ mod unit_test {
     use dotenvy::dotenv;
     use random_string::generate;
 
-    use crate::{
-        db,
-        models::{
-            links::{GetLink, InsertLink},
-            users::{GetUser, InsertUser},
-        },
-        schema::users,
+    use crate::models::{
+        links::{GetLink, InsertLink},
+        users::{GetUser, InsertUser},
     };
+
+    use crate::connectors::db;
     use diesel::prelude::*;
     // NOTE: execute 'diesel migration run' before unit tests to ensure the tables are loaded into psql
     // before running the unit tests.

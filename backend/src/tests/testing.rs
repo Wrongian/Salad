@@ -1,12 +1,3 @@
-use crate::{
-    db::start_connection,
-    funcs,
-    routes::auth::{register, RegisterParams},
-};
-use diesel::PgConnection;
-use tide::http::{Body, Method, Request, Response, Url};
-use validator::Validate;
-
 // Do not run this in production
 
 // to run this with println! outputs use "rust test -- --nocapture"
