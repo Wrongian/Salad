@@ -6,6 +6,7 @@ export const standardResponseValidator = (res: any): res is TResponseBody => {
   return typeof res.result === "boolean" && typeof res.err === "string";
 };
 
+
 export type TProfileBody = {
   display_name: string;
   bio: string;
@@ -15,6 +16,7 @@ export type TProfileBody = {
   is_private: boolean;
 };
 
+
 export const TProfileBodyValidator = Joi.object<TProfileBody>({
   display_name: Joi.string().min(0).required(),
   bio: Joi.string().allow(null).min(0),
@@ -23,6 +25,7 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
   followers: Joi.number().optional(),
   is_private: Joi.boolean(),
 }).unknown();
+
 
 export type TLink = {
   id: number;
