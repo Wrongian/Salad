@@ -22,20 +22,31 @@ import {
 } from "./response-validator.js";
 import { addError } from "$lib/modules/Errors.svelte";
 import type { NavigationEvent } from "@sveltejs/kit";
+import { validatePayload, type Validator } from "./validator.js";
+import { TErrorValidator, type TError } from "./validation/error.js";
+import { TStandardPayloadValidator, type TStandardPayload } from "./validation/response.js";
+import { validateFetch } from "./fetch.js";
 
 const MASKED_ERROR_MESSAGE =
-  "/Oh no! Looks like something went wrong. Please try again later.";
+  "Oh no! Looks like something went wrong. Please try again later.";
 
 const BASEURL = "/";
-const UPDATE_PROFILE_IMAGE_ENDPOINT = "/api/profiles/image";
+const PROFILES_PREFIX = "/api/profiles"
+const UPDATE_PROFILE_IMAGE_ENDPOINT = PROFILES_PREFIX + "/image";
+const UPDATE_DISPLAY_PROFILE_ENDPOINT = PROFILES_PREFIX + "/display";
 const UPDATE_LINK_TITLE_ENDPOINT = "/api/links/title";
 const UPDATE_LINK_BIO_ENDPOINT = "/api/links/bio";
 const UPDATE_LINK_HREF_ENDPOINT = "/api/links/href";
 const REORDER_LINK_ENDPOINT = "/api/links/reorder";
 const DELETE_LINK_ENDPOINT = "/api/links";
+const LOGIN_ENDPOINT = "/api/login";
+const REGISTER_ENDPOINT = "/api/register";
 
 const BLACKSWAN_ERROR_STATUS_CODE = 500;
+const BAD_REQUEST_STATUS = 400;
 
+type fetch = typeof fetch;
+type HttpMethods = "GET" | "POST" | "PUT" | "PATCH" | "UPDATE" | "DELETE" | "HEAD";
 /**
  * forms a POST query to the /login endpoint to validate and log in user
  * expects: status 400 with message on error and 200 on successful login
@@ -50,45 +61,16 @@ export const login = async (
   password: string,
   next: string,
 ): Promise<void> => {
-  const response: TAuthResult = await fetch(`/api/login`, {
-    method: "POST",
-    body: JSON.stringify({
-      username: username,
-      password: password,
-    }),
-    // redirect: "manual",
-  })
-    .then(async (success) => {
-      // check and handle redirects
-      if (success.redirected) {
-        await goto(success.url);
-        return { status: 302, err: "" };
-      }
-
-      const resBody = await success.json();
-      if (!standardResponseValidator(resBody))
-        return Promise.reject("Obtained an invalid response body.");
-      return { status: success.status, err: resBody.err };
-    })
-    .catch((err) => {
-      return { status: 500, err: JSON.stringify(err) };
-    });
-
-  await invalidateAll();
-  if (response.status === 200) {
-    if (next != null) {
-      goto(next);
-    } else {
-      goto(BASEURL);
-    }
-  } else if (response.status === 400) {
-    // TODO: type validation and integration tests
-    addError(response.err, response.status);
-  } else if (response.status > 400 && response.status <= 500) {
-    // render error page on other error status codes
-    blackSwanError.set({ status: response.status, message: response.err });
-  }
+  // validate request here
+  await validateFetch<TStandardPayload, { username: string, password: string }>(
+    LOGIN_ENDPOINT,
+    "POST",
+    { username, password },
+    TStandardPayloadValidator
+  )
 };
+
+
 
 /**
  * forms a POST query to the /register endpoint to create a new user if it doesn't exist in the database.
@@ -105,147 +87,35 @@ export const register = async (
   password: string,
   next: string,
 ): Promise<void> => {
-  const response: TAuthResult = await fetch(`/api/register`, {
-    method: "POST",
-    body: JSON.stringify({
-      email: email,
-      username: username,
-      password: password,
-    }),
-  })
-    .then(async (success) => {
-      // TODO: set cookie
-      return success;
-    })
-    .then(async (success) => {
-      // check and handle redirects
-      if (success.redirected) {
-        await goto(success.url);
-        return { status: 302, err: "" };
-      }
-
-      const resBody = await success.json();
-      if (!standardResponseValidator(resBody))
-        return Promise.reject("Obtained an invalid response body.");
-      return { status: success.status, err: resBody.err };
-    })
-    .catch((err) => {
-      return { status: 400, err: JSON.stringify(err) };
-    });
-  await invalidateAll();
-  if (response.status === 200) {
-    if (next != null) {
-      goto(next);
-    } else {
-      goto(BASEURL);
-    }
-  } else if (response.status === 400) {
-    // TODO: flash svelte error
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: response.err });
-  }
-};
-
-// TODO: server-side CORS
-export const resetPassword = async (email: string) => {
-  const response = await fetch(`/api/users`, {
-    method: "PUT",
-    body: JSON.stringify({
-      email: email,
-    }),
-  }).catch((err) => {
-    return { status: 400, message: err };
-  });
-
-  if (response.status === 200) {
-    // reloads the current login page
-    await invalidateAll();
-  } else {
-    // TODO: flash svelte error
-  }
-  // uncomment to test for reset routing
-  // invalidateAll()
+  // validate request here
+  await validateFetch<TStandardPayload, { username: string, password: string, email: string }>(
+    REGISTER_ENDPOINT,
+    "POST",
+    { username, password, email },
+    TStandardPayloadValidator
+  )
 };
 
 export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
-  const response = await fetch(`/api/profiles/display`, {
-    method: "PUT",
-    body: JSON.stringify(updateQuery),
-  })
-    .then(async (res) => {
-      let body = await res.json();
-      return {
-        status: res.status,
-        err: body.err,
-      };
-    })
-    .catch((err) => {
-      return { status: 400, err };
-    });
-
-  if (response.status === 200) {
-    // code to redirect client to GET profile/:username
-    await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({
-      status: response.status,
-      message: "Error occurred updating profile information",
-    });
-  }
+  await validateFetch<TStandardPayload, TUpdateProfileQuery>(
+    UPDATE_DISPLAY_PROFILE_ENDPOINT,
+    "PUT",
+    updateQuery,
+    TStandardPayloadValidator
+  )
 };
 
-type fetch = typeof fetch;
 
 export const getProfile = async (
   username: string,
   fetch: fetch,
-): Promise<TProfileBody | undefined> => {
-  const result: TResult<TProfileBody> = await fetch(
-    `/api/profiles/${username}`,
-    { method: "GET" },
+): Promise<TProfileBody | null> => {
+  return await validateFetch<TProfileBody, { username: string }>(
+    `${PROFILES_PREFIX}/${username}`,
+    "GET",
+    { username },
+    TProfileBodyValidator
   )
-    .then(async (success) => {
-      const body = await success.json();
-      if (success.ok) {
-        const payload = await TProfileBodyValidator.validateAsync(body).catch(
-          (e) => {
-            console.log(e);
-            return Promise.reject(MASKED_ERROR_MESSAGE);
-          },
-        );
-        return {
-          payload,
-          success: true as const,
-        };
-      }
-
-      // if response not ok check error body type
-      if (!standardResponseValidator(body)) {
-        // this is unexpected
-        return Promise.reject(MASKED_ERROR_MESSAGE);
-      }
-
-      return {
-        success: false as const,
-        status: success.status,
-        err: body.err,
-      };
-    })
-    .catch((err) => {
-      return { status: 500, err: JSON.stringify(err), success: false as const };
-    });
-
-  if (result.success) {
-    return result.payload;
-  } else if (result.status < BLACKSWAN_ERROR_STATUS_CODE) {
-    addError(result.err, result.status);
-  } else {
-    // something really bad happened here
-    blackSwanError.set({ status: result.status, message: result.err });
-  }
 };
 
 export const getLinks = async (
@@ -508,6 +378,9 @@ export const updateLinkHref = async (
     });
   }
 };
+
+
+
 
 export const deleteLink = async (link_id: number) => {
   const response = await fetch(`${DELETE_LINK_ENDPOINT}/${link_id}`, {
