@@ -24,14 +24,17 @@ import { addError } from "$lib/modules/Errors.svelte";
 import type { NavigationEvent } from "@sveltejs/kit";
 import { validatePayload, type Validator } from "./validator.js";
 import { TErrorValidator, type TError } from "./validation/error.js";
-import { TStandardPayloadValidator, type TStandardPayload } from "./validation/response.js";
+import {
+  TStandardPayloadValidator,
+  type TStandardPayload,
+} from "./validation/response.js";
 import { validateFetch } from "./fetch.js";
 
 const MASKED_ERROR_MESSAGE =
   "Oh no! Looks like something went wrong. Please try again later.";
 
 const BASEURL = "/";
-const PROFILES_PREFIX = "/api/profiles"
+const PROFILES_PREFIX = "/api/profiles";
 const UPDATE_PROFILE_IMAGE_ENDPOINT = PROFILES_PREFIX + "/image";
 const UPDATE_DISPLAY_PROFILE_ENDPOINT = PROFILES_PREFIX + "/display";
 const UPDATE_LINK_TITLE_ENDPOINT = "/api/links/title";
@@ -46,7 +49,14 @@ const BLACKSWAN_ERROR_STATUS_CODE = 500;
 const BAD_REQUEST_STATUS = 400;
 
 type fetch = typeof fetch;
-type HttpMethods = "GET" | "POST" | "PUT" | "PATCH" | "UPDATE" | "DELETE" | "HEAD";
+type HttpMethods =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "UPDATE"
+  | "DELETE"
+  | "HEAD";
 /**
  * forms a POST query to the /login endpoint to validate and log in user
  * expects: status 400 with message on error and 200 on successful login
@@ -62,15 +72,13 @@ export const login = async (
   next: string,
 ): Promise<void> => {
   // validate request here
-  await validateFetch<TStandardPayload, { username: string, password: string }>(
+  await validateFetch<TStandardPayload, { username: string; password: string }>(
     LOGIN_ENDPOINT,
     "POST",
     { username, password },
-    TStandardPayloadValidator
-  )
+    TStandardPayloadValidator,
+  );
 };
-
-
 
 /**
  * forms a POST query to the /register endpoint to create a new user if it doesn't exist in the database.
@@ -88,12 +96,15 @@ export const register = async (
   next: string,
 ): Promise<void> => {
   // validate request here
-  await validateFetch<TStandardPayload, { username: string, password: string, email: string }>(
+  await validateFetch<
+    TStandardPayload,
+    { username: string; password: string; email: string }
+  >(
     REGISTER_ENDPOINT,
     "POST",
     { username, password, email },
-    TStandardPayloadValidator
-  )
+    TStandardPayloadValidator,
+  );
 };
 
 export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
@@ -101,10 +112,9 @@ export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
     UPDATE_DISPLAY_PROFILE_ENDPOINT,
     "PUT",
     updateQuery,
-    TStandardPayloadValidator
-  )
+    TStandardPayloadValidator,
+  );
 };
-
 
 export const getProfile = async (
   username: string,
@@ -114,8 +124,13 @@ export const getProfile = async (
     `${PROFILES_PREFIX}/${username}`,
     "GET",
     { username },
-    TProfileBodyValidator
-  )
+    TProfileBodyValidator,
+  );
+};
+
+export const resetPassword = async (email: string) => {
+  // TODO: finish up reset password implementation
+  return email;
 };
 
 export const getLinks = async (
@@ -378,9 +393,6 @@ export const updateLinkHref = async (
     });
   }
 };
-
-
-
 
 export const deleteLink = async (link_id: number) => {
   const response = await fetch(`${DELETE_LINK_ENDPOINT}/${link_id}`, {
