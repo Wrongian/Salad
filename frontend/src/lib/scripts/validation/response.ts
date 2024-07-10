@@ -1,11 +1,29 @@
 import Joi from "joi";
-import type { TResponseBody } from "./query";
 
-export const standardResponseValidator = (res: any): res is TResponseBody => {
-  if (!("result" in res) || !("err" in res)) return false;
-  return typeof res.result === "boolean" && typeof res.err === "string";
-};
+export type TStandardPayload = {};
 
+export const TStandardPayloadValidator = Joi.object<TStandardPayload>();
+
+export type TResultPayload = { result: boolean };
+
+export const TResultPayloadValidator = Joi.object<TResultPayload>({
+  result: Joi.boolean(),
+});
+
+export type TGetUsernamePayload = { username: string };
+
+export const TGetUsernamePayloadValidator = Joi.object<TGetUsernamePayload>({
+  username: Joi.string(),
+});
+
+export type TUpdateImageResponseBody = { href: string };
+
+export const UpdateImageResponseBodyValidator =
+  Joi.object<TUpdateImageResponseBody>({
+    href: Joi.string().allow(""),
+  });
+
+// profile
 export type TProfileBody = {
   display_name: string;
   bio: string;
@@ -24,6 +42,7 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
   is_private: Joi.boolean(),
 }).unknown();
 
+// link
 export type TLink = {
   id: number;
   user_id: number;
@@ -49,12 +68,3 @@ export const TLinkBodyValidator = Joi.object<{ links: TLink[] }>({
     )
     .min(0),
 });
-
-export type TUpdateImageResponseBody = TResponseBody & { href: string };
-
-export const UpdateImageResponseBodyValidator =
-  Joi.object<TUpdateImageResponseBody>({
-    result: Joi.boolean().optional(),
-    err: Joi.string().optional().allow(""),
-    href: Joi.string().allow(""),
-  });

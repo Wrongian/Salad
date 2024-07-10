@@ -1,6 +1,8 @@
-use crate::routes::links_controller::GetImagedLink;
+use crate::routes::links::get::GetImagedLink;
 use priority_queue::PriorityQueue;
 use std::{cmp::Reverse, collections::HashMap};
+
+// functions related to links
 
 // we assume each GetLink element is unique (i.e link.id is unique) in the vector.
 pub fn linearise(links: &Vec<GetImagedLink>) -> Vec<GetImagedLink> {
@@ -36,7 +38,7 @@ pub fn linearise(links: &Vec<GetImagedLink>) -> Vec<GetImagedLink> {
 
 #[cfg(test)]
 mod unit_tests {
-    use crate::routes::links_controller::GetImagedLink;
+    use crate::routes::links::get::GetImagedLink;
 
     use super::linearise;
 

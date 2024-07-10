@@ -1,6 +1,8 @@
 use dotenvy::dotenv;
 use std::env;
 
+// various miscellaneous functions
+
 // gets the server url
 pub fn get_url() -> String {
     dotenv().expect("No .env file found");
