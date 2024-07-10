@@ -34,8 +34,6 @@ struct UpdateDisplayProfilePayload {
 #[derive(Debug, serde::Serialize)]
 struct UploadProfileImageResponseBody {
     href: String,
-    result: bool,
-    err: String,
 }
 
 // update profile response body
@@ -142,12 +140,7 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_profile_image(&mut conn, &payload).await {
-        Ok(img) => Response::new(UploadProfileImageResponseBody {
-            href: cdn_href,
-            result: true,
-            err: "".to_string(),
-        })
-        .into_response(),
+        Ok(img) => Response::new(UploadProfileImageResponseBody { href: cdn_href }).into_response(),
         Err(e) => Error::DieselError(e).into_response(),
     }
 }
