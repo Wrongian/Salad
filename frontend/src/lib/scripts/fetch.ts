@@ -22,13 +22,17 @@ type HttpMethods =
   | "HEAD";
 type fetch = typeof fetch;
 
-export async function validateFetch<T, U extends object>(
+export async function validateFetch<R, U extends object = {}>(
   endpoint: string,
   method: HttpMethods,
   payload: U,
-  validator: Validator<T>,
-): Promise<T | null> {
-  const hasBody = method == "GET" || method == "DELETE" || method == "HEAD";
+  validator: Validator<R>,
+  options?: {
+    fetch?: fetch;
+  },
+): Promise<R | null> {
+  const hasBody = !(method == "GET" || method == "DELETE" || method == "HEAD");
+  const useFetch = options?.fetch ?? fetch;
   // check body
   const request = hasBody
     ? {
@@ -38,9 +42,8 @@ export async function validateFetch<T, U extends object>(
     : {
         method,
       };
-
   // get the response
-  const response = await fetch(endpoint, request);
+  const response = await useFetch(endpoint, request);
 
   //
   const jsonBody = await response.json().catch((_) => {
