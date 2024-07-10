@@ -4,8 +4,11 @@ use serde::Serialize;
 use tide::{log::error, Request};
 
 use crate::{
-    connectors::db::{link::get_user_links_by_id, user::get_user_profile_by_username},
-    helpers::{auth::get_session_username, links::linearise},
+    connectors::db::{
+        link::get_user_links_by_id,
+        user::{check_user_exists, check_username_present, get_user_profile_by_username},
+    },
+    helpers::{auth::get_session_username, links::linearise, params::extract_username_from_params},
     types::{error::Error, response::Response, state::TideState},
 };
 
@@ -30,9 +33,9 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     let session_username = get_session_username(&req).unwrap_or("".to_string());
 
     // get username from params
-    let username = match req.param("username") {
-        Ok(username) => username.to_string(),
-        Err(err) => return Error::InvalidSessionError().into_response(),
+    let username = match extract_username_from_params(&req) {
+        Ok(usr) => usr,
+        Err(err) => return err.into_response(),
     };
 
     let is_owner = session_username == username;
@@ -40,6 +43,11 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     // get connection state
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
+
+    // check username exists
+    if !check_username_present(&mut conn, &username).await {
+        return Error::NotFoundError(String::from("User")).into_response();
+    }
 
     // check if profile is private, if it is then return empty vec
     let profile = match get_user_profile_by_username(&mut conn, &username).await {
