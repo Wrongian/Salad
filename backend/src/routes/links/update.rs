@@ -44,8 +44,6 @@ struct UpdateHrefPayload {
 #[derive(Debug, Serialize)]
 struct UploadLinkResponseBody {
     href: String,
-    result: bool,
-    err: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -222,13 +220,10 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
         Err(e) => return e.into_response(),
     };
 
-    // get user link from link id from params
-    let link_id = match req.param("link_id").and_then(|id| {
-        id.parse::<i32>()
-            .map_err(|_| tide::Error::from_str(400, "Invalid link_id provided."))
-    }) {
+    // extract link id
+    let link_id = match extract_link_id_from_params(&req) {
         Ok(id) => id,
-        Err(err) => return Err(err),
+        Err(e) => return e.into_response(),
     };
 
     // get :name from params
@@ -305,12 +300,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_link_image(&mut conn, &payload).await {
-        Ok(_) => Response::new(UploadLinkResponseBody {
-            href: cdn_href,
-            result: true,
-            err: "".to_string(),
-        })
-        .into_response(),
+        Ok(_) => Response::new(UploadLinkResponseBody { href: cdn_href }).into_response(),
         Err(e) => Error::DieselError(e).into_response(),
     }
 }
