@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
   import { addLinks } from "$lib/scripts/queries";
 
   let linkName = "";
@@ -14,6 +15,7 @@
     linkName = "";
     linkUrl = "";
     linkDescription = "";
+    await invalidateAll();
   };
 </script>
 
