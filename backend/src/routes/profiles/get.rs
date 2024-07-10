@@ -7,7 +7,10 @@ use tide::{
 use validator::Validate;
 
 use crate::{
-    connectors::db::{image::get_profile_image, user::get_user_profile_by_username},
+    connectors::db::{
+        image::get_profile_image,
+        user::{check_username_present, get_user_profile_by_username},
+    },
     helpers::{auth::get_session_username, params::extract_username_from_params},
     types::{error::Error, response::Response, state::TideState},
 };
@@ -66,6 +69,11 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
 
     let state = req.state();
     let mut conn = state.tide_pool.get().unwrap();
+
+    // check username exists
+    if !check_username_present(&mut conn, &username).await {
+        return Error::NotFoundError(String::from("User")).into_response();
+    }
 
     // get profile view from database
     let profile_query_result = get_user_profile_by_username(&mut conn, &username).await;
