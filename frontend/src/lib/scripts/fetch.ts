@@ -24,20 +24,30 @@ type fetch = typeof fetch;
 
 export async function validateFetch<R, U extends object = {}>(
   endpoint: string,
+  // the HTTP
   method: HttpMethods,
+  // The request payload
   payload: U,
+  // Validator for the response
   validator: Validator<R>,
+  // optional options
   options?: {
+    // whether to use your own fetch or the universal fetch
     fetch?: fetch;
+    // whether the body is a blob or not
+    isBlobBody?: boolean;
   },
 ): Promise<R | null> {
   const hasBody = !(method == "GET" || method == "DELETE" || method == "HEAD");
+  const isBlobBody =
+    hasBody && Boolean(options?.isBlobBody) && payload instanceof Blob;
   const useFetch = options?.fetch ?? fetch;
   // check body
   const request = hasBody
     ? {
         method,
-        body: JSON.stringify(payload),
+        // Type cast here is safe because isBlobBody => payload instanceof Blob
+        body: isBlobBody ? (payload as Blob) : JSON.stringify(payload),
       }
     : {
         method,
