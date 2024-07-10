@@ -3,6 +3,7 @@ use serde::Serialize;
 use tide::StatusCode;
 
 // this a custom response struct that abstracts a tide response
+#[derive(Serialize)]
 pub struct Response<T: Serialize = EmptyBody> {
     pub payload: T,
 }
@@ -20,7 +21,7 @@ impl<T: Serialize> Response<T> {
         Response { payload }
     }
     pub fn into_response(self) -> tide::Result {
-        tide::Body::from_json(&self.payload)
+        tide::Body::from_json(&self)
             .map(|body| tide::Response::builder(StatusCode::Ok).body(body).build())
             .or_else(|_| Error::InvalidResponseError().into_response())
     }
