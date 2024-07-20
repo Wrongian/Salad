@@ -1,5 +1,7 @@
 // defines the smtp trait which is used as an interface
 
+use crate::types::error::Error;
+
 trait SMTPService {
-    // currently contains no functions
+    async fn send_email(to_email: String) -> Result<(), Error>;
 }
