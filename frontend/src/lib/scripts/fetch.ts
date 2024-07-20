@@ -38,7 +38,7 @@ export async function validateFetch<R, U extends object = {}>(
     isBlobBody?: boolean;
   },
 ): Promise<R | null> {
-  const hasBody = !(method == "GET" || method == "DELETE" || method == "HEAD");
+  const hasBody = !(method == "GET" || method == "HEAD");
   const isBlobBody =
     hasBody && Boolean(options?.isBlobBody) && payload instanceof Blob;
   const useFetch = options?.fetch ?? fetch;
