@@ -1,5 +1,6 @@
 pub mod routes {
     pub mod auth;
+    pub mod follow;
     pub mod links;
     pub mod profiles;
 }
