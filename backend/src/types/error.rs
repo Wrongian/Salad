@@ -46,6 +46,8 @@ pub enum Error {
     // if association to db doesnt work somehow
     #[error("{0}")]
     DBAssociationError(#[from] AssociationErrors),
+    #[error("Unable to send email")]
+    EmailError(),
 }
 
 impl Error {
@@ -57,6 +59,7 @@ impl Error {
             Error::HashError(_) => StatusCode::InternalServerError,
             Error::InvalidResponseError() => StatusCode::InternalServerError,
             Error::ConnectionPoolError() => StatusCode::InternalServerError,
+            Error::EmailError() => StatusCode::InternalServerError,
 
             // 4XX errors (These are checked)
             Error::ValidationError(_) => StatusCode::BadRequest,
