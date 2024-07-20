@@ -8,11 +8,15 @@ struct EmailService {
 }
 
 impl EmailService {
-    pub fn new() -> EmailService {}
+    pub fn new() -> EmailService {
+        let host = env::var("SMTP_HOST").expect("SMTP host not found in .env");
+        return EmailService { email_host: host };
+    }
 
     fn get_credentials() -> Credentials {
-        let username = env::var("SMTP_USERNAME").expect("SMTP Username not Found in .env");
-        let password = env::var("SMTP_PASSWORD").expect("SMTP Password not Found in .env");
+        // honestly this should return a custom error
+        let username = env::var("SMTP_USERNAME").expect("SMTP username not found in .env");
+        let password = env::var("SMTP_PASSWORD").expect("SMTP password not found in .env");
         // consume both
         let cred = Credentials::new(username, password);
         return cred;
