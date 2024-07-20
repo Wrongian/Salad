@@ -137,7 +137,7 @@ async fn main() -> tide::Result<()> {
     app.at("/follow").put(settle_inbound_follow_request);
     app.at("/follower").delete(delete_follower);
     app.at("/following").delete(delete_following);
-    app.at("/following-request")
+    app.at("/follow-request")
         .post(create_outbound_follow_request)
         .delete(delete_outbound_follow_request);
 

@@ -19,7 +19,7 @@ use crate::{
 
 #[derive(Deserialize)]
 pub struct CreateOutBoundFollowRequestPayload {
-    to_id: i32,
+    pending_follow_id: i32,
 }
 
 pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) -> tide::Result {
@@ -39,7 +39,7 @@ pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
     }
 
     let to_id = match req.body_json::<CreateOutBoundFollowRequestPayload>().await {
-        Ok(payload) => payload.to_id,
+        Ok(payload) => payload.pending_follow_id,
         Err(_) => {
             return Error::InvalidRequestError(RequestErrors::MalformedPayload).into_response()
         }
