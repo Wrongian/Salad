@@ -11,6 +11,11 @@ use saladify::helpers::funcs;
 use saladify::routes::auth::login::{is_logged_in, login};
 use saladify::routes::auth::logout::logout;
 use saladify::routes::auth::register::register;
+use saladify::routes::follow::create::create_outbound_follow_request;
+use saladify::routes::follow::delete::{
+    delete_follower, delete_following, delete_outbound_follow_request,
+};
+use saladify::routes::follow::update::settle_inbound_follow_request;
 use saladify::routes::links::create::add_link;
 use saladify::routes::links::delete::{delete_link_picture, delete_links};
 use saladify::routes::links::get::get_links;
@@ -127,6 +132,14 @@ async fn main() -> tide::Result<()> {
         .put(update_link_picture);
     app.at("/links/:link_id/image").delete(delete_link_picture);
     app.at("/links/:link_id").delete(delete_links);
+
+    // follow
+    app.at("/follow").put(settle_inbound_follow_request);
+    app.at("/follower").delete(delete_follower);
+    app.at("/following").delete(delete_following);
+    app.at("/following-request")
+        .post(create_outbound_follow_request)
+        .delete(delete_outbound_follow_request);
 
     // misc
     app.at("get-username").get(get_username);

@@ -22,11 +22,6 @@ use crate::{
 };
 
 #[derive(Deserialize)]
-pub struct DeleteInboundFollowRequestPayload {
-    pending_follower_id: i32,
-}
-
-#[derive(Deserialize)]
 pub struct DeleteOutboundFollowRequestPayload {
     pending_follow_id: i32,
 }
@@ -38,39 +33,6 @@ pub struct DeleteFollowerPayload {
 #[derive(Deserialize)]
 pub struct DeleteFollowingPayload {
     following_id: i32,
-}
-
-pub async fn delete_inbound_follow_request(mut req: Request<Arc<TideState>>) -> tide::Result {
-    let pending_follower_id = match req.body_json::<DeleteInboundFollowRequestPayload>().await {
-        Ok(payload) => payload.pending_follower_id,
-        Err(_) => {
-            return Error::InvalidRequestError(RequestErrors::MalformedPayload).into_response()
-        }
-    };
-
-    // extract user id from session
-    let user_id = match get_session_user_id(&req) {
-        Ok(id) => id,
-        Err(e) => return e.into_response(),
-    };
-
-    let mut conn = get_connection(&mut req);
-
-    // check if request with the pending_follower_id exists
-    match has_follow_request(&mut conn, user_id, pending_follower_id).await {
-        Ok(true) => (),
-        Ok(false) => return Error::NotFoundError(String::from("Follow Request")).into_response(),
-        Err(e) => return Error::DieselError(e).into_response(),
-    };
-
-    // delete record from db (pending_follow_requests table)
-    if let Err(e) = delete_follow_request(&mut conn, user_id, pending_follower_id).await {
-        return Error::DieselError(e).into_response();
-    }
-
-    // TODO: delete tagged notifications
-
-    return Response::empty().into_response();
 }
 
 pub async fn delete_outbound_follow_request(mut req: Request<Arc<TideState>>) -> tide::Result {
