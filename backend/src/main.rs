@@ -15,6 +15,7 @@ use saladify::routes::follow::create::create_outbound_follow_request;
 use saladify::routes::follow::delete::{
     delete_follower, delete_following, delete_outbound_follow_request,
 };
+use saladify::routes::follow::get::get_follow_status;
 use saladify::routes::follow::update::settle_inbound_follow_request;
 use saladify::routes::links::create::add_link;
 use saladify::routes::links::delete::{delete_link_picture, delete_links};
@@ -137,6 +138,7 @@ async fn main() -> tide::Result<()> {
     app.at("/follow").put(settle_inbound_follow_request);
     app.at("/follower").delete(delete_follower);
     app.at("/following").delete(delete_following);
+    app.at("/follow-status").get(get_follow_status);
     app.at("/follow-request")
         .post(create_outbound_follow_request)
         .delete(delete_outbound_follow_request);
