@@ -71,6 +71,19 @@ pub async fn check_username_present(conn: &mut PgConnection, name: &String) -> b
     false
 }
 
+// check if user with id exists
+pub async fn has_user_id(
+    conn: &mut PgConnection,
+    user_id: i32,
+) -> Result<bool, diesel::result::Error> {
+    use crate::schema::users::dsl::{id, users};
+    users
+        .filter(id.eq(user_id))
+        .count()
+        .get_result::<i64>(conn)
+        .map(|count| count > 0)
+}
+
 // get the user_profile using the user's username
 pub async fn get_user_profile_by_username(
     conn: &mut PgConnection,
