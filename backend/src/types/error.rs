@@ -45,7 +45,7 @@ pub enum Error {
     ConnectionPoolError(),
     // if association to db doesnt work somehow
     #[error("{0}")]
-    DBAssociationError(#[from] AssociationErrors),
+    AssociationError(#[from] AssociationErrors),
 }
 
 impl Error {
@@ -64,7 +64,7 @@ impl Error {
             Error::NotFoundError(_) => StatusCode::BadRequest,
             Error::WrongPasswordError() => StatusCode::BadRequest,
             Error::InvalidSessionError() => StatusCode::BadRequest,
-            Error::DBAssociationError(_) => StatusCode::BadRequest,
+            Error::AssociationError(_) => StatusCode::BadRequest,
             Error::S3Error(S3Errors::FailedToDeleteImage) => StatusCode::BadRequest,
             Error::S3Error(S3Errors::FailedToUploadImage) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedParams) => StatusCode::BadRequest,

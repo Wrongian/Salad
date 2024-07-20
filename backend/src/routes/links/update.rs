@@ -88,7 +88,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
     match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
         Ok(result) => {
             if !result {
-                return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                     .into_response();
             }
         }
@@ -244,7 +244,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
     match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
         Ok(is_user_link) => {
             if !is_user_link {
-                return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                     .into_response();
             }
         }
@@ -328,7 +328,7 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
     match link_id_belongs_to_user(&mut conn, reorder_link_params.link_id, user_id).await {
         Ok(is_user_link) => {
             if !is_user_link {
-                return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                     .into_response();
             }
         }
@@ -345,7 +345,7 @@ pub async fn reorder_links(mut req: Request<Arc<TideState>>) -> tide::Result {
         {
             Ok(is_user_link) => {
                 if !is_user_link {
-                    return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                    return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                         .into_response();
                 }
             }
