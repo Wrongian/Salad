@@ -8,6 +8,7 @@ use validator::Validate;
 
 use crate::{
     connectors::db::{
+        follow::{get_follower_count, get_following_count},
         image::get_profile_image,
         user::{check_username_present, get_user_profile_by_username},
     },
@@ -34,8 +35,8 @@ struct GetProfileResponseBody {
     bio: String,
     is_owner: bool,
     picture: String,
-    following: Option<i32>,
-    followers: Option<i32>,
+    following: Option<i64>,
+    followers: Option<i64>,
 }
 
 // Gets the session username
@@ -108,13 +109,16 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                         String::from("")
                     });
 
+                let follower_count = get_follower_count(&mut conn, profile.id).await.ok();
+                let following_count = get_following_count(&mut conn, profile.id).await.ok();
+
                 GetProfileResponseBody {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
                     is_owner,
                     picture,
-                    followers: Some(0),
-                    following: Some(0),
+                    followers: follower_count,
+                    following: following_count,
                 }
             }
         }

@@ -1,4 +1,4 @@
-use aws_sdk_s3::{self as s3, config};
+use aws_sdk_s3::{self as s3};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
 use std::path::Path;

@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS pending_follow_requests;
 DROP TABLE IF EXISTS images;
 DROP TABLE IF EXISTS links;
 DROP TABLE IF EXISTS users;

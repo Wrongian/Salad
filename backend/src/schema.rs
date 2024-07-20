@@ -1,6 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    follows (id) {
+        id -> Int4,
+        from_id -> Int4,
+        to_id -> Int4,
+    }
+}
+
+diesel::table! {
     images (id) {
         id -> Int4,
         img_src -> Varchar,
@@ -23,6 +31,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    pending_follow_requests (id) {
+        id -> Int4,
+        from_id -> Int4,
+        to_id -> Int4,
+    }
+}
+
+diesel::table! {
     users (id) {
         id -> Int4,
         #[max_length = 30]
@@ -41,7 +57,9 @@ diesel::joinable!(images -> users (user_id));
 diesel::joinable!(links -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    follows,
     images,
     links,
+    pending_follow_requests,
     users,
 );

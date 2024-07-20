@@ -1,5 +1,6 @@
 pub mod routes {
     pub mod auth;
+    pub mod follow;
     pub mod links;
     pub mod profiles;
 }
@@ -8,12 +9,7 @@ pub mod routes {
 pub mod types;
 
 // these are the database modals
-pub mod models {
-    pub mod images;
-    pub mod links;
-    pub mod users;
-}
-
+pub mod models;
 // these define the helper functions used in various routes and backend logic
 pub mod helpers;
 
