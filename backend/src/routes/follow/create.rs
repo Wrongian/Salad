@@ -58,15 +58,15 @@ pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
     }
 
     // check if request record already exists, or already following
-    let has_follow_request_result = match has_follow_request(&mut conn, to_id, user_id).await {
+    let has_follow_request = match has_follow_request(&mut conn, to_id, user_id).await {
         Ok(res) => res,
         Err(e) => return Error::DieselError(e).into_response(),
     };
-    let is_following_result = match is_following(&mut conn, user_id, to_id).await {
+    let is_following = match is_following(&mut conn, user_id, to_id).await {
         Ok(res) => res,
         Err(e) => return Error::DieselError(e).into_response(),
     };
-    if !has_follow_request_result || !is_following_result {
+    if has_follow_request || is_following {
         return Error::AssociationError(AssociationErrors::InvalidFollowUser).into_response();
     }
 
