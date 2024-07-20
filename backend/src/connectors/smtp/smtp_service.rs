@@ -3,5 +3,10 @@
 use crate::types::error::Error;
 
 trait SMTPService {
-    async fn send_email(&self, to_email: String) -> Result<(), Error>;
+    async fn send_email(
+        &self,
+        to_email: String,
+        subject: String,
+        body: String,
+    ) -> Result<(), Error>;
 }
