@@ -10,11 +10,6 @@ export type TUpdateProfile = {
   bio?: string;
 };
 
-export type TAuthResult = {
-  status: number;
-  err: string;
-};
-
 export type TCreateLinkPayload = {
   title?: string;
   bio?: string;
@@ -38,18 +33,6 @@ export type TReorderPayload = {
   new_position_id: number | null;
 };
 
-export type TResponseBody = {
-  result: boolean;
-  err: string;
-};
-
-export type TResult<T> =
-  | {
-      payload: T;
-      success: true;
-    }
-  | {
-      success: false;
-      status: number;
-      err: string;
-    };
+export type TCreateFollowRequestPayload = {
+  pending_follow_id: number;
+}
