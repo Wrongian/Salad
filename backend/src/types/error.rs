@@ -102,7 +102,7 @@ pub enum AssociationErrors {
     #[error("Link provided does not belong to the user.")]
     LinkDoesNotBelongToUser,
     #[error("Invalid follow user specified.")]
-    UserDoesNotFollowTarget,
+    InvalidFollowUser,
 }
 
 #[derive(thiserror::Error, Debug)]

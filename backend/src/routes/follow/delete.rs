@@ -170,8 +170,7 @@ pub async fn delete_following(mut req: Request<Arc<TideState>>) -> tide::Result 
     match is_following(&mut conn, user_id, following_id).await {
         Ok(true) => (),
         Ok(false) => {
-            return Error::AssociationError(AssociationErrors::UserDoesNotFollowTarget)
-                .into_response()
+            return Error::AssociationError(AssociationErrors::InvalidFollowUser).into_response()
         }
         Err(e) => return Error::DieselError(e).into_response(),
     }
