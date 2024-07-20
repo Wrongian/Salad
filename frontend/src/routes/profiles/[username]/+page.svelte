@@ -2,8 +2,21 @@
   import type { PageData } from "./$types";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as Card from "$lib/components/ui/card";
+  import { UserPlus } from "lucide-svelte";
+  import { createFollowRequest } from "$lib/scripts/queries";
+  import { addError } from "$lib/modules/Errors.svelte";
   export let data: PageData;
   $: links = data.links ?? [];
+  $: isOwner = data.is_owner ?? false;
+  $: userId = data.id ?? NaN;
+
+  async function followUser() {
+    if (Number.isNaN(userId)) {
+      addError("Error in following user. Please try again later.");
+      return;
+    }
+    await createFollowRequest({ pending_follow_id: userId });
+  }
 </script>
 
 <div class="p-2 flex flex-col">
@@ -23,6 +36,15 @@
           <p>followers: {data.followers}</p>
           <p>following: {data.following}</p>
         </div>
+        {#if !isOwner}
+          <button
+            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1"
+            on:click={followUser}
+          >
+            <UserPlus />
+            <p>Follow</p>
+          </button>
+        {/if}
       </div>
     </div>
     <div>
@@ -44,7 +66,6 @@
             <div class="flex space-x-4">
               <div>
                 <Avatar.Root class="w-[50px] h-[50px] ring-2">
-                  <!-- TODO: use CDN hosted link instead of b64 string -->
                   <Avatar.Image src={link.img_src} alt="" />
                   <Avatar.Fallback></Avatar.Fallback>
                 </Avatar.Root>

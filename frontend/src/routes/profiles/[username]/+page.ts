@@ -1,5 +1,4 @@
 import { getProfile, getLinks } from "$lib/scripts/queries";
-import type { TLink } from "$lib/scripts/response-validator";
 import { error } from "@sveltejs/kit";
 import type { PageLoad } from "./$types";
 /**
