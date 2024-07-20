@@ -37,6 +37,7 @@ struct GetProfileResponseBody {
     picture: String,
     following: Option<i64>,
     followers: Option<i64>,
+    id: i32,
 }
 
 // Gets the session username
@@ -89,6 +90,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                     display_name: profile.display_name,
                     bio: "".to_owned(),
                     picture: String::from("picture placeholder"),
+                    id: profile.id,
                     is_owner: false,
                     followers: None,
                     following: None,
@@ -116,6 +118,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                     display_name: profile.display_name,
                     bio: profile.bio.unwrap_or("".to_owned()),
                     is_owner,
+                    id: profile.id,
                     picture,
                     followers: follower_count,
                     following: following_count,
