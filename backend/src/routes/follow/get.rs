@@ -19,25 +19,25 @@ struct FollowStatusParams {
 }
 #[derive(Serialize)]
 struct FollowStatusResponsePayload {
-    payload: String,
+    status: String,
 }
 
 impl FollowStatusResponsePayload {
     pub fn following() -> FollowStatusResponsePayload {
         FollowStatusResponsePayload {
-            payload: String::from("following"),
+            status: String::from("following"),
         }
     }
 
     pub fn none() -> FollowStatusResponsePayload {
         FollowStatusResponsePayload {
-            payload: String::from("none"),
+            status: String::from("none"),
         }
     }
 
     pub fn pending() -> FollowStatusResponsePayload {
         FollowStatusResponsePayload {
-            payload: String::from("pending"),
+            status: String::from("pending"),
         }
     }
 
