@@ -4,8 +4,8 @@ const BAD_REQUEST_STATUS = 400;
 import { validatePayload, type Validator } from "./validator.js";
 import { TErrorValidator, type TError } from "./validation/error.js";
 import {
-  TStandardPayloadValidator,
-  type TStandardPayload,
+  TStandardResponsePayloadValidator,
+  type TStandardResponsePayload,
 } from "./validation/response.js";
 import { addError } from "$lib/modules/Errors.svelte";
 

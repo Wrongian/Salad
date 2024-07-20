@@ -1,8 +1,8 @@
 import Joi from "joi";
 
-export type TStandardPayload = {};
+export type TStandardResponsePayload = {};
 
-export const TStandardPayloadValidator = Joi.object<TStandardPayload>();
+export const TStandardResponsePayloadValidator = Joi.object<TStandardResponsePayload>();
 
 export type TResultPayload = { result: boolean };
 
@@ -31,6 +31,8 @@ export type TProfileBody = {
   following: number | null;
   followers: number | null;
   is_private: boolean;
+  is_owner: boolean;
+  id: number;
 };
 
 export const TProfileBodyValidator = Joi.object<TProfileBody>({
@@ -40,6 +42,8 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
   following: Joi.number().optional(),
   followers: Joi.number().optional(),
   is_private: Joi.boolean(),
+  is_owner: Joi.boolean(),
+  id: Joi.number(),
 }).unknown();
 
 // link
