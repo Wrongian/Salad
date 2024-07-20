@@ -64,6 +64,40 @@ pub async fn delete_follow_request(
     .map(|_| ())
 }
 
+pub async fn get_follower_count(
+    conn: &mut PgConnection,
+    user_id: i32,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::follows::dsl::*;
+
+    follows
+        .filter(to_id.eq(user_id))
+        .count()
+        .get_result::<i64>(conn)
+}
+pub async fn get_following_count(
+    conn: &mut PgConnection,
+    user_id: i32,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::follows::dsl::*;
+
+    follows
+        .filter(from_id.eq(user_id))
+        .count()
+        .get_result::<i64>(conn)
+}
+
+pub async fn get_pending_follow_requests(
+    conn: &mut PgConnection,
+    user_id: i32,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::pending_follow_requests::dsl::*;
+    pending_follow_requests
+        .filter(from_id.eq(user_id).or(to_id.eq(user_id)))
+        .count()
+        .get_result::<i64>(conn)
+}
+
 pub async fn has_follower(
     conn: &mut PgConnection,
     user_id: i32,
