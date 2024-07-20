@@ -2,12 +2,14 @@
   import type { PageData } from "./$types";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as Card from "$lib/components/ui/card";
-  import { UserPlus } from "lucide-svelte";
-  import { createFollowRequest } from "$lib/scripts/queries";
+  import { UserPlus, UserMinus } from "lucide-svelte";
+  import { createFollowRequest, removeFollower } from "$lib/scripts/queries";
   import { addError } from "$lib/modules/Errors.svelte";
+  import { invalidateAll } from "$app/navigation";
   export let data: PageData;
   $: links = data.links ?? [];
   $: isOwner = data.is_owner ?? false;
+  $: followStatus = data.followStatus ?? "none";
   $: userId = data.id ?? NaN;
 
   async function followUser() {
@@ -16,6 +18,17 @@
       return;
     }
     await createFollowRequest({ pending_follow_id: userId });
+    await invalidateAll();
+  }
+
+  async function unfollowUser() {
+    if (Number.isNaN(userId)) {
+      addError("Error in unfollowing user. Please try again later.");
+      return;
+    }
+
+    await removeFollower(userId);
+    await invalidateAll();
   }
 </script>
 
@@ -36,13 +49,25 @@
           <p>followers: {data.followers}</p>
           <p>following: {data.following}</p>
         </div>
-        {#if !isOwner}
+        {#if !isOwner && followStatus === "none"}
           <button
             class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1"
             on:click={followUser}
           >
             <UserPlus />
             <p>Follow</p>
+          </button>
+        {:else if !isOwner && followStatus === "pending"}
+          <div class="rounded-xl p-2">
+            <p>Request sent</p>
+          </div>
+        {:else if !isOwner && followStatus === "following"}
+          <button
+            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1"
+            on:click={unfollowUser}
+          >
+            <UserMinus />
+            <p>Unfollow</p>
           </button>
         {/if}
       </div>

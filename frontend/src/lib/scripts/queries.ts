@@ -10,9 +10,12 @@ import type {
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
+  TFollowStatusValidator,
   TLinkBodyValidator,
   TProfileBodyValidator,
   UpdateImageResponseBodyValidator,
+  type FollowStatus,
+  type TFollowStatusResponsePayload,
   type TLink,
   type TProfileBody,
   type TUpdateImageResponseBody,
@@ -45,6 +48,8 @@ const REGISTER_ENDPOINT = "/api/register";
 const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
 const GET_USERNAME_ENDPOINT = "/api/get-username";
 const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
+const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
+const FOLLOWER_ENDPOINT = "/api/follower";
 
 type fetch = typeof fetch;
 
@@ -151,6 +156,20 @@ export const getLinks = async (
     return [];
   });
 };
+
+export const getFollowStatus = async (
+  targetUserId: number,
+  fetch: fetch
+): Promise<FollowStatus | undefined> => {
+  return await validateFetch<TFollowStatusResponsePayload>(
+    `${FOLLOW_STATUS_ENDPOINT}?${new URLSearchParams([["id", targetUserId.toString()]]).toString()}`,
+    "GET",
+    {},
+    TFollowStatusValidator,
+    { fetch }
+  ).then(payload => payload?.status)
+
+}
 
 export const getIsLoggedIn = async (fetch: fetch): Promise<boolean> => {
   return (
@@ -340,5 +359,13 @@ export const createFollowRequest = async (payload: TCreateFollowRequestPayload) 
     payload,
     TStandardResponsePayloadValidator
   )
+}
 
+export const removeFollower = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOWER_ENDPOINT,
+    "DELETE",
+    { follower_id: userId },
+    TStandardResponsePayloadValidator
+  )
 }
