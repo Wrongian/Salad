@@ -1,8 +1,12 @@
-use crate::types::Error::EmailError;
-use crate::types::Error::Error;
-use dotenvy::dotenv;
+use crate::connectors::smtp::smtp_service::SMTPService;
+use crate::types::error::Error;
+use crate::types::error::Error::{AddressError, EmailError};
+use lettre::address::Address;
+use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
+use std::env;
+use tide::{log::info, Request};
 
 struct EmailService {
     // I shall avoid storing the credentials in the struct
@@ -31,25 +35,55 @@ impl SMTPService for EmailService {
         let cred = EmailService::get_credentials();
         // we open a new connection each time
         // not sure if putting the connection in the app will be super reliable
-        let conn = SmtpTransport::relay(self.host)
+        let conn = SmtpTransport::relay(&self.email_host)
             .unwrap()
-            .credentials(&cred)
+            .credentials(cred)
             .build();
-
         let username = env::var("SMTP_USERNAME").expect("SMTP username not found in .env");
+        let to_address: Mailbox = match to_email.parse() {
+            Ok(address) => address,
+            Err(e) => return Err(AddressError(e)),
+        };
+        let from_address: Mailbox = match username.parse() {
+            Ok(address) => address,
+            Err(e) => return Err(AddressError(e)),
+        };
         // make message
         let message = Message::builder()
-            .from(username)
-            .to(to_email)
+            .from(from_address)
+            .to(to_address)
             .subject(subject)
             .body(body)
             .unwrap();
 
         // send the email
-        match conn.send(message) {
+        match conn.send(&message) {
             Ok(_) => {}
-            Err(e) => return EmailError(),
+            Err(e) => return Err(EmailError(e)),
         }
-        Ok()
+        Ok(())
+    }
+}
+
+// testing
+#[cfg(test)]
+mod email_tests {
+    use crate::connectors::smtp::email::EmailService;
+    use crate::connectors::smtp::smtp_service::SMTPService;
+    use dotenvy::dotenv;
+    use std::env;
+    #[test]
+    pub fn test_send_email() {
+        dotenv().expect("No .env file found");
+        let email_service = EmailService::new();
+
+        let username = env::var("SMTP_USERNAME").expect("SMTP username not found in .env");
+        let _res = email_service
+            .send_email(
+                username,
+                "testing".to_string(),
+                "testing sending email".to_string(),
+            )
+            .expect("email not sent");
     }
 }
