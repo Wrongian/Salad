@@ -50,6 +50,7 @@ const GET_USERNAME_ENDPOINT = "/api/get-username";
 const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
+const FOLLOWING_ENDPOINT = "/api/following";
 
 type fetch = typeof fetch;
 
@@ -366,6 +367,15 @@ export const removeFollower = async (userId: number) => {
     FOLLOWER_ENDPOINT,
     "DELETE",
     { follower_id: userId },
+    TStandardResponsePayloadValidator
+  )
+}
+
+export const removeFollowing = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOWING_ENDPOINT,
+    "DELETE",
+    { following_id: userId },
     TStandardResponsePayloadValidator
   )
 }

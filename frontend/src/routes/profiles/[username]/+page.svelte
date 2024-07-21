@@ -3,7 +3,7 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as Card from "$lib/components/ui/card";
   import { UserPlus, UserMinus } from "lucide-svelte";
-  import { createFollowRequest, removeFollower } from "$lib/scripts/queries";
+  import { createFollowRequest, removeFollowing } from "$lib/scripts/queries";
   import { addError } from "$lib/modules/Errors.svelte";
   import { invalidateAll } from "$app/navigation";
   export let data: PageData;
@@ -27,7 +27,7 @@
       return;
     }
 
-    await removeFollower(userId);
+    await removeFollowing(userId);
     await invalidateAll();
   }
 </script>
