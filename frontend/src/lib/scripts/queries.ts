@@ -11,10 +11,12 @@ import type {
 import { goto, invalidateAll } from "$app/navigation";
 import {
   TFollowStatusValidator,
+  type TGetPaginatedProfilePayload,
+  TGetPaginatedProfilePayloadValidator,
   TLinkBodyValidator,
   TProfileBodyValidator,
   UpdateImageResponseBodyValidator,
-  type FollowStatus,
+  type TFollowStatus,
   type TFollowStatusResponsePayload,
   type TLink,
   type TProfileBody,
@@ -29,6 +31,7 @@ import {
   type TStandardResponsePayload as TStandardResponsePayload,
 } from "./validation/response.js";
 import { validateFetch } from "./fetch.js";
+import { getAsSearchParamString } from "./searchParams.js";
 
 const BASEURL = "/";
 const PROFILES_PREFIX = "/api/profiles";
@@ -51,6 +54,7 @@ const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
 const FOLLOWING_ENDPOINT = "/api/following";
+const SEARCH_USERS_ENDPOINT = "/api/search";
 
 type fetch = typeof fetch;
 
@@ -161,7 +165,7 @@ export const getLinks = async (
 export const getFollowStatus = async (
   targetUserId: number,
   fetch: fetch
-): Promise<FollowStatus | undefined> => {
+): Promise<TFollowStatus | undefined> => {
   return await validateFetch<TFollowStatusResponsePayload>(
     `${FOLLOW_STATUS_ENDPOINT}?${new URLSearchParams([["id", targetUserId.toString()]]).toString()}`,
     "GET",
@@ -354,7 +358,7 @@ export const updateProfilePicture = async (
 };
 
 export const createFollowRequest = async (payload: TCreateFollowRequestPayload) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, TCreateFollowRequestPayload>(
     `${FOLLOW_REQUEST_ENDPOINT}`,
     "POST",
     payload,
@@ -363,7 +367,7 @@ export const createFollowRequest = async (payload: TCreateFollowRequestPayload) 
 }
 
 export const removeFollowRequest = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { pending_follow_id: number }>(
     FOLLOW_REQUEST_ENDPOINT,
     "DELETE",
     { pending_follow_id: userId },
@@ -372,7 +376,7 @@ export const removeFollowRequest = async (userId: number) => {
 }
 
 export const removeFollower = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { follower_id: number }>(
     FOLLOWER_ENDPOINT,
     "DELETE",
     { follower_id: userId },
@@ -381,10 +385,42 @@ export const removeFollower = async (userId: number) => {
 }
 
 export const removeFollowing = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { following_id: number }>(
     FOLLOWING_ENDPOINT,
     "DELETE",
     { following_id: userId },
     TStandardResponsePayloadValidator
+  )
+}
+
+export const getFollowers = async (query: string, pageIndex: number = 1) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWER_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator
+  )
+}
+
+export const getFollowings = async (query: string, pageIndex: number = 1) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWING_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator
+  )
+}
+
+export const searchUsers = async (query: string, pageIndex: number = 1, filterObj: object = {}) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex, ...filterObj}) 
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${SEARCH_USERS_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator
   )
 }

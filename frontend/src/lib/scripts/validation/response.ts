@@ -74,12 +74,34 @@ export const TLinkBodyValidator = Joi.object<{ links: TLink[] }>({
 });
 
 const FOLLOW_STATUSES = ['following', 'pending', 'none'] as const
-export type FollowStatus = typeof FOLLOW_STATUSES[number]
+export type TFollowStatus = typeof FOLLOW_STATUSES[number]
 
 export type TFollowStatusResponsePayload = {
-  status: FollowStatus
+  status: TFollowStatus
 }
 
 export const TFollowStatusValidator = Joi.object<TFollowStatusResponsePayload>({
   status: Joi.string().valid(...FOLLOW_STATUSES)
 })
+
+export type TPaginatedProfile = {
+  username: string,
+  img_src: string | undefined,
+  id: number,
+  display_name: string 
+}
+export type TGetPaginatedProfilePayload = {
+  profiles: TPaginatedProfile[] 
+}
+
+export const TGetPaginatedProfilePayloadValidator = Joi.object<TGetPaginatedProfilePayload>({
+  profiles: Joi.array().items(
+    Joi.object<TPaginatedProfile>({
+      username: Joi.string().min(0),
+      img_src: Joi.string().allow(null),
+      id: Joi.number(),
+      display_name: Joi.string().allow(null),
+    })
+  )
+})
+
