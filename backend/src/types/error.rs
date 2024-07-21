@@ -1,4 +1,5 @@
 use crate::helpers::errors::validation_error_message;
+use lettre::address::AddressError;
 use serde::Serialize;
 use tide::{Response, StatusCode};
 
@@ -46,8 +47,10 @@ pub enum Error {
     // if association to db doesnt work somehow
     #[error("{0}")]
     DBAssociationError(#[from] AssociationErrors),
-    #[error("Unable to send email")]
-    EmailError(),
+    #[error("{0}")]
+    EmailError(#[from] lettre::transport::smtp::Error),
+    #[error("{0}")]
+    AddressError(#[from] AddressError),
 }
 
 impl Error {
@@ -59,7 +62,8 @@ impl Error {
             Error::HashError(_) => StatusCode::InternalServerError,
             Error::InvalidResponseError() => StatusCode::InternalServerError,
             Error::ConnectionPoolError() => StatusCode::InternalServerError,
-            Error::EmailError() => StatusCode::InternalServerError,
+            Error::EmailError(_) => StatusCode::InternalServerError,
+            Error::AddressError(_) => StatusCode::InternalServerError,
 
             // 4XX errors (These are checked)
             Error::ValidationError(_) => StatusCode::BadRequest,
