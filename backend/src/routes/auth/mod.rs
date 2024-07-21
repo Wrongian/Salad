@@ -1,6 +1,7 @@
 pub mod login;
 pub mod logout;
 pub mod register;
+pub mod reset_password;
 
 // init session when logged in
 pub fn init_session(session: &mut tide::sessions::Session, user_id: i32, username: &String) {
