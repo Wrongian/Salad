@@ -4,8 +4,8 @@ const BAD_REQUEST_STATUS = 400;
 import { validatePayload, type Validator } from "./validator.js";
 import { TErrorValidator, type TError } from "./validation/error.js";
 import {
-  TStandardPayloadValidator,
-  type TStandardPayload,
+  TStandardResponsePayloadValidator,
+  type TStandardResponsePayload,
 } from "./validation/response.js";
 import { addError } from "$lib/modules/Errors.svelte";
 
@@ -38,7 +38,7 @@ export async function validateFetch<R, U extends object = {}>(
     isBlobBody?: boolean;
   },
 ): Promise<R | null> {
-  const hasBody = !(method == "GET" || method == "DELETE" || method == "HEAD");
+  const hasBody = !(method == "GET" || method == "HEAD");
   const isBlobBody =
     hasBody && Boolean(options?.isBlobBody) && payload instanceof Blob;
   const useFetch = options?.fetch ?? fetch;

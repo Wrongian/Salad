@@ -7,19 +7,22 @@
 
   const ERROR_TIMEOUT_MS = 5000;
 
-  export function addError(message: string, statusCode: number) {
+  export function addError(message: string, statusCode?: number) {
     errorStore.update((errs) => {
       const errorHash = uuidv4();
 
       setTimeout(() => {
         removeAt(errorHash);
       }, ERROR_TIMEOUT_MS);
-
-      return errs.set(errorHash, {
+      const errorObject: TErrorContext = {
         id: errorHash,
-        statusCode,
         message,
-      });
+      };
+      if (statusCode) {
+        errorObject["statusCode"] = statusCode;
+      }
+
+      return errs.set(errorHash, errorObject);
     });
   }
   // blackswan error logic hook here (on client only)

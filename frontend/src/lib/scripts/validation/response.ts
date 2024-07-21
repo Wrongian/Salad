@@ -1,8 +1,8 @@
 import Joi from "joi";
 
-export type TStandardPayload = {};
+export type TStandardResponsePayload = {};
 
-export const TStandardPayloadValidator = Joi.object<TStandardPayload>();
+export const TStandardResponsePayloadValidator = Joi.object<TStandardResponsePayload>();
 
 export type TResultPayload = { result: boolean };
 
@@ -31,6 +31,8 @@ export type TProfileBody = {
   following: number | null;
   followers: number | null;
   is_private: boolean;
+  is_owner: boolean;
+  id: number;
 };
 
 export const TProfileBodyValidator = Joi.object<TProfileBody>({
@@ -40,6 +42,8 @@ export const TProfileBodyValidator = Joi.object<TProfileBody>({
   following: Joi.number().optional(),
   followers: Joi.number().optional(),
   is_private: Joi.boolean(),
+  is_owner: Joi.boolean(),
+  id: Joi.number(),
 }).unknown();
 
 // link
@@ -68,3 +72,14 @@ export const TLinkBodyValidator = Joi.object<{ links: TLink[] }>({
     )
     .min(0),
 });
+
+const FOLLOW_STATUSES = ['following', 'pending', 'none'] as const
+export type FollowStatus = typeof FOLLOW_STATUSES[number]
+
+export type TFollowStatusResponsePayload = {
+  status: FollowStatus
+}
+
+export const TFollowStatusValidator = Joi.object<TFollowStatusResponsePayload>({
+  status: Joi.string().valid(...FOLLOW_STATUSES)
+})
