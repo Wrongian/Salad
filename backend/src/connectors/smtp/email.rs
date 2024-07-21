@@ -8,7 +8,7 @@ use lettre::{Message, SmtpTransport, Transport};
 use std::env;
 use tide::{log::info, Request};
 
-struct EmailService {
+pub struct EmailService {
     // I shall avoid storing the credentials in the struct
     email_host: String,
 }
