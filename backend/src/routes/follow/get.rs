@@ -10,6 +10,7 @@ use crate::{
     helpers::{auth::get_session_user_id, state::get_connection},
     types::{
         error::{Error, RequestErrors},
+        pagination::{GetPaginatedProfile, PaginatedGetPayload, PER_PAGE},
         response::Response,
         state::TideState,
     },
@@ -53,21 +54,6 @@ struct FollowGetQueryParams {
     query: String,
     index: i64,
 }
-
-#[derive(Serialize)]
-struct PaginatedGetPayload {
-    profiles: Vec<GetPaginatedProfile>,
-}
-
-#[derive(Serialize)]
-struct GetPaginatedProfile {
-    username: String,
-    img_src: Option<String>,
-    id: i32,
-    display_name: String,
-}
-
-static PER_PAGE: i64 = 8;
 
 pub async fn get_follow_status(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id
