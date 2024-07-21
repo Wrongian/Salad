@@ -12,16 +12,17 @@ use tempfile::TempDir;
 pub type TidePool = Pool<ConnectionManager<PgConnection>>;
 
 // this is actual state of the tide app as a struct
-pub struct TideState<T: SMTPService> {
+pub struct TideState {
     pub tide_pool: TidePool,
     pub s3_client: s3::Client,
     pub tempdir: TempDir,
     // might want to make this a dynamic type in the future
-    pub email_service: T,
+    // or make this generic, tried making it generic but broke everything because you have to change a million things
+    pub email_service: EmailService,
 }
 
 // this returns the path of the directory
-impl<T: SMTPService> TideState<T> {
+impl TideState {
     fn path(&self) -> &Path {
         self.tempdir.path()
     }
