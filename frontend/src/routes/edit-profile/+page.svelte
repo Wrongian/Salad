@@ -6,9 +6,9 @@
   import type { PageData } from "./$types";
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
   import { updateTextProfile } from "$lib/scripts/queries";
-  import type { TLink } from "$lib/scripts/response-validator";
   import { updateProfilePicture } from "$lib/scripts/queries";
   import { invalidateAll } from "$app/navigation";
+  import type { TLink } from "$lib/scripts/validation/response";
   export let data: PageData;
   export let links: TLink[] = data.links;
   $: links = data.links;
@@ -32,7 +32,7 @@
   const updateProfileImage = async (image: Blob, filetype: string) => {
     const payload = await updateProfilePicture(image, filetype);
     // skip if updating profile image failed
-    if (!payload.result) {
+    if (!payload) {
       return;
     }
     imageURL = payload.href;

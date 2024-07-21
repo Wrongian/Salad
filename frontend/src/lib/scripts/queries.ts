@@ -345,16 +345,14 @@ export const updateLinkPicture = async (
 export const updateProfilePicture = async (
   image: Blob,
   filetype: String,
-): Promise<TUpdateImageResponseBody> => {
+): Promise<TUpdateImageResponseBody | null> => {
   return await validateFetch<TUpdateImageResponseBody, Blob>(
     `${UPDATE_PROFILE_IMAGE_ENDPOINT}/${filetype}`,
     "PUT",
     image,
     UpdateImageResponseBodyValidator,
     { isBlobBody: true },
-  ).then(async (payload) => {
-    return payload ?? { href: "" };
-  });
+  )
 };
 
 export const createFollowRequest = async (payload: TCreateFollowRequestPayload) => {

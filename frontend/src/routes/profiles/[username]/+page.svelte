@@ -50,7 +50,6 @@
   <main class="flex-1">
     <div class="flex space-y-5 px-2 space-x-2">
       <Avatar.Root class="w-[150px] h-[150px] ring-2">
-        <!-- TODO: use CDN hosted link instead of b64 string -->
         <Avatar.Image src={data.picture} alt="" />
         <Avatar.Fallback></Avatar.Fallback>
       </Avatar.Root>
