@@ -1,3 +1,4 @@
+use crate::models::images::GetImage;
 use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
@@ -121,4 +122,22 @@ pub async fn update_user_by_id(
         .returning(id)
         .get_result::<i32>(conn)
         .map(|v| v == user_id)
+}
+
+pub async fn get_queried_users(
+    conn: &mut PgConnection,
+    query: String,
+    index: i64,
+    per_page: i64,
+) -> Result<Vec<(GetUser, Option<GetImage>)>, diesel::result::Error> {
+    // use crate::schema::follows;
+    use crate::schema::images;
+    use crate::schema::users;
+    users::table
+        .left_join(images::table.on(users::id.nullable().eq(images::user_id)))
+        .filter(users::display_name.like(["%", query.as_str(), "%"].join("")))
+        .offset((index - 1) * per_page)
+        .limit(per_page)
+        .select((GetUser::as_select(), Option::<GetImage>::as_select()))
+        .load::<(GetUser, Option<GetImage>)>(conn)
 }

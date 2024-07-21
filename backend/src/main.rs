@@ -25,6 +25,7 @@ use saladify::routes::links::update::{
 };
 use saladify::routes::profiles::get::{get_profile, get_username};
 use saladify::routes::profiles::update::{update_display_profile, update_profile_image};
+use saladify::routes::search::get::search_users;
 use saladify::types::state::TideState;
 use std::env;
 use std::sync::Arc;
@@ -146,6 +147,9 @@ async fn main() -> tide::Result<()> {
     app.at("/follow-request")
         .post(create_outbound_follow_request)
         .delete(delete_outbound_follow_request);
+
+    // search
+    app.at("/search").get(search_users);
 
     // misc
     app.at("get-username").get(get_username);
