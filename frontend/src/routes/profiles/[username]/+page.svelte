@@ -2,8 +2,12 @@
   import type { PageData } from "./$types";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as Card from "$lib/components/ui/card";
-  import { UserPlus, UserMinus } from "lucide-svelte";
-  import { createFollowRequest, removeFollowing } from "$lib/scripts/queries";
+  import { UserPlus, UserMinus, X } from "lucide-svelte";
+  import {
+    createFollowRequest,
+    removeFollowing,
+    removeFollowRequest,
+  } from "$lib/scripts/queries";
   import { addError } from "$lib/modules/Errors.svelte";
   import { invalidateAll } from "$app/navigation";
   export let data: PageData;
@@ -30,6 +34,16 @@
     await removeFollowing(userId);
     await invalidateAll();
   }
+
+  async function cancelFollowRequest() {
+    if (Number.isNaN(userId)) {
+      addError("Error in unfollowing user. Please try again later.");
+      return;
+    }
+
+    await removeFollowRequest(userId);
+    await invalidateAll();
+  }
 </script>
 
 <div class="p-2 flex flex-col">
@@ -51,19 +65,26 @@
         </div>
         {#if !isOwner && followStatus === "none"}
           <button
-            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1"
+            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
             on:click={followUser}
           >
             <UserPlus />
             <p>Follow</p>
           </button>
         {:else if !isOwner && followStatus === "pending"}
-          <div class="rounded-xl p-2">
-            <p>Request sent</p>
+          <div class="flex gap-x-2">
+            <button
+              class="flex hover:bg-lime-500 hover:text-white px-2 py-2 rounded-xl shadow-md ring-1 ring-lime-500"
+              on:click={cancelFollowRequest}
+            >
+              <X />
+              <p>Cancel</p>
+            </button>
+            <p class="py-2 font-semibold">Request sent</p>
           </div>
         {:else if !isOwner && followStatus === "following"}
           <button
-            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1"
+            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
             on:click={unfollowUser}
           >
             <UserMinus />

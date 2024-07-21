@@ -362,6 +362,15 @@ export const createFollowRequest = async (payload: TCreateFollowRequestPayload) 
   )
 }
 
+export const removeFollowRequest = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOW_REQUEST_ENDPOINT,
+    "DELETE",
+    { pending_follow_id: userId },
+    TStandardResponsePayloadValidator
+  )
+}
+
 export const removeFollower = async (userId: number) => {
   return await validateFetch<TStandardResponsePayload>(
     FOLLOWER_ENDPOINT,
