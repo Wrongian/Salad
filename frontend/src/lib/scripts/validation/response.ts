@@ -73,13 +73,13 @@ export const TLinkBodyValidator = Joi.object<{ links: TLink[] }>({
     .min(0),
 });
 
-const FollowStatuses = ['following', 'pending', 'none'] as const
-export type FollowStatus = typeof FollowStatuses[number]
+const FOLLOW_STATUSES = ['following', 'pending', 'none'] as const
+export type FollowStatus = typeof FOLLOW_STATUSES[number]
 
 export type TFollowStatusResponsePayload = {
   status: FollowStatus
 }
 
 export const TFollowStatusValidator = Joi.object<TFollowStatusResponsePayload>({
-  status: Joi.string().valid(...FollowStatuses)
+  status: Joi.string().valid(...FOLLOW_STATUSES)
 })
