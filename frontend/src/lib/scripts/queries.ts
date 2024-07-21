@@ -391,28 +391,30 @@ export const removeFollowing = async (userId: number) => {
   )
 }
 
-export const getFollowers = async (query: string, pageIndex: number = 1) => {
+export const getFollowers = async (query: string, pageIndex: number, fetch? :fetch) => {
   const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
 
   return await validateFetch<TGetPaginatedProfilePayload>(
     `${FOLLOWER_ENDPOINT}?${searchParams}`,
     "GET" ,
     {},
-    TGetPaginatedProfilePayloadValidator
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
   )
 }
 
-export const getFollowings = async (query: string, pageIndex: number = 1) => {
+export const getFollowings = async (query: string, pageIndex: number, fetch?: fetch) => {
   const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
   return await validateFetch<TGetPaginatedProfilePayload>(
     `${FOLLOWING_ENDPOINT}?${searchParams}`,
     "GET" ,
     {},
-    TGetPaginatedProfilePayloadValidator
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
   )
 }
 
-export const searchUsers = async (query: string, pageIndex: number = 1, filterObj: object = {}) => {
+export const searchUsers = async (query: string, pageIndex: number, filterObj: object = {}) => {
   const searchParams = getAsSearchParamString({ query: query, index: pageIndex, ...filterObj}) 
 
   return await validateFetch<TGetPaginatedProfilePayload>(
