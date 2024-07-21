@@ -13,13 +13,13 @@ export const load: PageLoad = async ({ data, route, fetch, params }) => {
       message: "Profile not found",
     });
   }
-  let status = await getFollowStatus(profileData.id, fetch);
+  let followStatus = await getFollowStatus(profileData.id, fetch);
   
   let links = await getLinks(params.username, fetch);
 
   return {
     ...profileData,
-    followStatus: status,
+    followStatus,
     links,
   };
 };
