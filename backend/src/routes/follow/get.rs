@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 use tide::Request;
 
 use crate::{
-    connectors::db::follow::{has_follow_request, is_following},
+    connectors::db::follow::{
+        get_queried_followers, get_queried_followings, has_follow_request, is_following,
+    },
     helpers::{auth::get_session_user_id, state::get_connection},
     types::{
         error::{Error, RequestErrors},
@@ -46,6 +48,27 @@ impl FollowStatusResponsePayload {
     }
 }
 
+#[derive(Deserialize)]
+struct FollowGetQueryParams {
+    query: String,
+    index: i64,
+}
+
+#[derive(Serialize)]
+struct PaginatedGetPayload {
+    profiles: Vec<GetPaginatedProfile>,
+}
+
+#[derive(Serialize)]
+struct GetPaginatedProfile {
+    username: String,
+    img_src: Option<String>,
+    id: i32,
+    display_name: String,
+}
+
+static PER_PAGE: i64 = 8;
+
 pub async fn get_follow_status(mut req: Request<Arc<TideState>>) -> tide::Result {
     // extract user id
     let user_id = match get_session_user_id(&req) {
@@ -73,4 +96,70 @@ pub async fn get_follow_status(mut req: Request<Arc<TideState>>) -> tide::Result
         Ok(false) => FollowStatusResponsePayload::none().into_response(),
         Err(e) => Error::DieselError(e).into_response(),
     }
+}
+
+pub async fn get_followers(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(e) => return e.into_response(),
+    };
+
+    let FollowGetQueryParams { query, index } = match req.query::<FollowGetQueryParams>() {
+        Ok(params) => params,
+        Err(_) => {
+            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response();
+        }
+    };
+
+    let mut conn = get_connection(&mut req);
+
+    // get brief profile information (name, profile picture, etc.) of followers
+    let profiles = match get_queried_followers(&mut conn, query, user_id, index, PER_PAGE).await {
+        Ok(result) => result
+            .into_iter()
+            .map(|user| GetPaginatedProfile {
+                display_name: user.0.display_name,
+                id: user.0.id,
+                img_src: user.1.map(|img| img.img_src),
+                username: user.0.username,
+            })
+            .collect::<Vec<GetPaginatedProfile>>(),
+        Err(e) => return Error::DieselError(e).into_response(),
+    };
+
+    Response::new(PaginatedGetPayload { profiles }).into_response()
+}
+
+pub async fn get_following(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(e) => return e.into_response(),
+    };
+
+    let FollowGetQueryParams { query, index } = match req.query::<FollowGetQueryParams>() {
+        Ok(params) => params,
+        Err(_) => {
+            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response();
+        }
+    };
+
+    let mut conn = get_connection(&mut req);
+
+    // get brief profile information (name, profile picture, etc.) of users being followed
+    let profiles = match get_queried_followings(&mut conn, query, user_id, index, PER_PAGE).await {
+        Ok(result) => result
+            .into_iter()
+            .map(|user| GetPaginatedProfile {
+                display_name: user.0.display_name,
+                id: user.0.id,
+                img_src: user.1.map(|img| img.img_src),
+                username: user.0.username,
+            })
+            .collect::<Vec<GetPaginatedProfile>>(),
+        Err(e) => return Error::DieselError(e).into_response(),
+    };
+
+    Response::new(PaginatedGetPayload { profiles }).into_response()
 }
