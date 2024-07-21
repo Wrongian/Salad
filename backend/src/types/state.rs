@@ -1,4 +1,5 @@
 use crate::connectors::smtp::email::EmailService;
+use crate::connectors::smtp::smtp_service::SMTPService;
 use aws_sdk_s3::{self as s3, config};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
@@ -15,7 +16,7 @@ pub struct TideState {
     pub tide_pool: TidePool,
     pub s3_client: s3::Client,
     pub tempdir: TempDir,
-    pub email_service: EmailService,
+    pub email_service: dyn SMTPService,
 }
 
 // this returns the path of the directory
