@@ -24,6 +24,7 @@ pub mod tests;
 pub mod connectors {
     pub mod buckets;
     pub mod db;
+    pub mod smtp;
 }
 
 // this the database schema
