@@ -112,10 +112,6 @@ pub async fn delete_link_by_id(
 
 #[cfg(test)]
 mod unit_test {
-    use std::env;
-
-    use diesel::{Connection, PgConnection};
-    use dotenvy::dotenv;
     use random_string::generate;
 
     use crate::models::{
