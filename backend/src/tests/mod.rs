@@ -1,3 +1,4 @@
+pub mod email;
 pub mod link;
 pub mod password_reset;
 pub mod testing;
