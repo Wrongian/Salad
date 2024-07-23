@@ -1,12 +1,10 @@
 use crate::connectors::smtp::smtp_service::SMTPService;
 use crate::types::error::Error;
 use crate::types::error::Error::{AddressError, EmailError};
-use lettre::address::Address;
 use lettre::message::Mailbox;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use std::env;
-use tide::{log::info, Request};
 
 pub struct EmailService {
     // I shall avoid storing the credentials in the struct
