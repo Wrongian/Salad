@@ -104,7 +104,7 @@ pub async fn update_link_title(mut req: Request<Arc<TideState>>) -> tide::Result
         href: None,
     };
 
-    let result = match update_link_by_id(&mut conn, &update_link, link_id).await {
+    let _result = match update_link_by_id(&mut conn, &update_link, link_id).await {
         Ok(result) => result,
         Err(e) => return Error::DieselError(e).into_response(),
     };
@@ -154,7 +154,7 @@ pub async fn update_link_bio(mut req: Request<Arc<TideState>>) -> tide::Result {
         href: None,
     };
 
-    let result = match update_link_by_id(&mut conn, &update_bio, link_id).await {
+    let _result = match update_link_by_id(&mut conn, &update_bio, link_id).await {
         Ok(result) => result,
         Err(err) => return Error::DieselError(err).into_response(),
     };
@@ -205,7 +205,7 @@ pub async fn update_link_href(mut req: Request<Arc<TideState>>) -> tide::Result 
         href: Some(updated_href.href),
     };
 
-    let result = match update_link_by_id(&mut conn, &update_link, link_id).await {
+    let _result = match update_link_by_id(&mut conn, &update_link, link_id).await {
         Ok(result) => result,
         Err(e) => return Error::DieselError(e).into_response(),
     };
@@ -266,7 +266,7 @@ pub async fn update_link_picture(mut req: Request<Arc<TideState>>) -> tide::Resu
             }
         }
         // do nothing if not found
-        Err(msg) => (),
+        Err(_msg) => (),
     }
 
     // get uploaded file as bytes

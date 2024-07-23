@@ -115,7 +115,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
     }
 
     // create user
-    let user = create(&mut conn, &new_user).await;
+    let _user = create(&mut conn, &new_user).await;
     let user_id = get_user_id_from_name(&mut conn, &username).await;
 
     // log the user in

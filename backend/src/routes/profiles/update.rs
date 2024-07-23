@@ -64,7 +64,7 @@ pub async fn update_display_profile(mut req: Request<Arc<TideState>>) -> tide::R
     let mut conn = state.tide_pool.get().unwrap();
     // call orm
     return match update_user_by_id(&mut conn, user_id, &update_user).await {
-        Ok(result) => Response::empty().into_response(),
+        Ok(_result) => Response::empty().into_response(),
         Err(err) => Error::DieselError(err).into_response(),
     };
 }
@@ -105,7 +105,7 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
             }
         }
         // do nothing if not found
-        Err(msg) => (),
+        Err(_msg) => (),
     }
 
     // get uploaded file as bytes
@@ -140,7 +140,9 @@ pub async fn update_profile_image(mut req: Request<Arc<TideState>>) -> tide::Res
     info!("creating cdn href.. {}", cdn_href.clone());
 
     match create_profile_image(&mut conn, &payload).await {
-        Ok(img) => Response::new(UploadProfileImageResponseBody { href: cdn_href }).into_response(),
+        Ok(_img) => {
+            Response::new(UploadProfileImageResponseBody { href: cdn_href }).into_response()
+        }
         Err(e) => Error::DieselError(e).into_response(),
     }
 }
