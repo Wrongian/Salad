@@ -1,4 +1,7 @@
-pub fn make_random_string(len: u32) -> String {
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+
+pub fn make_random_string(len: usize) -> String {
     let rng = rand::thread_rng();
     let str: String = rng
         .sample_iter(&Alphanumeric)
