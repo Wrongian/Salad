@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod password_reset_tests {
-
     use crate::connectors::db::mock_connection;
     use crate::connectors::db::reset::{
         create_request, delete_request, get_request_by_id, replace_request, request_exists,
