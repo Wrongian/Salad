@@ -128,14 +128,7 @@ mod unit_test {
     // NOTE: execute 'diesel migration run' before unit tests to ensure the tables are loaded into psql
     // before running the unit tests.
 
-    pub async fn mock_connection() -> PgConnection {
-        dotenv().expect("No .env file found");
-
-        let database_url = env::var("DATABASE_URL").expect("No database url found");
-
-        PgConnection::establish(&database_url)
-            .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
-    }
+    use crate::connectors::db::mock_connection;
 
     pub async fn delete_mock_user(user_id: i32) {
         let mut conn = mock_connection().await;
