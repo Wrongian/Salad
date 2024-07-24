@@ -51,7 +51,7 @@ pub enum Error {
     EmailError(#[from] lettre::transport::smtp::Error),
     #[error("{0}")]
     AddressError(#[from] AddressError),
-    #[error("Wrong password leset code")]
+    #[error("Wrong password reset code")]
     WrongPasswordResetCodeError(),
 }
 
