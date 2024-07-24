@@ -78,7 +78,7 @@ pub async fn get_email(req: Request<Arc<TideState>>) -> tide::Result {
     .email;
 
     // get smtp service
-    let email_service: Box<&dyn SMTPService> = Box::new(&state.email_service);
+    let email_service: Box<&(dyn SMTPService + Sync)> = Box::new(&state.email_service);
     //  send email
     // in the future could build html using handlebar or something
     match (*email_service).send_email(
