@@ -203,8 +203,13 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
     };
 
     // if code  doesnt match
-    if code != reset_params.code {
-        return Error::WrongPasswordResetCodeError().into_response();
+    match verify(reset_params.code, &code) {
+        Ok(is_correct) => {
+            if !is_correct {
+                return Error::WrongPasswordResetCodeError().into_response();
+            }
+        }
+        Err(e) => return Error::HashError(e).into_response(),
     }
 
     // update user
