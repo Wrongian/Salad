@@ -8,6 +8,8 @@ import type {
   TUpdateLinkBioPayload,
   TUpdateLinkHrefPayload,
   TReorderPayload,
+  TResetCodeBody,
+  TResetPasswordBody,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
@@ -45,6 +47,8 @@ const LOGOUT_ENDPOINT = "/api/logout";
 const REGISTER_ENDPOINT = "/api/register";
 const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
 const GET_USERNAME_ENDPOINT = "/api/get-username";
+const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
+const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
 
 type fetch = typeof fetch;
 
@@ -126,10 +130,6 @@ export const getProfile = async (
   );
 };
 
-export const resetPassword = async (email: string) => {
-  // TODO: finish up reset password implementation
-  return email;
-};
 
 export const getLinks = async (
   username: string,
@@ -331,4 +331,35 @@ export const updateProfilePicture = async (
   ).then(async (payload) => {
     return payload ?? { href: "" };
   });
+};
+
+
+export const get_reset_email = async (fetch: fetch): Promise<void> => {
+  await validateFetch<TStandardPayload>(
+    RESET_PASSWORD_ENDPOINT,
+    "GET",
+    {},
+    TStandardPayloadValidator,
+    { fetch },
+  );
+};
+
+export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<void> => {
+  await validateFetch<TStandardPayload, TResetCodeBody>(
+    CHECK_PASSWORD_CODE_ENDPOINT,
+    "POST",
+    query,
+    TStandardPayloadValidator,
+    { fetch },
+  );
+};
+
+export const reset_password = async (query: TResetPasswordBody, fetch: fetch): Promise<void> => {
+  await validateFetch<TStandardPayload>(
+    RESET_PASSWORD_ENDPOINT,
+    "POST",
+    query,
+    TStandardPayloadValidator,
+    { fetch },
+  );
 };

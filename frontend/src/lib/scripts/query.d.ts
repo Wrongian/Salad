@@ -45,11 +45,20 @@ export type TResponseBody = {
 
 export type TResult<T> =
   | {
-      payload: T;
-      success: true;
-    }
+    payload: T;
+    success: true;
+  }
   | {
-      success: false;
-      status: number;
-      err: string;
-    };
+    success: false;
+    status: number;
+    err: string;
+  };
+
+export type TResetCodeBody = {
+  code: string;
+};
+
+export type TResetPasswordBody = {
+  code: string;
+  password: string;
+};
