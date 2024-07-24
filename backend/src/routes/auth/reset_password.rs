@@ -1,6 +1,6 @@
 use crate::connectors::db::connection::DBConnection;
 use crate::connectors::db::reset::{
-    create_request, get_request_by_id, replace_request, request_exists,
+    create_request, delete_request, get_request_by_id, replace_request, request_exists,
 };
 use crate::connectors::db::user::get_user_by_id;
 use crate::connectors::db::user::update_user_by_id;
@@ -158,6 +158,16 @@ pub async fn check_password_code(mut req: Request<Arc<TideState>>) -> tide::Resu
     // get connection pool
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
+    // check if the code exists
+    match request_exists(&mut conn, user_id).await {
+        Ok(exists) => {
+            if !exists {
+                return Error::NoPasswordResetError().into_response();
+            }
+        }
+        Err(e) => return e.into_response(),
+    }
+
     // get the code
     let request = match get_request_by_id(&mut conn, user_id).await {
         Ok(request) => request,
@@ -215,6 +225,15 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get connection pool
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
+    // check if the code exists
+    match request_exists(&mut conn, user_id).await {
+        Ok(exists) => {
+            if !exists {
+                return Error::NoPasswordResetError().into_response();
+            }
+        }
+        Err(e) => return e.into_response(),
+    }
     // get the code
     let request = match get_request_by_id(&mut conn, user_id).await {
         Ok(request) => request,
@@ -259,6 +278,12 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
     match update_user_by_id(&mut conn, user_id, &update_user).await {
         Ok(_) => {}
         Err(e) => return Error::DieselError(e).into_response(),
+    };
+
+    // delete the email request
+    match delete_request(&mut conn, user_id).await {
+        Ok(_) => {}
+        Err(e) => return e.into_response(),
     };
 
     return Response::empty().into_response();

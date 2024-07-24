@@ -55,8 +55,10 @@ pub enum Error {
     WrongPasswordResetCodeError(),
     #[error("Could not parse datetime")]
     DatetimeError(),
-    #[error("Password Reset Code Expired")]
+    #[error("Password reset code xxpired")]
     PasswordResetCodeExpiredError(),
+    #[error("No password reset requested")]
+    NoPasswordResetError(),
 }
 
 impl Error {
@@ -87,6 +89,7 @@ impl Error {
             Error::InvalidRequestError(RequestErrors::MalformedPayload) => StatusCode::BadRequest,
             Error::WrongPasswordResetCodeError() => StatusCode::BadRequest,
             Error::PasswordResetCodeExpiredError() => StatusCode::BadRequest,
+            Error::NoPasswordResetError() => StatusCode::BadRequest,
         }
     }
 
