@@ -6,8 +6,9 @@ use crate::connectors::db::user::get_user_by_id;
 use crate::connectors::db::user::update_user_by_id;
 use crate::connectors::smtp::smtp_service::SMTPService;
 use crate::helpers::auth::get_session_user_id;
+use crate::helpers::funcs::is_expired;
 use crate::helpers::random::make_random_string;
-use crate::models::reset::{InsertRequest, UpdateRequest};
+use crate::models::reset::InsertRequest;
 use crate::models::users::UpdateUser;
 use crate::types::error::{Error, RequestErrors};
 use crate::types::response::Response;
@@ -28,6 +29,10 @@ const COST: u32 = 8;
 const HASH_LEN: usize = 32;
 const RESET_PASSWORD_SUBJECT: Lazy<String> = Lazy::new(|| "Saladify Password Reset".to_string());
 const RESET_PASSWORD_BODY: Lazy<String> = Lazy::new(|| "Your Verification Code is:".to_string());
+// 5 minutes
+const RESET_DURATION: chrono::TimeDelta = chrono::Duration::minutes(5);
+// testing
+// const RESET_DURATION: chrono::TimeDelta = chrono::Duration::seconds(5);
 
 // structs
 #[derive(Deserialize, Validate, Debug)]
@@ -100,9 +105,10 @@ pub async fn get_email(req: Request<Arc<TideState>>) -> tide::Result {
 
     if already_exists {
         // replace
-        let new_request = UpdateRequest {
-            user_id: None,
+        let new_request = InsertRequest {
+            user_id: user_id,
             code: hashed_code,
+            created_at: chrono::Local::now().naive_local(),
         };
         match replace_request(&mut conn, user_id, new_request).await {
             Ok(_) => {}
@@ -113,6 +119,7 @@ pub async fn get_email(req: Request<Arc<TideState>>) -> tide::Result {
         let new_request = InsertRequest {
             user_id: user_id,
             code: hashed_code,
+            created_at: chrono::Local::now().naive_local(),
         };
         match create_request(&mut conn, new_request).await {
             Ok(_) => {}
@@ -152,12 +159,22 @@ pub async fn check_password_code(mut req: Request<Arc<TideState>>) -> tide::Resu
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
     // get the code
-    let code = match get_request_by_id(&mut conn, user_id).await {
-        Ok(request) => request.code,
+    let request = match get_request_by_id(&mut conn, user_id).await {
+        Ok(request) => request,
         Err(e) => return e.into_response(),
     };
 
-    match verify(code_params.code, &code) {
+    // check if expired
+    match is_expired(request.created_at, RESET_DURATION.clone()) {
+        Ok(password_expired) => {
+            if password_expired {
+                return Error::PasswordResetCodeExpiredError().into_response();
+            }
+        }
+        Err(e) => return e.into_response(),
+    }
+
+    match verify(code_params.code, &request.code) {
         Ok(is_correct) => {
             if !is_correct {
                 return Error::WrongPasswordResetCodeError().into_response();
@@ -199,13 +216,23 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn: DBConnection = state.tide_pool.get().unwrap();
 
     // get the code
-    let code = match get_request_by_id(&mut conn, user_id).await {
-        Ok(request) => request.code,
+    let request = match get_request_by_id(&mut conn, user_id).await {
+        Ok(request) => request,
         Err(e) => return e.into_response(),
     };
 
+    // check if expired
+    match is_expired(request.created_at, RESET_DURATION.clone()) {
+        Ok(password_expired) => {
+            if password_expired {
+                return Error::PasswordResetCodeExpiredError().into_response();
+            }
+        }
+        Err(e) => return e.into_response(),
+    }
+
     // if code  doesnt match
-    match verify(reset_params.code, &code) {
+    match verify(reset_params.code, &request.code) {
         Ok(is_correct) => {
             if !is_correct {
                 return Error::WrongPasswordResetCodeError().into_response();

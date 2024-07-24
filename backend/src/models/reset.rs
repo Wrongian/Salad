@@ -11,6 +11,7 @@ use serde::Serialize;
 pub struct InsertRequest {
     pub code: String,
     pub user_id: i32,
+    pub created_at: NaiveDateTime,
 }
 
 // Get

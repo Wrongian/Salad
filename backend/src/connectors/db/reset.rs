@@ -64,8 +64,9 @@ pub async fn request_exists(conn: &mut PgConnection, uid: i32) -> Result<bool, E
 pub async fn replace_request(
     conn: &mut PgConnection,
     uid: i32,
-    new_request: UpdateRequest,
+    new_request: InsertRequest,
 ) -> Result<(), Error> {
+    /*
     use crate::schema::reset_password_request::dsl::*;
     match diesel::update(reset_password_request.filter(user_id.eq(uid)))
         .set(new_request)
@@ -75,6 +76,22 @@ pub async fn replace_request(
         Ok(_) => return Ok(()),
         Err(e) => return Err(DieselError(e)),
     }
+    */
+    match delete_request(conn, uid).await {
+        Ok(_) => {}
+        Err(e) => return Err(e),
+    };
+    let new_request = InsertRequest {
+        code: new_request.code,
+        user_id: uid,
+        created_at: new_request.created_at,
+    };
+
+    match create_request(conn, new_request).await {
+        Ok(_) => {}
+        Err(e) => return Err(e),
+    };
+    Ok(())
 }
 
 pub async fn delete_request(conn: &mut PgConnection, uid: i32) -> Result<(), Error> {

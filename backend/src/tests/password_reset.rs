@@ -4,7 +4,7 @@ mod password_reset_tests {
     use crate::connectors::db::reset::{
         create_request, delete_request, get_request_by_id, replace_request, request_exists,
     };
-    use crate::models::reset::{InsertRequest, UpdateRequest};
+    use crate::models::reset::InsertRequest;
     use crate::tests::{create_mock_user, delete_mock_user};
 
     #[tokio::test]
@@ -14,6 +14,7 @@ mod password_reset_tests {
         let request = InsertRequest {
             code: "anime".to_string(),
             user_id: user.id,
+            created_at: chrono::Local::now().naive_local(),
         };
         let res = create_request(&mut conn, request).await;
         assert!(res.is_ok());
@@ -29,6 +30,7 @@ mod password_reset_tests {
         let request = InsertRequest {
             code: "anime".to_string(),
             user_id: user.id,
+            created_at: chrono::Local::now().naive_local(),
         };
         let res = create_request(&mut conn, request).await;
         assert!(res.is_ok());
@@ -46,6 +48,7 @@ mod password_reset_tests {
         let request = InsertRequest {
             code: "anime".to_string(),
             user_id: user.id,
+            created_at: chrono::Local::now().naive_local(),
         };
         let res = create_request(&mut conn, request).await;
         assert!(res.is_ok());
@@ -64,12 +67,14 @@ mod password_reset_tests {
         let request = InsertRequest {
             code: "anime".to_string(),
             user_id: user.id,
+            created_at: chrono::Local::now().naive_local(),
         };
         let res = create_request(&mut conn, request).await;
         assert!(res.is_ok());
-        let new_request = UpdateRequest {
+        let new_request = InsertRequest {
             code: "bruh".to_string(),
-            user_id: None,
+            user_id: user.id,
+            created_at: chrono::Local::now().naive_local(),
         };
         let res = replace_request(&mut conn, user.id, new_request).await;
         assert!(res.is_ok());

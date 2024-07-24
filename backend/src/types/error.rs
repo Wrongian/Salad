@@ -53,6 +53,10 @@ pub enum Error {
     AddressError(#[from] AddressError),
     #[error("Wrong password reset code")]
     WrongPasswordResetCodeError(),
+    #[error("Could not parse datetime")]
+    DatetimeError(),
+    #[error("Password Reset Code Expired")]
+    PasswordResetCodeExpiredError(),
 }
 
 impl Error {
@@ -66,6 +70,7 @@ impl Error {
             Error::ConnectionPoolError() => StatusCode::InternalServerError,
             Error::EmailError(_) => StatusCode::InternalServerError,
             Error::AddressError(_) => StatusCode::InternalServerError,
+            Error::DatetimeError() => StatusCode::InternalServerError,
 
             // 4XX errors (These are checked)
             Error::ValidationError(_) => StatusCode::BadRequest,
@@ -81,6 +86,7 @@ impl Error {
             Error::InvalidRequestError(RequestErrors::MalformedParams) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedPayload) => StatusCode::BadRequest,
             Error::WrongPasswordResetCodeError() => StatusCode::BadRequest,
+            Error::PasswordResetCodeExpiredError() => StatusCode::BadRequest,
         }
     }
 
