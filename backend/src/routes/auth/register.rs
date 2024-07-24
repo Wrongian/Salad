@@ -19,10 +19,7 @@ use serde::{Deserialize, Serialize};
 use tide::Request;
 use validator::{Validate, ValidationError};
 
-use super::init_session;
-
-// password cost
-const COST: u32 = 10;
+use super::{init_session, PASSWORD_COST};
 
 // regex for password
 const PASSWORD_REGEX: Lazy<Regex> =
@@ -80,7 +77,7 @@ pub async fn register(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(e) => return Error::ValidationError(e).into_response(),
     }
     // hash salt
-    let password_res = hash(password, COST);
+    let password_res = hash(password, PASSWORD_COST);
     let hashed_password: String;
     match password_res {
         Ok(password_hash) => {

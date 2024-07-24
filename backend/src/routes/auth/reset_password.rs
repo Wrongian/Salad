@@ -20,6 +20,8 @@ use std::sync::Arc;
 use tide::Request;
 use validator::Validate;
 
+use super::PASSWORD_COST;
+
 // less important less cost
 // consts
 const COST: u32 = 8;
@@ -212,10 +214,15 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(e) => return Error::HashError(e).into_response(),
     }
 
+    let hashed_password = match hash(reset_params.password, PASSWORD_COST) {
+        Ok(p) => p,
+        Err(e) => return Error::HashError(e).into_response(),
+    };
+
     // update user
     let update_user = UpdateUser {
         username: None,
-        password: Some(reset_params.password),
+        password: Some(hashed_password),
         salt: None,
         email: None,
         bio: None,
