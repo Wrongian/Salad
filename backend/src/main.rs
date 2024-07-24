@@ -12,6 +12,7 @@ use saladify::helpers::funcs;
 use saladify::routes::auth::login::{is_logged_in, login};
 use saladify::routes::auth::logout::logout;
 use saladify::routes::auth::register::register;
+use saladify::routes::auth::reset_password::{check_password_code, get_email, reset_password};
 use saladify::routes::links::create::add_link;
 use saladify::routes::links::delete::{delete_link_picture, delete_links};
 use saladify::routes::links::get::get_links;
@@ -129,6 +130,11 @@ async fn main() -> tide::Result<()> {
         .put(update_link_picture);
     app.at("/links/:link_id/image").delete(delete_link_picture);
     app.at("/links/:link_id").delete(delete_links);
+
+    // password reset
+    app.at("/reset-password").get(get_email);
+    app.at("/pasword-code").post(check_password_code);
+    app.at("/reset-password").post(reset_password);
 
     // misc
     app.at("get-username").get(get_username);
