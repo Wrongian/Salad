@@ -131,7 +131,7 @@ pub async fn check_password_code(mut req: Request<Arc<TideState>>) -> tide::Resu
     };
 
     // get payload
-    let code_params: ResetPasswordParams = match req.body_json().await {
+    let code_params: PasswordCodeParams = match req.body_json().await {
         Ok(params) => params,
         Err(_e) => {
             return Error::InvalidRequestError(RequestErrors::MalformedPayload).into_response()
