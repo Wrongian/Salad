@@ -133,7 +133,7 @@ async fn main() -> tide::Result<()> {
 
     // password reset
     app.at("/reset-password").get(get_email);
-    app.at("/pasword-code").post(check_password_code);
+    app.at("/password-code").post(check_password_code);
     app.at("/reset-password").post(reset_password);
 
     // misc
