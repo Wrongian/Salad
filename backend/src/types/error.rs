@@ -51,6 +51,8 @@ pub enum Error {
     EmailError(#[from] lettre::transport::smtp::Error),
     #[error("{0}")]
     AddressError(#[from] AddressError),
+    #[error("Wrong password leset code")]
+    WrongPasswordResetCodeError(),
 }
 
 impl Error {
@@ -78,6 +80,7 @@ impl Error {
             Error::S3Error(S3Errors::FailedToUploadImage) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedParams) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedPayload) => StatusCode::BadRequest,
+            Error::WrongPasswordResetCodeError() => StatusCode::BadRequest,
         }
     }
 
