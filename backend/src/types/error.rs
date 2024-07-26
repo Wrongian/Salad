@@ -55,7 +55,7 @@ pub enum Error {
     WrongPasswordResetCodeError(),
     #[error("Could not parse datetime")]
     DatetimeError(),
-    #[error("Password reset code xxpired")]
+    #[error("Password reset code expired")]
     PasswordResetCodeExpiredError(),
     #[error("No password reset requested")]
     NoPasswordResetError(),

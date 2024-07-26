@@ -1,4 +1,5 @@
 use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
+use crate::types::error::Error;
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
 
@@ -121,4 +122,32 @@ pub async fn update_user_by_id(
         .returning(id)
         .get_result::<i32>(conn)
         .map(|v| v == user_id)
+}
+
+pub async fn get_user_from_email(
+    conn: &mut PgConnection,
+    email_str: String,
+) -> Result<GetUser, Error> {
+    use crate::schema::users::dsl::*;
+    match users
+        .filter(email.eq(&email_str))
+        .select(GetUser::as_select())
+        .first::<GetUser>(conn)
+    {
+        Ok(user) => Ok(user),
+        Err(e) => Err(Error::DieselError(e)),
+    }
+}
+
+pub async fn does_email_exist(conn: &mut PgConnection, email_str: String) -> Result<bool, Error> {
+    use crate::schema::users::dsl::*;
+    match users
+        .filter(email.eq(&email_str))
+        .count()
+        .get_result::<i64>(conn)
+        .map(|count| count > 0)
+    {
+        Ok(count) => return Ok(count),
+        Err(e) => return Err(Error::DieselError(e)),
+    }
 }

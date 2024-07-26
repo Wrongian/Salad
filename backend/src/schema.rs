@@ -35,7 +35,7 @@ diesel::table! {
         id -> Int4,
         from_id -> Int4,
         to_id -> Int4,
-  }
+    }
 }
 
 diesel::table! {
