@@ -199,12 +199,13 @@ export const logout = async (fetch: fetch, next: string): Promise<void> => {
     { fetch },
   );
 
-  // await invalidateAll();
-  if (next != null) {
-    goto(next);
-  } else {
-    goto(BASEURL);
-  }
+  await invalidateAll();
+  goto("/")
+  // if (next != null) {
+  //   goto(next);
+  // } else {
+  //   goto(BASEURL);
+  // }
 };
 
 // get username route
