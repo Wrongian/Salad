@@ -1,6 +1,4 @@
 import type {
-  TAuthResult,
-  TResult,
   TUpdateProfileQuery,
   TUpdateProfile,
   TCreateLinkPayload,
@@ -8,14 +6,18 @@ import type {
   TUpdateLinkBioPayload,
   TUpdateLinkHrefPayload,
   TReorderPayload,
+  TCreateFollowRequestPayload,
   TResetCodeBody,
   TResetPasswordBody,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
+  TFollowStatusValidator,
   TLinkBodyValidator,
   TProfileBodyValidator,
   UpdateImageResponseBodyValidator,
+  type FollowStatus,
+  type TFollowStatusResponsePayload,
   type TLink,
   type TProfileBody,
   type TUpdateImageResponseBody,
@@ -24,9 +26,9 @@ import {
   type TGetUsernamePayload,
   TGetUsernamePayloadValidator,
   TResultPayloadValidator,
-  TStandardPayloadValidator,
+  TStandardResponsePayloadValidator,
   type TResultPayload,
-  type TStandardPayload,
+  type TStandardResponsePayload as TStandardResponsePayload,
 } from "./validation/response.js";
 import { validateFetch } from "./fetch.js";
 
@@ -47,6 +49,10 @@ const LOGOUT_ENDPOINT = "/api/logout";
 const REGISTER_ENDPOINT = "/api/register";
 const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
 const GET_USERNAME_ENDPOINT = "/api/get-username";
+const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
+const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
+const FOLLOWER_ENDPOINT = "/api/follower";
+const FOLLOWING_ENDPOINT = "/api/following";
 const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
 const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
 
@@ -68,9 +74,9 @@ export const login = async (
 ): Promise<void> => {
   // validate request here
   const payload = await validateFetch<
-    TStandardPayload,
+    TStandardResponsePayload,
     { username: string; password: string }
-  >(LOGIN_ENDPOINT, "POST", { username, password }, TStandardPayloadValidator);
+  >(LOGIN_ENDPOINT, "POST", { username, password }, TStandardResponsePayloadValidator);
 
   if (payload !== null) {
     await invalidateAll();
@@ -94,13 +100,13 @@ export const register = async (
 ): Promise<void> => {
   // validate request here
   const payload = await validateFetch<
-    TStandardPayload,
+    TStandardResponsePayload,
     { username: string; password: string; email: string }
   >(
     REGISTER_ENDPOINT,
     "POST",
     { username, password, email },
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -109,11 +115,11 @@ export const register = async (
 };
 
 export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
-  await validateFetch<TStandardPayload, TUpdateProfileQuery>(
+  await validateFetch<TStandardResponsePayload, TUpdateProfileQuery>(
     UPDATE_DISPLAY_PROFILE_ENDPOINT,
     "PUT",
     updateQuery,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 };
 
@@ -152,6 +158,20 @@ export const getLinks = async (
   });
 };
 
+export const getFollowStatus = async (
+  targetUserId: number,
+  fetch: fetch
+): Promise<FollowStatus | undefined> => {
+  return await validateFetch<TFollowStatusResponsePayload>(
+    `${FOLLOW_STATUS_ENDPOINT}?${new URLSearchParams([["id", targetUserId.toString()]]).toString()}`,
+    "GET",
+    {},
+    TFollowStatusValidator,
+    { fetch }
+  ).then(payload => payload?.status)
+
+}
+
 export const getIsLoggedIn = async (fetch: fetch): Promise<boolean> => {
   return (
     (
@@ -169,11 +189,11 @@ export const getIsLoggedIn = async (fetch: fetch): Promise<boolean> => {
 // logout route, doesnt do anything if not logged in
 // cant really get an error logging out since its a get request
 export const logout = async (fetch: fetch, next: string): Promise<void> => {
-  await validateFetch<TStandardPayload>(
+  await validateFetch<TStandardResponsePayload>(
     LOGOUT_ENDPOINT,
     "GET",
     {},
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
     { fetch },
   );
 
@@ -203,11 +223,11 @@ export const getUsername = async (fetch: fetch): Promise<string> => {
 export const updateTextProfile = async (
   query: TUpdateProfile,
 ): Promise<void> => {
-  let payload = await validateFetch<TStandardPayload, TUpdateProfile>(
+  let payload = await validateFetch<TStandardResponsePayload, TUpdateProfile>(
     UPDATE_DISPLAY_PROFILE_ENDPOINT,
     "PUT",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -216,11 +236,11 @@ export const updateTextProfile = async (
 };
 
 export const addLinks = async (query: TCreateLinkPayload): Promise<void> => {
-  await validateFetch<TStandardPayload, TCreateLinkPayload>(
+  await validateFetch<TStandardResponsePayload, TCreateLinkPayload>(
     ADD_LINKS_ENDPOINT,
     "POST",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 };
 
@@ -229,13 +249,13 @@ export const updateLinkTitle = async (
   link_id: number,
 ) => {
   const payload = await validateFetch<
-    TStandardPayload,
+    TStandardResponsePayload,
     TUpdateLinkTitlePayload
   >(
     `${UPDATE_LINK_TITLE_ENDPOINT}/${link_id}`,
     "PUT",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -247,11 +267,11 @@ export const updateLinkBio = async (
   query: TUpdateLinkBioPayload,
   link_id: number,
 ) => {
-  const payload = await validateFetch<TStandardPayload, TUpdateLinkBioPayload>(
+  const payload = await validateFetch<TStandardResponsePayload, TUpdateLinkBioPayload>(
     `${UPDATE_LINK_BIO_ENDPOINT}/${link_id}`,
     "PUT",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -263,11 +283,11 @@ export const updateLinkHref = async (
   query: TUpdateLinkHrefPayload,
   link_id: number,
 ) => {
-  const payload = await validateFetch<TStandardPayload, TUpdateLinkHrefPayload>(
+  const payload = await validateFetch<TStandardResponsePayload, TUpdateLinkHrefPayload>(
     `${UPDATE_LINK_HREF_ENDPOINT}/${link_id}`,
     "PUT",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -276,11 +296,11 @@ export const updateLinkHref = async (
 };
 
 export const deleteLink = async (link_id: number) => {
-  const payload = await validateFetch<TStandardPayload>(
+  const payload = await validateFetch<TStandardResponsePayload>(
     `${DELETE_LINK_ENDPOINT}/${link_id}`,
     "DELETE",
     {},
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -289,11 +309,11 @@ export const deleteLink = async (link_id: number) => {
 };
 
 export const reorderLink = async (query: TReorderPayload) => {
-  const payload = await validateFetch<TStandardPayload, TReorderPayload>(
+  const payload = await validateFetch<TStandardResponsePayload, TReorderPayload>(
     REORDER_LINK_ENDPOINT,
     "POST",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
   );
 
   if (payload !== null) {
@@ -333,6 +353,41 @@ export const updateProfilePicture = async (
   });
 };
 
+export const createFollowRequest = async (payload: TCreateFollowRequestPayload) => {
+  return await validateFetch<TStandardResponsePayload>(
+    `${FOLLOW_REQUEST_ENDPOINT}`,
+    "POST",
+    payload,
+    TStandardResponsePayloadValidator
+  )
+}
+
+export const removeFollowRequest = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOW_REQUEST_ENDPOINT,
+    "DELETE",
+    { pending_follow_id: userId },
+    TStandardResponsePayloadValidator
+  )
+}
+
+export const removeFollower = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOWER_ENDPOINT,
+    "DELETE",
+    { follower_id: userId },
+    TStandardResponsePayloadValidator
+  )
+}
+
+export const removeFollowing = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload>(
+    FOLLOWING_ENDPOINT,
+    "DELETE",
+    { following_id: userId },
+    TStandardResponsePayloadValidator
+  )
+}
 
 export const get_reset_email = async (fetch: fetch): Promise<void> => {
   await validateFetch<TStandardPayload>(
@@ -363,3 +418,4 @@ export const reset_password = async (query: TResetPasswordBody, fetch: fetch): P
     { fetch },
   );
 };
+

@@ -40,7 +40,7 @@ pub async fn delete_link_picture(req: Request<Arc<TideState>>) -> tide::Result {
     match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
         Ok(is_user_link) => {
             if !is_user_link {
-                return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                     .into_response();
             }
         }
@@ -93,7 +93,7 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
     match link_id_belongs_to_user(&mut conn, link_id, user_id).await {
         Ok(is_user_link) => {
             if !is_user_link {
-                return Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser)
+                return Error::AssociationError(AssociationErrors::LinkDoesNotBelongToUser)
                     .into_response();
             }
         }

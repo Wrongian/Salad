@@ -80,9 +80,7 @@ impl Error {
             Error::NotFoundError(_) => StatusCode::BadRequest,
             Error::WrongPasswordError() => StatusCode::BadRequest,
             Error::InvalidSessionError() => StatusCode::BadRequest,
-            Error::DBAssociationError(AssociationErrors::LinkDoesNotBelongToUser) => {
-                StatusCode::BadRequest
-            }
+            Error::AssociationError(_) => StatusCode::BadRequest,
             Error::S3Error(S3Errors::FailedToDeleteImage) => StatusCode::BadRequest,
             Error::S3Error(S3Errors::FailedToUploadImage) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedParams) => StatusCode::BadRequest,
@@ -122,6 +120,8 @@ struct ErrorBody {
 pub enum AssociationErrors {
     #[error("Link provided does not belong to the user.")]
     LinkDoesNotBelongToUser,
+    #[error("Invalid follow user specified.")]
+    InvalidFollowUser,
 }
 
 #[derive(thiserror::Error, Debug)]
