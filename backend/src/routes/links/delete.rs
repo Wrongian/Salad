@@ -18,7 +18,7 @@ use crate::{
     },
 };
 
-pub async fn delete_link_picture(mut req: Request<Arc<TideState>>) -> tide::Result {
+pub async fn delete_link_picture(req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from session
     let user_id = match get_session_user_id(&req) {
         Ok(id) => id,
@@ -120,7 +120,7 @@ pub async fn delete_links(req: Request<Arc<TideState>>) -> tide::Result {
 
     // delete link_id
     match delete_link_by_id(&mut conn, link_id).await {
-        Ok(res) => Response::empty().into_response(),
+        Ok(_res) => Response::empty().into_response(),
         Err(e) => {
             error!("Error in deleting link: {:?}", e);
             Error::DieselError(e).into_response()

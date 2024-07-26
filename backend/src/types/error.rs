@@ -1,4 +1,5 @@
 use crate::helpers::errors::validation_error_message;
+use lettre::address::AddressError;
 use serde::Serialize;
 use tide::{Response, StatusCode};
 
@@ -45,7 +46,19 @@ pub enum Error {
     ConnectionPoolError(),
     // if association to db doesnt work somehow
     #[error("{0}")]
-    AssociationError(#[from] AssociationErrors),
+    DBAssociationError(#[from] AssociationErrors),
+    #[error("{0}")]
+    EmailError(#[from] lettre::transport::smtp::Error),
+    #[error("{0}")]
+    AddressError(#[from] AddressError),
+    #[error("Wrong password reset code")]
+    WrongPasswordResetCodeError(),
+    #[error("Could not parse datetime")]
+    DatetimeError(),
+    #[error("Password reset code xxpired")]
+    PasswordResetCodeExpiredError(),
+    #[error("No password reset requested")]
+    NoPasswordResetError(),
 }
 
 impl Error {
@@ -57,6 +70,9 @@ impl Error {
             Error::HashError(_) => StatusCode::InternalServerError,
             Error::InvalidResponseError() => StatusCode::InternalServerError,
             Error::ConnectionPoolError() => StatusCode::InternalServerError,
+            Error::EmailError(_) => StatusCode::InternalServerError,
+            Error::AddressError(_) => StatusCode::InternalServerError,
+            Error::DatetimeError() => StatusCode::InternalServerError,
 
             // 4XX errors (These are checked)
             Error::ValidationError(_) => StatusCode::BadRequest,
@@ -69,6 +85,9 @@ impl Error {
             Error::S3Error(S3Errors::FailedToUploadImage) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedParams) => StatusCode::BadRequest,
             Error::InvalidRequestError(RequestErrors::MalformedPayload) => StatusCode::BadRequest,
+            Error::WrongPasswordResetCodeError() => StatusCode::BadRequest,
+            Error::PasswordResetCodeExpiredError() => StatusCode::BadRequest,
+            Error::NoPasswordResetError() => StatusCode::BadRequest,
         }
     }
 

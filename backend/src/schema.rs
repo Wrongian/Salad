@@ -35,6 +35,15 @@ diesel::table! {
         id -> Int4,
         from_id -> Int4,
         to_id -> Int4,
+  }
+}
+
+diesel::table! {
+    reset_password_request (id) {
+        id -> Int4,
+        user_id -> Int4,
+        created_at -> Timestamp,
+        code -> Varchar,
     }
 }
 
@@ -55,11 +64,13 @@ diesel::table! {
 diesel::joinable!(images -> links (link_id));
 diesel::joinable!(images -> users (user_id));
 diesel::joinable!(links -> users (user_id));
+diesel::joinable!(reset_password_request -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     follows,
     images,
     links,
     pending_follow_requests,
+    reset_password_request,
     users,
 );

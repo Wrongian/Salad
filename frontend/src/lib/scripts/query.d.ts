@@ -36,3 +36,29 @@ export type TReorderPayload = {
 export type TCreateFollowRequestPayload = {
   pending_follow_id: number;
 }
+
+export type TResponseBody = {
+  result: boolean;
+  err: string;
+};
+
+export type TResult<T> =
+  | {
+    payload: T;
+    success: true;
+  }
+  | {
+    success: false;
+    status: number;
+    err: string;
+  };
+
+export type TResetCodeBody = {
+  code: string;
+};
+
+export type TResetPasswordBody = {
+  code: string;
+  password: string;
+};
+

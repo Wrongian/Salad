@@ -71,8 +71,8 @@ pub async fn update_s3_profile_image(
         .await;
 
     match put_object {
-        Ok(res) => Ok(()),
-        Err(res) => {
+        Ok(_res) => Ok(()),
+        Err(_res) => {
             // TODO: more verbose error message
             Err("failed to update profile image.")
         }
@@ -88,8 +88,8 @@ pub async fn delete_s3_profile_image(client: &s3::Client, img_name: String) -> R
         .await;
 
     match delete_response {
-        Ok(res) => Ok(()),
-        Err(res) => Err("failed to delete profile image."),
+        Ok(_ress) => Ok(()),
+        Err(_res) => Err("failed to delete profile image."),
     }
 }
 pub async fn get_s3_link_image(client: &s3::Client, link_id: String) -> Result<ByteStream, &str> {
@@ -120,8 +120,8 @@ pub async fn update_s3_link_image(
         .await;
 
     match put_object {
-        Ok(res) => Ok(()),
-        Err(res) => {
+        Ok(_res) => Ok(()),
+        Err(_res) => {
             // TODO: more verbose error message
             Err("failed to update link image.")
         }
@@ -137,7 +137,7 @@ pub async fn delete_s3_link_image(client: &s3::Client, img_name: String) -> Resu
         .await;
 
     match delete_response {
-        Ok(res) => Ok(()),
+        Ok(_res) => Ok(()),
         Err(res) => {
             println!("delete image failed with: {:?}", res);
             return Err(String::from("failed to delete image from aws s3"));
