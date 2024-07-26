@@ -390,31 +390,31 @@ export const removeFollowing = async (userId: number) => {
 }
 
 export const get_reset_email = async (fetch: fetch): Promise<void> => {
-  await validateFetch<TStandardPayload>(
+  await validateFetch<TStandardResponsePayload>(
     RESET_PASSWORD_ENDPOINT,
     "GET",
     {},
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
     { fetch },
   );
 };
 
 export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<void> => {
-  await validateFetch<TStandardPayload, TResetCodeBody>(
+  await validateFetch<TStandardResponsePayload, TResetCodeBody>(
     CHECK_PASSWORD_CODE_ENDPOINT,
     "POST",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
     { fetch },
   );
 };
 
-export const reset_password = async (query: TResetPasswordBody, fetch: fetch): Promise<void> => {
-  await validateFetch<TStandardPayload>(
+export const resetPassword = async (query: TResetPasswordBody, fetch: fetch): Promise<void> => {
+  await validateFetch<TStandardResponsePayload>(
     RESET_PASSWORD_ENDPOINT,
     "POST",
     query,
-    TStandardPayloadValidator,
+    TStandardResponsePayloadValidator,
     { fetch },
   );
 };
