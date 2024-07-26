@@ -21,7 +21,7 @@ use std::sync::Arc;
 use tide::Request;
 use validator::Validate;
 
-use super::PASSWORD_COST;
+use super::{init_session, PASSWORD_COST};
 
 // less important less cost
 // consts
@@ -325,6 +325,8 @@ pub async fn reset_password(mut req: Request<Arc<TideState>>) -> tide::Result {
         Ok(_) => {}
         Err(e) => return e.into_response(),
     };
+
+    init_session(req.session_mut(), user.id, &user.username);
 
     return Response::empty().into_response();
 }
