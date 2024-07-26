@@ -15,7 +15,7 @@ export const load: PageLoad = async ({ data, route, fetch, params }: any) => {
     redirect(302, "/auth/login");
   }
   const username = await getUsername(fetch);
-  if (!username || username == "") {
+  if (username == null || username == "") {
     redirect(302, "/auth/login");
   }
   const profileData = await getProfile(username, fetch);

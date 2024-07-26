@@ -206,7 +206,7 @@ export const logout = async (fetch: fetch, next: string): Promise<void> => {
 };
 
 // get username route
-export const getUsername = async (fetch: fetch): Promise<string> => {
+export const getUsername = async (fetch: fetch): Promise<string | null> => {
   const maybeUsername = await validateFetch<TGetUsernamePayload>(
     GET_USERNAME_ENDPOINT,
     "GET",
