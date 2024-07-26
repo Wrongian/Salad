@@ -197,7 +197,7 @@ export const logout = async (fetch: fetch, next: string): Promise<void> => {
     { fetch },
   );
 
-  await invalidateAll();
+  // await invalidateAll();
   if (next != null) {
     goto(next);
   } else {

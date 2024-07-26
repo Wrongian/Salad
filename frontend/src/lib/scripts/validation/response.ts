@@ -13,7 +13,7 @@ export const TResultPayloadValidator = Joi.object<TResultPayload>({
 export type TGetUsernamePayload = { username: string | null };
 
 export const TGetUsernamePayloadValidator = Joi.object<TGetUsernamePayload>({
-  username: Joi.string().optional(),
+  username: Joi.string().allow(null).allow(""),
 });
 
 export type TUpdateImageResponseBody = { href: string };
