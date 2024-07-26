@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto, invalidateAll } from "$app/navigation";
+  import { afterNavigate, goto, invalidateAll } from "$app/navigation";
   import {
     get_reset_email,
     getUsername,
@@ -33,11 +33,21 @@
     let is_reset: boolean = await resetPassword(reset_body);
     if (is_reset) {
       await invalidateAll();
-      goto("/");
+      goto(next);
     }
     code = "";
     password = "";
   }
+
+  let next = "";
+  afterNavigate(({ from }) => {
+    next = from?.url.pathname || next;
+    // change later to dynamic route
+    // or later use svelte store to do this instead in the outermost layout route
+    if (next == "/auth/reset-password") {
+      next = "/";
+    }
+  });
 </script>
 
 {#if !toggle}

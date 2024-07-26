@@ -81,7 +81,11 @@ export const login = async (
   >(LOGIN_ENDPOINT, "POST", { username, password }, TStandardResponsePayloadValidator);
 
   if (payload !== null) {
+    if (next == "/auth/login") {
+      next = "/";
+    }
     await invalidateAll();
+    goto(next);
   }
 };
 
@@ -110,9 +114,12 @@ export const register = async (
     { username, password, email },
     TStandardResponsePayloadValidator,
   );
-
+  if (next == "/auth/register") {
+    next = "/";
+  }
   if (payload !== null) {
     await invalidateAll();
+    goto(next);
   }
 };
 
