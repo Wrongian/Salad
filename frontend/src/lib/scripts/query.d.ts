@@ -53,11 +53,16 @@ export type TResult<T> =
     err: string;
   };
 
+export type TGetEmailBody = {
+  email: string;
+};
 export type TResetCodeBody = {
+  email: string;
   code: string;
 };
 
 export type TResetPasswordBody = {
+  email: string;
   code: string;
   password: string;
 };

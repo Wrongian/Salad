@@ -9,6 +9,7 @@ import type {
   TCreateFollowRequestPayload,
   TResetCodeBody,
   TResetPasswordBody,
+  TGetEmailBody,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
@@ -53,6 +54,7 @@ const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
 const FOLLOWING_ENDPOINT = "/api/following";
+const GET_EMAIL_ENDPOINT = "/api/get-email";
 const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
 const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
 
@@ -389,13 +391,12 @@ export const removeFollowing = async (userId: number) => {
   )
 }
 
-export const get_reset_email = async (fetch: fetch): Promise<void> => {
-  await validateFetch<TStandardResponsePayload>(
-    RESET_PASSWORD_ENDPOINT,
-    "GET",
-    {},
+export const get_reset_email = async (query: TGetEmailBody): Promise<void> => {
+  await validateFetch<TStandardResponsePayload, TGetEmailBody>(
+    GET_EMAIL_ENDPOINT,
+    "POST",
+    query,
     TStandardResponsePayloadValidator,
-    { fetch },
   );
 };
 
@@ -409,13 +410,12 @@ export const check_password_reset_code = async (query: TResetCodeBody, fetch: fe
   );
 };
 
-export const resetPassword = async (query: TResetPasswordBody, fetch: fetch): Promise<void> => {
+export const resetPassword = async (query: TResetPasswordBody): Promise<void> => {
   await validateFetch<TStandardResponsePayload>(
     RESET_PASSWORD_ENDPOINT,
     "POST",
     query,
     TStandardResponsePayloadValidator,
-    { fetch },
   );
 };
 
