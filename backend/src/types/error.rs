@@ -46,7 +46,7 @@ pub enum Error {
     ConnectionPoolError(),
     // if association to db doesnt work somehow
     #[error("{0}")]
-    DBAssociationError(#[from] AssociationErrors),
+    AssociationError(#[from] AssociationErrors),
     #[error("{0}")]
     EmailError(#[from] lettre::transport::smtp::Error),
     #[error("{0}")]
