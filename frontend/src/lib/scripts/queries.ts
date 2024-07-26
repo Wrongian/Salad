@@ -391,31 +391,45 @@ export const removeFollowing = async (userId: number) => {
   )
 }
 
-export const get_reset_email = async (query: TGetEmailBody): Promise<void> => {
-  await validateFetch<TStandardResponsePayload, TGetEmailBody>(
+export const get_reset_email = async (query: TGetEmailBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TGetEmailBody>(
     GET_EMAIL_ENDPOINT,
     "POST",
     query,
     TStandardResponsePayloadValidator,
   );
+  if (payload) {
+    return true;
+  }
+  return false;
 };
 
-export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<void> => {
-  await validateFetch<TStandardResponsePayload, TResetCodeBody>(
+export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TResetCodeBody>(
     CHECK_PASSWORD_CODE_ENDPOINT,
     "POST",
     query,
     TStandardResponsePayloadValidator,
     { fetch },
   );
+
+  if (payload) {
+    return true;
+  }
+  return false;
 };
 
-export const resetPassword = async (query: TResetPasswordBody): Promise<void> => {
-  await validateFetch<TStandardResponsePayload>(
+export const resetPassword = async (query: TResetPasswordBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
     RESET_PASSWORD_ENDPOINT,
     "POST",
     query,
     TStandardResponsePayloadValidator,
   );
+
+  if (payload) {
+    return true;
+  }
+  return false;
 };
 

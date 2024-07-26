@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import {
     get_reset_email,
     getUsername,
@@ -18,8 +18,10 @@
     let email_body: TGetEmailBody = {
       email: email,
     };
-    toggle = true;
-    await get_reset_email(email_body);
+    let is_sent: boolean = await get_reset_email(email_body);
+    if (is_sent) {
+      toggle = true;
+    }
   }
   async function send_reset_password() {
     let reset_body: TResetPasswordBody = {
@@ -28,8 +30,13 @@
       password: password,
     };
 
-    await resetPassword(reset_body);
-    goto("/");
+    let is_reset: boolean = await resetPassword(reset_body);
+    if (is_reset) {
+      await invalidateAll();
+      goto("/");
+    }
+    code = "";
+    password = "";
   }
 </script>
 
@@ -44,6 +51,7 @@
       class="px-1 peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300"
       bind:value={email}
     />
+
     <div class="py-3 flex justify-center">
       <button
         type="submit"
@@ -83,7 +91,7 @@
       <input
         id="new-password-text"
         type="password"
-        class="peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
+        class="px-1 peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
       focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
       "
         bind:value={password}
@@ -96,6 +104,18 @@
         on:click={async () => await send_reset_password()}
       >
         <span>Submit</span>
+      </button>
+    </div>
+    <div class="py-3 flex justify-center">
+      <button
+        type="submit"
+        class="justify-center rounded-md w-[200px]"
+        on:click={async () => {
+          email = "";
+          toggle = false;
+        }}
+      >
+        <span>Back</span>
       </button>
     </div>
   </div>
