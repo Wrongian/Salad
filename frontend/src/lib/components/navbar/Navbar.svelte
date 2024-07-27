@@ -1,7 +1,9 @@
 <script lang="ts">
   import favicon from "$lib/assets/favicon.ico";
+  import Searchbar from "../search/Searchbar.svelte";
   import DropDownLink from "../ui/dropdown/DropDownLink.svelte";
   import DropDownLinkNoPreload from "../ui/dropdown/DropDownLinkNoPreload.svelte";
+  import { Input } from "../ui/input";
   import NavLink from "../ui/navbar/NavLink.svelte";
   export let isLoggedIn = false;
   export let profileRoute = "";
@@ -26,7 +28,7 @@
 
 <nav class="bg-lime-200">
   <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8">
-    <div class="relative flex h-8 items-center justify-between">
+    <div class="relative flex h-10 items-center justify-between">
       <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <!-- Mobile -->
         <button
@@ -82,8 +84,7 @@
               <NavLink linkName={`Edit Profile`} link={`/edit-profile`}
               ></NavLink>
             {/if}
-            <!--No implementation now so comment out-->
-            <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
+            <Searchbar />
           </div>
         </div>
       </div>
@@ -170,7 +171,7 @@
         <NavLink linkName={`Edit Profile`} link={`/edit-profile`}></NavLink>
       {/if}
       <!--No implementation yet-->
-      <!-- <NavLink linkName={`Search`} link = {`/search`}></NavLink> -->
+      <NavLink linkName={`Search`} link={`/search/users`}></NavLink>
     </div>
   </div>
 </nav>
