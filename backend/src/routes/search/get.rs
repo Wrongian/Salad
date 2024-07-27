@@ -2,31 +2,30 @@ use std::sync::Arc;
 
 use serde::Deserialize;
 use tide::Request;
+use validator::Validate;
 
 use crate::{
     connectors::db::user::{get_queried_user_total_count, get_queried_users},
-    helpers::{auth::get_session_user_id, state::get_connection},
+    helpers::{state::get_connection, validation::validate_query_params},
     types::{
-        error::{Error, RequestErrors},
+        error::Error,
         pagination::{GetPaginatedProfile, PaginatedGetPayload, PER_PAGE},
         response::Response,
         state::TideState,
     },
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 struct SearchUserQueryParams {
     query: String,
+    #[validate(range(min = 1))]
     index: i64,
 }
 
-// session is not needed (for now).
 pub async fn search_users(mut req: Request<Arc<TideState>>) -> tide::Result {
-    let SearchUserQueryParams { query, index } = match req.query::<SearchUserQueryParams>() {
+    let SearchUserQueryParams { query, index } = match validate_query_params(&req) {
         Ok(params) => params,
-        Err(_) => {
-            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response();
-        }
+        Err(e) => return e.into_response(),
     };
 
     let mut conn = get_connection(&mut req);

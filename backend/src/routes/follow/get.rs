@@ -2,22 +2,25 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use tide::Request;
+use validator::Validate;
 
 use crate::{
     connectors::db::follow::{
         get_queried_follower_total_count, get_queried_followers, get_queried_following_total_count,
         get_queried_followings, has_follow_request, is_following,
     },
-    helpers::{auth::get_session_user_id, state::get_connection},
+    helpers::{
+        auth::get_session_user_id, state::get_connection, validation::validate_query_params,
+    },
     types::{
-        error::{Error, RequestErrors},
+        error::Error,
         pagination::{GetPaginatedProfile, PaginatedGetPayload, PER_PAGE},
         response::Response,
         state::TideState,
     },
 };
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 struct FollowStatusParams {
     pub id: i32,
 }
@@ -50,9 +53,10 @@ impl FollowStatusResponsePayload {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 struct FollowGetQueryParams {
     query: String,
+    #[validate(range(min = 1))]
     index: i64,
 }
 
@@ -63,12 +67,11 @@ pub async fn get_follow_status(mut req: Request<Arc<TideState>>) -> tide::Result
         Err(e) => return e.into_response(),
     };
 
-    let to_id = match req.query::<FollowStatusParams>() {
+    let to_id = match validate_query_params::<FollowStatusParams>(&req) {
         Ok(params) => params.id,
-        Err(_) => {
-            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response()
-        }
+        Err(e) => return e.into_response(),
     };
+
     let mut conn = get_connection(&mut req);
     // check user is following to_id
     match is_following(&mut conn, user_id, to_id).await {
@@ -92,12 +95,11 @@ pub async fn get_followers(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(e) => return e.into_response(),
     };
 
-    let FollowGetQueryParams { query, index } = match req.query::<FollowGetQueryParams>() {
-        Ok(params) => params,
-        Err(_) => {
-            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response();
-        }
-    };
+    let FollowGetQueryParams { query, index } =
+        match validate_query_params::<FollowGetQueryParams>(&req) {
+            Ok(params) => params,
+            Err(e) => return e.into_response(),
+        };
 
     let mut conn = get_connection(&mut req);
 
@@ -134,12 +136,11 @@ pub async fn get_following(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(e) => return e.into_response(),
     };
 
-    let FollowGetQueryParams { query, index } = match req.query::<FollowGetQueryParams>() {
-        Ok(params) => params,
-        Err(_) => {
-            return Error::InvalidRequestError(RequestErrors::MalformedParams).into_response();
-        }
-    };
+    let FollowGetQueryParams { query, index } =
+        match validate_query_params::<FollowGetQueryParams>(&req) {
+            Ok(params) => params,
+            Err(e) => return e.into_response(),
+        };
 
     let mut conn = get_connection(&mut req);
 
