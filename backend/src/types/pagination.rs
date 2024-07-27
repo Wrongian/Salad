@@ -14,4 +14,4 @@ pub struct GetPaginatedProfile {
     pub display_name: String,
 }
 
-pub static PER_PAGE: i64 = 8;
+pub const PER_PAGE: i64 = 8;
