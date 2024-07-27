@@ -3,6 +3,7 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct PaginatedGetPayload {
     pub profiles: Vec<GetPaginatedProfile>,
+    pub total_size: i64,
 }
 
 #[derive(Serialize)]
