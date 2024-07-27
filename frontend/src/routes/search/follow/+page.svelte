@@ -1,26 +1,44 @@
 <script lang="ts">
   import * as Tabs from "$lib/components/ui/tabs";
   import { Input } from "$lib/components/ui/input/index.js";
-  import { getFollowers, getFollowings } from "$lib/scripts/queries";
-  import type { TPaginatedProfile } from "$lib/scripts/validation/response";
+  import {
+    getFollowers,
+    getFollowings,
+    getFollowRequests,
+  } from "$lib/scripts/queries";
+  import type {
+    TPaginatedFollowRequestProfile,
+    TPaginatedProfile,
+  } from "$lib/scripts/validation/response";
   import type { PageData } from "./$types";
   import { twMerge } from "tailwind-merge";
   import FollowTabContent from "$lib/components/follow/FollowTabContent.svelte";
-  const VIEW_MODES = ["Followers", "Following"] as const;
-  type ViewModes = (typeof VIEW_MODES)[number];
+  import PendingTabContent from "$lib/components/follow/PendingTabContent.svelte";
+
+  const VIEW_MODES = ["Followers", "Following", "Pending"] as const;
+  type TViewMode = (typeof VIEW_MODES)[number];
+  const UPDATE_MAPPINGS: Record<TViewMode, Function> = {
+    Followers: updateFollowerProfiles,
+    Following: updateFollowingProfiles,
+    Pending: updatePendingProfiles,
+  };
+
   const PER_PAGE = 8;
   export let data: PageData;
-  let viewMode: ViewModes = VIEW_MODES[0];
+  let viewMode: TViewMode = VIEW_MODES[0];
 
   let currFollowerPageIndex = 1;
   let currFollowingPageIndex = 1;
+  let currPendingPageIndex = 1;
 
   let searchQuery = "";
   let followers: TPaginatedProfile[] = data.followers;
   let followings: TPaginatedProfile[] = data.followings;
+  let pendingRequests: TPaginatedFollowRequestProfile[] = data.pendingRequests;
 
   let totalFollowers = data.totalFollowers;
   let totalFollowing = data.totalFollowing;
+  let totalPending = data.totalPending;
 
   async function updateFollowerProfiles() {
     const getFollowerResult = await getFollowers(
@@ -40,31 +58,41 @@
     totalFollowing = getFollowingResult?.total_size ?? totalFollowing;
   }
 
-  function changeViewMode(newView: ViewModes) {
+  async function updatePendingProfiles() {
+    const getFollowRequestResult = await getFollowRequests(
+      searchQuery,
+      currPendingPageIndex,
+    );
+    pendingRequests = getFollowRequestResult?.profiles ?? pendingRequests;
+    totalPending = getFollowRequestResult?.total_size ?? totalPending;
+  }
+
+  function changeViewMode(newView: TViewMode) {
     viewMode = newView;
   }
 
-  function onCurrentPageIndexChange() {
-    viewMode === VIEW_MODES[0]
-      ? updateFollowerProfiles()
-      : updateFollowingProfiles();
-  }
-
   function onSearchQueryChange() {
-    viewMode === VIEW_MODES[0]
-      ? updateFollowerProfiles()
-      : updateFollowingProfiles();
+    return UPDATE_MAPPINGS[viewMode]();
   }
 
-  $: currFollowerPageIndex, onCurrentPageIndexChange();
-  $: currFollowingPageIndex, onCurrentPageIndexChange();
+  function refreshPendingRequests() {
+    pendingRequests = data.pendingRequests;
+    totalPending = data.totalPending;
+  }
+
+  // listens for load fn reruns and updates data accordingly
+  $: data.pendingRequests, refreshPendingRequests();
+
+  // listens for page index changes & updates data accordingly
+  $: currFollowerPageIndex, updateFollowerProfiles();
+  $: currFollowingPageIndex, updateFollowingProfiles();
   $: searchQuery, onSearchQueryChange();
 </script>
 
-<div class="flex justify-center">
+<div class="flex justify-center h-fit">
   <Tabs.Root value={viewMode} class="w-[50vw] h-[90vh] mt-2 min-w-60 max-w-90">
     <Tabs.List
-      class="h-[50px] grid w-full grid-cols-2 bg-lime-200 rounded-[4px]"
+      class="h-[50px] grid w-full grid-cols-3 bg-lime-200 rounded-[4px]"
     >
       <button
         class={twMerge(
@@ -91,6 +119,18 @@
       >
         {VIEW_MODES[1]}
       </button>
+      <button
+        class={twMerge(
+          "w-full h-3/4 rounded-[4px]",
+          viewMode === VIEW_MODES[2] && "bg-lime-600 text-white",
+        )}
+        on:click={async () => {
+          await updatePendingProfiles();
+          changeViewMode(VIEW_MODES[2]);
+        }}
+      >
+        {VIEW_MODES[2]}
+      </button>
     </Tabs.List>
 
     <div class="flex justify-center">
@@ -102,13 +142,13 @@
       />
     </div>
 
-    <div class="flex flex-col justify-between h-[65vh] relative">
+    <div class="flex flex-col justify-between">
       <Tabs.Content value={VIEW_MODES[0]}>
         <FollowTabContent
           paginatedFollowRecords={followers}
           totalRecords={totalFollowers}
           recordsPerPage={PER_PAGE}
-          currentPageIndex={currFollowerPageIndex}
+          bind:currentPageIndex={currFollowerPageIndex}
         />
       </Tabs.Content>
 
@@ -117,7 +157,16 @@
           paginatedFollowRecords={followings}
           totalRecords={totalFollowing}
           recordsPerPage={PER_PAGE}
-          currentPageIndex={currFollowingPageIndex}
+          bind:currentPageIndex={currFollowingPageIndex}
+        />
+      </Tabs.Content>
+
+      <Tabs.Content value={VIEW_MODES[2]}>
+        <PendingTabContent
+          paginatedFollowRecords={pendingRequests}
+          totalRecords={totalPending}
+          recordsPerPage={PER_PAGE}
+          bind:currentPageIndex={currPendingPageIndex}
         />
       </Tabs.Content>
     </div>
