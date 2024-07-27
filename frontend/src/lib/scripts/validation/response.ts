@@ -91,7 +91,8 @@ export type TPaginatedProfile = {
   display_name: string 
 }
 export type TGetPaginatedProfilePayload = {
-  profiles: TPaginatedProfile[] 
+  profiles: TPaginatedProfile[],
+  total_size: number,
 }
 
 export const TGetPaginatedProfilePayloadValidator = Joi.object<TGetPaginatedProfilePayload>({
@@ -102,6 +103,7 @@ export const TGetPaginatedProfilePayloadValidator = Joi.object<TGetPaginatedProf
       id: Joi.number(),
       display_name: Joi.string().allow(null),
     })
-  )
+  ),
+  total_size: Joi.number()
 })
 
