@@ -4,7 +4,7 @@ use serde::Deserialize;
 use tide::Request;
 
 use crate::{
-    connectors::db::user::get_queried_users,
+    connectors::db::user::{get_queried_user_total_count, get_queried_users},
     helpers::{auth::get_session_user_id, state::get_connection},
     types::{
         error::{Error, RequestErrors},
@@ -20,10 +20,6 @@ struct SearchUserQueryParams {
     index: i64,
 }
 
-impl SearchUserQueryParams {
-    fn get_filter_object(&self) {}
-}
-
 // session is not needed (for now).
 pub async fn search_users(mut req: Request<Arc<TideState>>) -> tide::Result {
     let SearchUserQueryParams { query, index } = match req.query::<SearchUserQueryParams>() {
@@ -34,8 +30,9 @@ pub async fn search_users(mut req: Request<Arc<TideState>>) -> tide::Result {
     };
 
     let mut conn = get_connection(&mut req);
-    let profiles = match get_queried_users(&mut conn, query, index, PER_PAGE).await {
-        Ok(p) => p
+
+    let profiles = match get_queried_users(&mut conn, query.clone(), index, PER_PAGE).await {
+        Ok(user_tuples) => user_tuples
             .into_iter()
             .map(|user| GetPaginatedProfile {
                 username: user.0.username,
@@ -47,5 +44,14 @@ pub async fn search_users(mut req: Request<Arc<TideState>>) -> tide::Result {
         Err(e) => return Error::DieselError(e).into_response(),
     };
 
-    Response::new(PaginatedGetPayload { profiles }).into_response()
+    let total_size = match get_queried_user_total_count(&mut conn, query).await {
+        Ok(total_profile_count) => total_profile_count,
+        Err(e) => return Error::DieselError(e).into_response(),
+    };
+
+    Response::new(PaginatedGetPayload {
+        profiles,
+        total_size,
+    })
+    .into_response()
 }

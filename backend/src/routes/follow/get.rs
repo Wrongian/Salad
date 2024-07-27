@@ -5,7 +5,8 @@ use tide::Request;
 
 use crate::{
     connectors::db::follow::{
-        get_queried_followers, get_queried_followings, has_follow_request, is_following,
+        get_queried_follower_total_count, get_queried_followers, get_queried_following_total_count,
+        get_queried_followings, has_follow_request, is_following,
     },
     helpers::{auth::get_session_user_id, state::get_connection},
     types::{
@@ -101,20 +102,29 @@ pub async fn get_followers(mut req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn = get_connection(&mut req);
 
     // get brief profile information (name, profile picture, etc.) of followers
-    let profiles = match get_queried_followers(&mut conn, query, user_id, index, PER_PAGE).await {
-        Ok(result) => result
-            .into_iter()
-            .map(|user| GetPaginatedProfile {
-                display_name: user.0.display_name,
-                id: user.0.id,
-                img_src: user.1.map(|img| img.img_src),
-                username: user.0.username,
-            })
-            .collect::<Vec<GetPaginatedProfile>>(),
+    let profiles =
+        match get_queried_followers(&mut conn, query.clone(), user_id, index, PER_PAGE).await {
+            Ok(result) => result
+                .into_iter()
+                .map(|user| GetPaginatedProfile {
+                    display_name: user.0.display_name,
+                    id: user.0.id,
+                    img_src: user.1.map(|img| img.img_src),
+                    username: user.0.username,
+                })
+                .collect::<Vec<GetPaginatedProfile>>(),
+            Err(e) => return Error::DieselError(e).into_response(),
+        };
+
+    let total_size = match get_queried_follower_total_count(&mut conn, user_id, query).await {
+        Ok(total_following_count) => total_following_count,
         Err(e) => return Error::DieselError(e).into_response(),
     };
-
-    Response::new(PaginatedGetPayload { profiles }).into_response()
+    Response::new(PaginatedGetPayload {
+        profiles,
+        total_size,
+    })
+    .into_response()
 }
 
 pub async fn get_following(mut req: Request<Arc<TideState>>) -> tide::Result {
@@ -134,18 +144,28 @@ pub async fn get_following(mut req: Request<Arc<TideState>>) -> tide::Result {
     let mut conn = get_connection(&mut req);
 
     // get brief profile information (name, profile picture, etc.) of users being followed
-    let profiles = match get_queried_followings(&mut conn, query, user_id, index, PER_PAGE).await {
-        Ok(result) => result
-            .into_iter()
-            .map(|user| GetPaginatedProfile {
-                display_name: user.0.display_name,
-                id: user.0.id,
-                img_src: user.1.map(|img| img.img_src),
-                username: user.0.username,
-            })
-            .collect::<Vec<GetPaginatedProfile>>(),
+    let profiles =
+        match get_queried_followings(&mut conn, query.clone(), user_id, index, PER_PAGE).await {
+            Ok(result) => result
+                .into_iter()
+                .map(|user| GetPaginatedProfile {
+                    display_name: user.0.display_name,
+                    id: user.0.id,
+                    img_src: user.1.map(|img| img.img_src),
+                    username: user.0.username,
+                })
+                .collect::<Vec<GetPaginatedProfile>>(),
+            Err(e) => return Error::DieselError(e).into_response(),
+        };
+
+    let total_size = match get_queried_following_total_count(&mut conn, user_id, query).await {
+        Ok(total_following_count) => total_following_count,
         Err(e) => return Error::DieselError(e).into_response(),
     };
 
-    Response::new(PaginatedGetPayload { profiles }).into_response()
+    Response::new(PaginatedGetPayload {
+        profiles,
+        total_size,
+    })
+    .into_response()
 }
