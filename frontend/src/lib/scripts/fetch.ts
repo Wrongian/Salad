@@ -58,7 +58,7 @@ export async function validateFetch<R, U extends object = {}>(
   //
   const jsonBody = await response.json().catch((_) => {
     // black swan
-    console.log(_);
+    // console.log(_);
     blackSwanError.set({
       status: BLACKSWAN_ERROR_STATUS_CODE,
       message: MASKED_ERROR_MESSAGE,
@@ -85,7 +85,7 @@ export async function validateFetch<R, U extends object = {}>(
       })
       .catch((_) => {
 
-        console.log(_);
+        // console.log(_);
         blackSwanError.set({
           status: BLACKSWAN_ERROR_STATUS_CODE,
           message: MASKED_ERROR_MESSAGE,
@@ -97,7 +97,7 @@ export async function validateFetch<R, U extends object = {}>(
   if ("payload" in jsonBody) {
     // validate
     return await validatePayload(jsonBody.payload, validator).catch((_) => {
-      console.log(_);
+      // console.log(_);
       blackSwanError.set({
         status: BLACKSWAN_ERROR_STATUS_CODE,
         message: MASKED_ERROR_MESSAGE,
