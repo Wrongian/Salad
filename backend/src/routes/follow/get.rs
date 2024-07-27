@@ -7,7 +7,8 @@ use validator::Validate;
 use crate::{
     connectors::db::follow::{
         get_queried_follower_total_count, get_queried_followers, get_queried_following_total_count,
-        get_queried_followings, has_follow_request, is_following,
+        get_queried_followings, get_queried_pending_follow_request_total_count,
+        get_queried_pending_follow_requests, has_follow_request, is_following,
     },
     helpers::{
         auth::get_session_user_id, state::get_connection, validation::validate_query_params,
@@ -19,6 +20,21 @@ use crate::{
         state::TideState,
     },
 };
+
+#[derive(Serialize)]
+struct PendingRequestPaginatedProfile {
+    pub username: String,
+    pub img_src: Option<String>,
+    pub id: i32,
+    pub display_name: String,
+    pub request_type: FollowRequestType,
+}
+
+#[derive(Serialize)]
+enum FollowRequestType {
+    OUTGOING,
+    INCOMING,
+}
 
 #[derive(Deserialize, Validate)]
 struct FollowStatusParams {
@@ -56,7 +72,7 @@ impl FollowStatusResponsePayload {
 #[derive(Deserialize, Validate)]
 struct FollowGetQueryParams {
     query: String,
-    #[validate(range(min = 1))]
+    #[validate(range(min = 1, message = "Invalid index provided"))]
     index: i64,
 }
 
@@ -163,6 +179,60 @@ pub async fn get_following(mut req: Request<Arc<TideState>>) -> tide::Result {
         Ok(total_following_count) => total_following_count,
         Err(e) => return Error::DieselError(e).into_response(),
     };
+
+    Response::new(PaginatedGetPayload {
+        profiles,
+        total_size,
+    })
+    .into_response()
+}
+
+pub async fn get_pending_follows(mut req: Request<Arc<TideState>>) -> tide::Result {
+    // extract user id
+    let user_id = match get_session_user_id(&req) {
+        Ok(id) => id,
+        Err(e) => return e.into_response(),
+    };
+
+    let FollowGetQueryParams { query, index } =
+        match validate_query_params::<FollowGetQueryParams>(&req) {
+            Ok(params) => params,
+            Err(e) => return e.into_response(),
+        };
+
+    let mut conn = get_connection(&mut req);
+
+    let profiles = match get_queried_pending_follow_requests(
+        &mut conn,
+        query.clone(),
+        user_id,
+        index,
+        PER_PAGE,
+    )
+    .await
+    {
+        Ok(result) => result
+            .into_iter()
+            .map(|user| PendingRequestPaginatedProfile {
+                display_name: user.0.display_name,
+                id: user.0.id,
+                img_src: user.1.map(|img| img.img_src),
+                username: user.0.username,
+                request_type: if user.2.to_id == user_id {
+                    FollowRequestType::INCOMING
+                } else {
+                    FollowRequestType::OUTGOING
+                },
+            })
+            .collect::<Vec<PendingRequestPaginatedProfile>>(),
+        Err(e) => return e.into_response(),
+    };
+
+    let total_size =
+        match get_queried_pending_follow_request_total_count(&mut conn, user_id, query).await {
+            Ok(total_following_count) => total_following_count,
+            Err(e) => return e.into_response(),
+        };
 
     Response::new(PaginatedGetPayload {
         profiles,

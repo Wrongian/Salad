@@ -18,7 +18,7 @@ use crate::{
 #[derive(Deserialize, Validate)]
 struct SearchUserQueryParams {
     query: String,
-    #[validate(range(min = 1))]
+    #[validate(range(min = 1, message = "Invalid index provided."))]
     index: i64,
 }
 

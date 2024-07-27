@@ -1,8 +1,8 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
-pub struct PaginatedGetPayload {
-    pub profiles: Vec<GetPaginatedProfile>,
+pub struct PaginatedGetPayload<T: Serialize = GetPaginatedProfile> {
+    pub profiles: Vec<T>,
     pub total_size: i64,
 }
 
