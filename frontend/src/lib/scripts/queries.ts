@@ -344,7 +344,6 @@ export const updateLinkPicture = async (
   filetype: String,
   id: number,
 ): Promise<TUpdateImageResponseBody> => {
-  console.log("image: ", image);
   return await validateFetch<TUpdateImageResponseBody, Blob>(
     `${LINKS_PREFIX}/${id.toString()}/image/${filetype}`,
     "PUT",
