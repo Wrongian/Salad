@@ -169,6 +169,43 @@ pub async fn get_queried_followers(
         .load::<(GetUser, Option<GetImage>)>(conn)
 }
 
+pub async fn get_queried_follower_total_count(
+    conn: &mut PgConnection,
+    user_id: i32,
+    query: String,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::follows;
+    use crate::schema::users;
+
+    follows::table
+        .inner_join(
+            users::table.on(follows::from_id
+                .eq(users::id)
+                .and(follows::to_id.eq(user_id))),
+        )
+        .filter(users::display_name.like(["%", query.as_str(), "%"].join("")))
+        .count()
+        .get_result::<i64>(conn)
+}
+pub async fn get_queried_following_total_count(
+    conn: &mut PgConnection,
+    user_id: i32,
+    query: String,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::follows;
+    use crate::schema::users;
+
+    follows::table
+        .inner_join(
+            users::table.on(follows::to_id
+                .eq(users::id)
+                .and(follows::from_id.eq(user_id))),
+        )
+        .filter(users::display_name.like(["%", query.as_str(), "%"].join("")))
+        .count()
+        .get_result::<i64>(conn)
+}
+
 pub async fn get_queried_followings(
     conn: &mut PgConnection,
     query: String,

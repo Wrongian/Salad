@@ -130,7 +130,6 @@ pub async fn get_queried_users(
     index: i64,
     per_page: i64,
 ) -> Result<Vec<(GetUser, Option<GetImage>)>, diesel::result::Error> {
-    // use crate::schema::follows;
     use crate::schema::images;
     use crate::schema::users;
     users::table
@@ -140,4 +139,15 @@ pub async fn get_queried_users(
         .limit(per_page)
         .select((GetUser::as_select(), Option::<GetImage>::as_select()))
         .load::<(GetUser, Option<GetImage>)>(conn)
+}
+
+pub async fn get_queried_user_total_count(
+    conn: &mut PgConnection,
+    query: String,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::users::dsl::{display_name, users};
+    users
+        .filter(display_name.like(["%", query.as_str(), "%"].join("")))
+        .count()
+        .get_result::<i64>(conn)
 }
