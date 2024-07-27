@@ -9,7 +9,8 @@
     removeFollowRequest,
   } from "$lib/scripts/queries";
   import { addError } from "$lib/modules/Errors.svelte";
-  import { invalidateAll } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
+  import { Contact } from "lucide-svelte";
   export let data: PageData;
   $: links = data.links ?? [];
   $: isOwner = data.is_owner ?? false;
@@ -58,9 +59,19 @@
           {data.display_name}
         </p>
         <!-- follower/following component -->
-        <div class="flex space-x-6 p-2 pt-4">
+        <div class="flex space-x-6 p-2 pt-4 items-center">
           <p>followers: {data.followers}</p>
           <p>following: {data.following}</p>
+          {#if isOwner}
+            <button
+              class="p-0 hover:text-white hover:bg-black rounded-full"
+              on:click={() => {
+                goto("/search/follow");
+              }}
+            >
+              <Contact />
+            </button>
+          {/if}
         </div>
         {#if !isOwner && followStatus === "none"}
           <button
