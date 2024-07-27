@@ -46,6 +46,14 @@ CREATE TABLE IF NOT EXISTS pending_follow_requests (
     FOREIGN KEY (to_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS reset_password_request (
+    id SERIAL PRIMARY KEY NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    code VARCHAR NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
 DECLARE
     current_next INT;

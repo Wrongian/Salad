@@ -10,10 +10,10 @@ export const TResultPayloadValidator = Joi.object<TResultPayload>({
   result: Joi.boolean(),
 });
 
-export type TGetUsernamePayload = { username: string };
+export type TGetUsernamePayload = { username: string | null };
 
 export const TGetUsernamePayloadValidator = Joi.object<TGetUsernamePayload>({
-  username: Joi.string(),
+  username: Joi.string().allow(null).allow(""),
 });
 
 export type TUpdateImageResponseBody = { href: string };

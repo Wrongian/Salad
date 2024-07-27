@@ -1,5 +1,6 @@
 use crate::models::images::GetImage;
 use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
+use crate::types::error::Error;
 use diesel::prelude::*;
 use diesel::{ExpressionMethods, PgConnection, RunQueryDsl, SelectableHelper};
 
@@ -150,4 +151,30 @@ pub async fn get_queried_user_total_count(
         .filter(display_name.like(["%", query.as_str(), "%"].join("")))
         .count()
         .get_result::<i64>(conn)
+pub async fn get_user_from_email(
+    conn: &mut PgConnection,
+    email_str: String,
+) -> Result<GetUser, Error> {
+    use crate::schema::users::dsl::*;
+    match users
+        .filter(email.eq(&email_str))
+        .select(GetUser::as_select())
+        .first::<GetUser>(conn)
+    {
+        Ok(user) => Ok(user),
+        Err(e) => Err(Error::DieselError(e)),
+    }
+}
+
+pub async fn does_email_exist(conn: &mut PgConnection, email_str: String) -> Result<bool, Error> {
+    use crate::schema::users::dsl::*;
+    match users
+        .filter(email.eq(&email_str))
+        .count()
+        .get_result::<i64>(conn)
+        .map(|count| count > 0)
+    {
+        Ok(count) => return Ok(count),
+        Err(e) => return Err(Error::DieselError(e)),
+    }
 }

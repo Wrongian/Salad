@@ -49,7 +49,7 @@ pub async fn login(mut req: Request<Arc<TideState>>) -> tide::Result {
         Ok(params) => {
             login_params = params;
         }
-        Err(e) => {
+        Err(_e) => {
             return Error::InvalidRequestError(RequestErrors::MalformedPayload).into_response()
         }
     }
