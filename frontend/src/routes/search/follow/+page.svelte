@@ -5,6 +5,8 @@
     getFollowers,
     getFollowings,
     getFollowRequests,
+    removeFollower,
+    removeFollowing,
   } from "$lib/scripts/queries";
   import type {
     TPaginatedFollowRequestProfile,
@@ -14,6 +16,7 @@
   import { twMerge } from "tailwind-merge";
   import FollowTabContent from "$lib/components/follow/FollowTabContent.svelte";
   import PendingTabContent from "$lib/components/follow/PendingTabContent.svelte";
+  import { invalidateAll } from "$app/navigation";
 
   const VIEW_MODES = ["Followers", "Following", "Pending"] as const;
   type TViewMode = (typeof VIEW_MODES)[number];
@@ -80,8 +83,30 @@
     totalPending = data.totalPending;
   }
 
+  function refreshFollowerProfiles() {
+    followers = data.followers;
+    totalFollowers = data.totalFollowers;
+  }
+
+  function refreshFollowingProfiles() {
+    followings = data.followings;
+    totalFollowing = data.totalFollowing;
+  }
+
+  function deleteFollowers(profile: TPaginatedProfile | undefined) {
+    if (!profile) return;
+    removeFollower(profile?.id).then((_) => invalidateAll());
+  }
+
+  function deleteFollowings(profile: TPaginatedProfile | undefined) {
+    if (!profile) return;
+    removeFollowing(profile?.id).then((_) => invalidateAll());
+  }
+
   // listens for load fn reruns and updates data accordingly
   $: data.pendingRequests, refreshPendingRequests();
+  $: data.followers, refreshFollowerProfiles();
+  $: data.followings, refreshFollowingProfiles();
 
   // listens for page index changes & updates data accordingly
   $: currFollowerPageIndex, updateFollowerProfiles();
@@ -148,6 +173,9 @@
           paginatedFollowRecords={followers}
           totalRecords={totalFollowers}
           recordsPerPage={PER_PAGE}
+          removeRecordDialogMessage="This action cannot be undone. Do you want to remove follower?"
+          removeRecordMenuButtonLabel="Remove follower"
+          onConfirmRecordRemove={deleteFollowers}
           bind:currentPageIndex={currFollowerPageIndex}
         />
       </Tabs.Content>
@@ -157,6 +185,9 @@
           paginatedFollowRecords={followings}
           totalRecords={totalFollowing}
           recordsPerPage={PER_PAGE}
+          removeRecordDialogMessage="This action cannot be undone. Do you want to remove following?"
+          removeRecordMenuButtonLabel="Unfollow"
+          onConfirmRecordRemove={deleteFollowings}
           bind:currentPageIndex={currFollowingPageIndex}
         />
       </Tabs.Content>
