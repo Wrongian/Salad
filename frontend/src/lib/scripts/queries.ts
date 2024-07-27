@@ -414,13 +414,14 @@ export const getFollowings = async (query: string, pageIndex: number, fetch?: fe
   )
 }
 
-export const searchUsers = async (query: string, pageIndex: number, filterObj: object = {}) => {
+export const searchUsers = async (query: string, pageIndex: number, filterObj: object = {}, fetch?: fetch) => {
   const searchParams = getAsSearchParamString({ query: query, index: pageIndex, ...filterObj}) 
 
   return await validateFetch<TGetPaginatedProfilePayload>(
     `${SEARCH_USERS_ENDPOINT}?${searchParams}`,
     "GET" ,
     {},
-    TGetPaginatedProfilePayloadValidator
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
   )
 }
