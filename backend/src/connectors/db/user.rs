@@ -151,6 +151,7 @@ pub async fn get_queried_user_total_count(
         .filter(display_name.like(["%", query.as_str(), "%"].join("")))
         .count()
         .get_result::<i64>(conn)
+}
 pub async fn get_user_from_email(
     conn: &mut PgConnection,
     email_str: String,
