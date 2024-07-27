@@ -1,13 +1,26 @@
 <script lang="ts">
-  import { EllipsisVertical } from "lucide-svelte";
-  import * as Avatar from "../ui/avatar";
-  import * as Pagination from "../ui/pagination";
+  import * as Avatar from "$lib/components/ui/avatar";
+  import * as Pagination from "$lib/components/ui/pagination";
+  import * as Dialog from "$lib/components/ui/dialog";
   import type { TPaginatedProfile } from "$lib/scripts/validation/response";
+  import FollowMenuButton from "./FollowMenuButton.svelte";
+  import Button from "$lib/components/ui/button/button.svelte";
 
   export let paginatedFollowRecords: TPaginatedProfile[];
   export let totalRecords: number;
   export let recordsPerPage: number;
   export let currentPageIndex: number;
+
+  export let removeRecordDialogMessage: string =
+    "This action cannot be undone.";
+  export let removeRecordMenuButtonLabel: String = "Remove";
+  export let removeRecordDialogTitle: string = "Are you sure absolutely sure?";
+  export let onConfirmRecordRemove: (
+    profile: TPaginatedProfile | undefined,
+  ) => void | Promise<void> = (profile) => {};
+
+  let menuDeleteRecord: TPaginatedProfile | undefined;
+  let menuDeleteDialogOpen = false;
 </script>
 
 <div class="flex flex-col justify-between h-[60vh]">
@@ -30,9 +43,18 @@
           </a>
         </div>
 
-        <button class="m-0 p-0">
-          <EllipsisVertical />
-        </button>
+        <FollowMenuButton>
+          <div slot="menu">
+            <button
+              class="h-10 w-full px-4 flex items-center justify-center border border-gray-100 hover:bg-lime-200 hover:cursor-pointer"
+              on:click={() => {
+                menuDeleteDialogOpen = true;
+                menuDeleteRecord = paginatedFollowRecords[i];
+              }}
+              >{removeRecordMenuButtonLabel}
+            </button>
+          </div>
+        </FollowMenuButton>
       </div>
     {/each}
   </div>
@@ -69,3 +91,30 @@
     </Pagination.Root>
   </div>
 </div>
+
+<Dialog.Root bind:open={menuDeleteDialogOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>{removeRecordDialogTitle}</Dialog.Title>
+      <Dialog.Description>
+        {removeRecordDialogMessage}
+      </Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Dialog.Close>
+        <Button
+          type="submit"
+          on:click={() => {
+            onConfirmRecordRemove(menuDeleteRecord);
+            menuDeleteRecord = undefined;
+          }}>Confirm</Button
+        >
+      </Dialog.Close>
+      <Dialog.Close>
+        <Button type="submit" on:click={() => (menuDeleteRecord = undefined)}
+          >Cancel</Button
+        >
+      </Dialog.Close>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
