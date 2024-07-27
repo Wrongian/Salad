@@ -1,31 +1,43 @@
 <script lang="ts">
   import * as Tabs from "$lib/components/ui/tabs";
-  import * as Avatar from "$lib/components/ui/avatar";
-  import * as Pagination from "$lib/components/ui/pagination";
   import { Input } from "$lib/components/ui/input/index.js";
   import { getFollowers, getFollowings } from "$lib/scripts/queries";
   import type { TPaginatedProfile } from "$lib/scripts/validation/response";
-  import { EllipsisVertical } from "lucide-svelte";
   import type { PageData } from "./$types";
   import { twMerge } from "tailwind-merge";
+  import FollowTabContent from "$lib/components/follow/FollowTabContent.svelte";
   const VIEW_MODES = ["Followers", "Following"] as const;
   type ViewModes = (typeof VIEW_MODES)[number];
   const PER_PAGE = 8;
   export let data: PageData;
   let viewMode: ViewModes = VIEW_MODES[0];
-  let currIndex = 1;
+
+  let currFollowerPageIndex = 1;
+  let currFollowingPageIndex = 1;
+
   let searchQuery = "";
   let followers: TPaginatedProfile[] = data.followers;
   let followings: TPaginatedProfile[] = data.followings;
 
+  let totalFollowers = data.totalFollowers;
+  let totalFollowing = data.totalFollowing;
+
   async function updateFollowerProfiles() {
-    followers =
-      (await getFollowers(searchQuery, currIndex))?.profiles ?? followers;
+    const getFollowerResult = await getFollowers(
+      searchQuery,
+      currFollowerPageIndex,
+    );
+    followers = getFollowerResult?.profiles ?? followers;
+    totalFollowers = getFollowerResult?.total_size ?? totalFollowers;
   }
 
   async function updateFollowingProfiles() {
-    followings =
-      (await getFollowings(searchQuery, currIndex))?.profiles ?? followings;
+    const getFollowingResult = await getFollowings(
+      searchQuery,
+      currFollowingPageIndex,
+    );
+    followings = getFollowingResult?.profiles ?? followings;
+    totalFollowing = getFollowingResult?.total_size ?? totalFollowing;
   }
 
   function changeViewMode(newView: ViewModes) {
@@ -44,7 +56,8 @@
       : updateFollowingProfiles();
   }
 
-  $: currIndex, onCurrentPageIndexChange();
+  $: currFollowerPageIndex, onCurrentPageIndexChange();
+  $: currFollowingPageIndex, onCurrentPageIndexChange();
   $: searchQuery, onSearchQueryChange();
 </script>
 
@@ -89,91 +102,24 @@
       />
     </div>
 
-    <div class="flex flex-col justify-between h-[65vh]">
+    <div class="flex flex-col justify-between h-[65vh] relative">
       <Tabs.Content value={VIEW_MODES[0]}>
-        <div>
-          {#each followers as { username, img_src, display_name }, i}
-            <div
-              class="h-20 p-8 flex gap-x-4 items-center justify-between shadow-sm rounded-xl border border-gray-100 mb-2"
-            >
-              <Avatar.Root class="w-10 h-10 ring-2 ring-lime-300">
-                <Avatar.Image src={img_src} alt="" />
-                <Avatar.Fallback></Avatar.Fallback>
-              </Avatar.Root>
-              <div class="flex-1">
-                <a
-                  href={`../profiles/${username}`}
-                  data-sveltekit-preload-data="tap"
-                  class="text-left select-none cursor-pointer"
-                >
-                  {display_name}
-                </a>
-              </div>
-
-              <button class="m-0 p-0">
-                <EllipsisVertical />
-              </button>
-            </div>
-          {/each}
-        </div>
+        <FollowTabContent
+          paginatedFollowRecords={followers}
+          totalRecords={totalFollowers}
+          recordsPerPage={PER_PAGE}
+          currentPageIndex={currFollowerPageIndex}
+        />
       </Tabs.Content>
 
       <Tabs.Content value={VIEW_MODES[1]}>
-        {#each followings as { username, img_src, display_name }, i}
-          <div
-            class="h-20 p-8 flex gap-x-4 items-center justify-between shadow-sm rounded-xl border border-gray-100 mb-2"
-          >
-            <Avatar.Root class="w-10 h-10 ring-2 ring-lime-300">
-              <Avatar.Image src={img_src} alt="" />
-              <Avatar.Fallback></Avatar.Fallback>
-            </Avatar.Root>
-            <div class="flex-1">
-              <a
-                href={`../profiles/${username}`}
-                data-sveltekit-preload-data="tap"
-                class="text-left select-none cursor-pointer"
-              >
-                {display_name}
-              </a>
-            </div>
-
-            <button class="m-0 p-0">
-              <EllipsisVertical />
-            </button>
-          </div>
-        {/each}
+        <FollowTabContent
+          paginatedFollowRecords={followings}
+          totalRecords={totalFollowing}
+          recordsPerPage={PER_PAGE}
+          currentPageIndex={currFollowingPageIndex}
+        />
       </Tabs.Content>
-    </div>
-    <div>
-      <Pagination.Root
-        count={100}
-        perPage={PER_PAGE}
-        bind:page={currIndex}
-        let:pages
-        let:currentPage
-      >
-        <Pagination.Content>
-          <Pagination.Item>
-            <Pagination.PrevButton />
-          </Pagination.Item>
-          {#each pages as page (page.key)}
-            {#if page.type === "ellipsis"}
-              <Pagination.Item>
-                <Pagination.Ellipsis />
-              </Pagination.Item>
-            {:else}
-              <Pagination.Item>
-                <Pagination.Link {page} isActive={currentPage == page.value}>
-                  {page.value}
-                </Pagination.Link>
-              </Pagination.Item>
-            {/if}
-          {/each}
-          <Pagination.Item>
-            <Pagination.NextButton />
-          </Pagination.Item>
-        </Pagination.Content>
-      </Pagination.Root>
     </div>
   </Tabs.Root>
 </div>
