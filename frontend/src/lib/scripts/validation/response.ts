@@ -84,15 +84,16 @@ export const TFollowStatusValidator = Joi.object<TFollowStatusResponsePayload>({
   status: Joi.string().valid(...FOLLOW_STATUSES)
 })
 
+export type TGetPaginatedProfilePayload<T extends object = TPaginatedProfile> = {
+  profiles: T[],
+  total_size: number,
+}
+
 export type TPaginatedProfile = {
   username: string,
   img_src: string | undefined,
   id: number,
   display_name: string 
-}
-export type TGetPaginatedProfilePayload = {
-  profiles: TPaginatedProfile[],
-  total_size: number,
 }
 
 export const TGetPaginatedProfilePayloadValidator = Joi.object<TGetPaginatedProfilePayload>({
@@ -107,3 +108,23 @@ export const TGetPaginatedProfilePayloadValidator = Joi.object<TGetPaginatedProf
   total_size: Joi.number()
 })
 
+// type declarations for paginated pending follow requests
+export const FOLLOW_REQUEST_TYPES = ["OUTGOING", "INCOMING"] as const
+export type TFollowRequest = typeof FOLLOW_REQUEST_TYPES[number]
+
+export type TPaginatedFollowRequestProfile = TPaginatedProfile & {
+  request_type: TFollowRequest
+}
+
+export const TGetPaginatedFollowRequestProfileValidator = Joi.object<TGetPaginatedProfilePayload<TPaginatedFollowRequestProfile>>({
+  profiles: Joi.array().items(
+    Joi.object<TPaginatedFollowRequestProfile>({
+      username: Joi.string().min(0),
+      img_src: Joi.string().allow(null),
+      id: Joi.number(),
+      display_name: Joi.string().allow(null),
+      request_type: Joi.string().valid(...FOLLOW_REQUEST_TYPES)
+    })
+  ),
+  total_size: Joi.number()
+})
