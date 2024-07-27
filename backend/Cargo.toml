@@ -27,7 +27,7 @@ tempfile = "3.10.1"
 priority-queue = "2.0.3"
 uuid = {version = "1.9.1", features = ["v4", "fast-rng"]}
 thiserror = "1.0.61"
-lettre = {features = ["tokio1-native-tls", "tokio1"]}
+lettre = {version = "0.11.7", features = ["tokio1-native-tls", "tokio1"]}
 chrono = "0.4.38"
 rand = "0.8.5"
 
