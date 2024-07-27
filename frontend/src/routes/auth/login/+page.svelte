@@ -49,6 +49,13 @@
           >
         </a>
       </div>
+      <div class="flex justify-center">
+        <a href="/auth/reset-password">
+          <span class="text-neutral-500 hover:text-green-950"
+            >Forgot Password?</span
+          >
+        </a>
+      </div>
     {/if}
   </div>
 </main>

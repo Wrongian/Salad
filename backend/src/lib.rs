@@ -10,6 +10,7 @@ pub mod types;
 
 // these are the database modals
 pub mod models;
+
 // these define the helper functions used in various routes and backend logic
 pub mod helpers;
 
@@ -20,6 +21,7 @@ pub mod tests;
 pub mod connectors {
     pub mod buckets;
     pub mod db;
+    pub mod smtp;
 }
 
 // this the database schema

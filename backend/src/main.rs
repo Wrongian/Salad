@@ -7,10 +7,12 @@ use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
 use saladify::connectors::buckets::file::setup_buckets;
 use saladify::connectors::db::connection::start_connection;
+use saladify::connectors::smtp::email::EmailService;
 use saladify::helpers::funcs;
 use saladify::routes::auth::login::{is_logged_in, login};
 use saladify::routes::auth::logout::logout;
 use saladify::routes::auth::register::register;
+use saladify::routes::auth::reset_password::{check_password_code, get_email, reset_password};
 use saladify::routes::follow::create::create_outbound_follow_request;
 use saladify::routes::follow::delete::{
     delete_follower, delete_following, delete_outbound_follow_request,
@@ -72,6 +74,7 @@ async fn main() -> tide::Result<()> {
         tide_pool: pool,
         s3_client,
         tempdir: tempfile::tempdir()?,
+        email_service: EmailService::new(),
     });
 
     // create app
@@ -142,6 +145,10 @@ async fn main() -> tide::Result<()> {
     app.at("/follow-request")
         .post(create_outbound_follow_request)
         .delete(delete_outbound_follow_request);
+    // password reset
+    app.at("/get-email").post(get_email);
+    app.at("/password-code").post(check_password_code);
+    app.at("/reset-password").post(reset_password);
 
     // misc
     app.at("get-username").get(get_username);

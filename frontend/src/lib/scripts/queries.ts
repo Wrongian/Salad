@@ -7,6 +7,9 @@ import type {
   TUpdateLinkHrefPayload,
   TReorderPayload,
   TCreateFollowRequestPayload,
+  TResetCodeBody,
+  TResetPasswordBody,
+  TGetEmailBody,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
@@ -51,6 +54,9 @@ const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
 const FOLLOWING_ENDPOINT = "/api/following";
+const GET_EMAIL_ENDPOINT = "/api/get-email";
+const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
+const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
 
 type fetch = typeof fetch;
 
@@ -75,7 +81,11 @@ export const login = async (
   >(LOGIN_ENDPOINT, "POST", { username, password }, TStandardResponsePayloadValidator);
 
   if (payload !== null) {
+    if (next == "/auth/login") {
+      next = "/";
+    }
     await invalidateAll();
+    goto(next);
   }
 };
 
@@ -104,9 +114,12 @@ export const register = async (
     { username, password, email },
     TStandardResponsePayloadValidator,
   );
-
+  if (next == "/auth/register") {
+    next = "/";
+  }
   if (payload !== null) {
     await invalidateAll();
+    goto(next);
   }
 };
 
@@ -132,10 +145,6 @@ export const getProfile = async (
   );
 };
 
-export const resetPassword = async (email: string) => {
-  // TODO: finish up reset password implementation
-  return email;
-};
 
 export const getLinks = async (
   username: string,
@@ -198,15 +207,16 @@ export const logout = async (fetch: fetch, next: string): Promise<void> => {
   );
 
   await invalidateAll();
-  if (next != null) {
-    goto(next);
-  } else {
-    goto(BASEURL);
-  }
+  goto("/")
+  // if (next != null) {
+  //   goto(next);
+  // } else {
+  //   goto(BASEURL);
+  // }
 };
 
 // get username route
-export const getUsername = async (fetch: fetch): Promise<string> => {
+export const getUsername = async (fetch: fetch): Promise<string | null> => {
   const maybeUsername = await validateFetch<TGetUsernamePayload>(
     GET_USERNAME_ENDPOINT,
     "GET",
@@ -388,3 +398,46 @@ export const removeFollowing = async (userId: number) => {
     TStandardResponsePayloadValidator
   )
 }
+
+export const get_reset_email = async (query: TGetEmailBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TGetEmailBody>(
+    GET_EMAIL_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+
+export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TResetCodeBody>(
+    CHECK_PASSWORD_CODE_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+    { fetch },
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+
+export const resetPassword = async (query: TResetPasswordBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    RESET_PASSWORD_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+

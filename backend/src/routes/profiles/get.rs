@@ -25,7 +25,7 @@ pub struct GetProfileParams {
 
 #[derive(Debug, serde::Serialize)]
 struct UsernameResponseBody {
-    username: String,
+    username: Option<String>,
 }
 
 // Profile parameters for getting the profile response body
@@ -43,10 +43,9 @@ struct GetProfileResponseBody {
 // Gets the session username
 pub async fn get_username(req: Request<Arc<TideState>>) -> tide::Result {
     // get session username from session
-    let session_username = match get_session_username(&req) {
-        Ok(session_usr) => session_usr,
-        Err(e) => return e.into_response(),
-    };
+
+    let session_username: Option<String> = req.session().get("username");
+
     return Response::new(UsernameResponseBody {
         username: session_username,
     })

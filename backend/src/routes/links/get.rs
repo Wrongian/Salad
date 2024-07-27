@@ -6,7 +6,7 @@ use tide::{log::error, Request};
 use crate::{
     connectors::db::{
         link::get_user_links_by_id,
-        user::{check_user_exists, check_username_present, get_user_profile_by_username},
+        user::{check_username_present, get_user_profile_by_username},
     },
     helpers::{auth::get_session_username, links::linearise, params::extract_username_from_params},
     types::{error::Error, response::Response, state::TideState},
