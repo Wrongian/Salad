@@ -42,9 +42,7 @@
   {#if doneLoad}
     <slot />
   {/if}
-  <footer class="p-2 bg-primary">
-    <p class="text-center text-300 text-primary-500">
-      <span> All rights reserved @Saladify. </span>
-    </p>
+  <footer class="bg-primary h-auto text-center">
+    <span> All rights reserved @Saladify. </span>
   </footer>
 </div>
