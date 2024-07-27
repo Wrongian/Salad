@@ -10,6 +10,7 @@ import type {
   TResetCodeBody,
   TResetPasswordBody,
   TGetEmailBody,
+  TCompleteFollowRequestPayload,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
@@ -24,6 +25,8 @@ import {
   type TLink,
   type TProfileBody,
   type TUpdateImageResponseBody,
+  type TPaginatedFollowRequestProfile,
+  TGetPaginatedFollowRequestProfileValidator,
 } from "./validation/response.js";
 import {
   type TGetUsernamePayload,
@@ -54,6 +57,7 @@ const REGISTER_ENDPOINT = "/api/register";
 const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
 const GET_USERNAME_ENDPOINT = "/api/get-username";
 const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
+const FOLLOW_ENDPOINT = "/api/follow";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
 const FOLLOWING_ENDPOINT = "/api/following";
@@ -374,6 +378,16 @@ export const createFollowRequest = async (payload: TCreateFollowRequestPayload) 
   )
 }
 
+export const completeFollowRequest = async (payload: TCompleteFollowRequestPayload) => {
+  return await validateFetch<TStandardResponsePayload, TCompleteFollowRequestPayload>(
+    FOLLOW_ENDPOINT,
+    "PUT",
+    payload,
+    TStandardResponsePayloadValidator,
+  )
+}
+
+
 export const removeFollowRequest = async (userId: number) => {
   return await validateFetch<TStandardResponsePayload, { pending_follow_id: number }>(
     FOLLOW_REQUEST_ENDPOINT,
@@ -398,6 +412,18 @@ export const removeFollowing = async (userId: number) => {
     "DELETE",
     { following_id: userId },
     TStandardResponsePayloadValidator
+  )
+}
+
+export const getFollowRequests = async (query: string, pageIndex: number, fetch?: fetch) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+
+  return await validateFetch<TGetPaginatedProfilePayload<TPaginatedFollowRequestProfile>>(
+    `${FOLLOW_REQUEST_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedFollowRequestProfileValidator,
+    { fetch }
   )
 }
 
