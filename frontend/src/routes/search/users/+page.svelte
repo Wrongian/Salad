@@ -3,7 +3,7 @@
   import * as Avatar from "$lib/components/ui/avatar";
   import * as Pagination from "$lib/components/ui/pagination";
 
-  const PER_PAGE = 8; //backend paginates with PER_PAGE=8
+  const PER_PAGE = 8; // backend paginates with PER_PAGE=8
 
   export let data;
   let users = data.users;
@@ -14,6 +14,7 @@
   const refreshPageIndex = () => {
     currIndex = data.pageIndex;
   };
+
   const refreshUsers = () => {
     users = data.users.slice(0, Math.min(PER_PAGE, data.users.length));
   };
@@ -36,29 +37,26 @@
 </script>
 
 <div class="flex flex-col justify-between h-[90vh]">
-  <div>
+  <div class="overflow-auto h-full">
     {#each users as { username, img_src, display_name }, i}
-      <div
-        class="h-20 p-8 flex gap-x-4 items-center justify-between shadow-sm rounded-xl border border-gray-100 mb-2"
+      <a
+        href={`../profiles/${username}`}
+        data-sveltekit-preload-data="tap"
+        class="hover:shadow-lg hover:font-semibold cursor-pointer h-20 p-8 flex gap-x-4 items-center justify-between shadow-sm rounded-xl border border-gray-100 mb-2"
       >
         <Avatar.Root class="w-10 h-10 ring-2 ring-lime-300">
           <Avatar.Image src={img_src} alt="" />
           <Avatar.Fallback></Avatar.Fallback>
         </Avatar.Root>
-        <div class="flex-1">
-          <a
-            href={`../profiles/${username}`}
-            data-sveltekit-preload-data="tap"
-            class="text-left select-none cursor-pointer"
-          >
-            {display_name}
-          </a>
-        </div>
-      </div>
+        <p class="flex-1 text-left select-none">
+          {display_name}
+        </p>
+      </a>
     {/each}
   </div>
+  <!-- count must be >= 1 otherwise shadcn pagination breaks :< -->
   <Pagination.Root
-    count={totalSize}
+    count={Math.max(totalSize, 1)}
     perPage={PER_PAGE}
     bind:page={currIndex}
     let:pages
