@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import favicon from "$lib/assets/favicon.ico";
+  import { logout } from "$lib/scripts/queries";
   import Searchbar from "../search/Searchbar.svelte";
+  import DropDownButton from "../ui/dropdown/DropDownButton.svelte";
   import DropDownLink from "../ui/dropdown/DropDownLink.svelte";
-  import DropDownLinkNoPreload from "../ui/dropdown/DropDownLinkNoPreload.svelte";
-  import { Input } from "../ui/input";
   import NavLink from "../ui/navbar/NavLink.svelte";
   export let isLoggedIn = false;
   export let profileRoute = "";
@@ -154,8 +155,11 @@
               >
                 <DropDownLink linkName="Settings" link="/settings"
                 ></DropDownLink>
-                <DropDownLinkNoPreload linkName="Logout" link="/logout"
-                ></DropDownLinkNoPreload>
+                <DropDownButton
+                  buttonTitle="Log out"
+                  onButtonClick={() =>
+                    logout().then((_) => goto("/auth/login"))}
+                />
               </div>
             {/if}
           </div>
