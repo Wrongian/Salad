@@ -1,4 +1,5 @@
 pub mod email;
+pub mod follow;
 pub mod link;
 pub mod password_reset;
 pub mod testing;

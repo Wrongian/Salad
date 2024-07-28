@@ -9,6 +9,7 @@
   import type { TLink } from "$lib/scripts/validation/response";
   import { updateProfilePicture } from "$lib/scripts/queries";
   import { invalidateAll } from "$app/navigation";
+  import type { TLink } from "$lib/scripts/validation/response";
   export let data: PageData;
   export let links: TLink[] = data.links;
   $: links = data.links;
