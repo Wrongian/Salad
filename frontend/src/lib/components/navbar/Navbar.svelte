@@ -158,7 +158,9 @@
                 <DropDownButton
                   buttonTitle="Log out"
                   onButtonClick={() =>
-                    logout().then((_) => goto("/auth/login"))}
+                    logout().then((_) =>
+                      goto("/auth/login", { invalidateAll: true }),
+                    )}
                 />
               </div>
             {/if}
