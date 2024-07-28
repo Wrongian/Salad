@@ -179,3 +179,19 @@ pub async fn does_email_exist(conn: &mut PgConnection, email_str: String) -> Res
         Err(e) => return Err(Error::DieselError(e)),
     }
 }
+
+pub async fn does_username_exist(
+    conn: &mut PgConnection,
+    username_str: String,
+) -> Result<bool, Error> {
+    use crate::schema::users::dsl::*;
+    match users
+        .filter(username.eq(&username_str))
+        .count()
+        .get_result::<i64>(conn)
+        .map(|count| count > 0)
+    {
+        Ok(count) => return Ok(count),
+        Err(e) => return Err(Error::DieselError(e)),
+    }
+}

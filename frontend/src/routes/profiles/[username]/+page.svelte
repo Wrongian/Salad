@@ -45,6 +45,12 @@
     await removeFollowRequest(userId);
     await invalidateAll();
   }
+
+  function copyToClipboard() {
+    let url: string = document.baseURI;
+    navigator.clipboard.writeText(url);
+    alert("Profile Link Copied");
+  }
 </script>
 
 <div class="p-2 flex flex-col">
@@ -73,6 +79,12 @@
             </button>
           {/if}
         </div>
+        <button
+          type="submit"
+          on:click={() => copyToClipboard()}
+          class="text-white center-1 bg-lime-700 hover:bg-lime-800 font-medium rounded-lg text-sm px-4 py-2"
+          >Share Profile</button
+        >
         {#if !isOwner && followStatus === "none"}
           <button
             class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"

@@ -6,6 +6,7 @@
   import type { PageData } from "./$types";
   import DraggableLinks from "$lib/components/ui/links/DraggableLinks.svelte";
   import { updateTextProfile } from "$lib/scripts/queries";
+  import type { TLink } from "$lib/scripts/validation/response";
   import { updateProfilePicture } from "$lib/scripts/queries";
   import { invalidateAll } from "$app/navigation";
   import type { TLink } from "$lib/scripts/validation/response";
