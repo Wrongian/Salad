@@ -3,10 +3,7 @@ const BLACKSWAN_ERROR_STATUS_CODE = 500;
 const BAD_REQUEST_STATUS = 400;
 import { validatePayload, type Validator } from "./validator.js";
 import { TErrorValidator, type TError } from "./validation/error.js";
-import {
-  TStandardResponsePayloadValidator,
-  type TStandardResponsePayload,
-} from "./validation/response.js";
+
 import { addError } from "$lib/modules/Errors.svelte";
 
 const MASKED_ERROR_MESSAGE =
@@ -45,13 +42,13 @@ export async function validateFetch<R, U extends object = {}>(
   // check body
   const request = hasBody
     ? {
-      method,
-      // Type cast here is safe because isBlobBody => payload instanceof Blob
-      body: isBlobBody ? (payload as Blob) : JSON.stringify(payload),
-    }
+        method,
+        // Type cast here is safe because isBlobBody => payload instanceof Blob
+        body: isBlobBody ? (payload as Blob) : JSON.stringify(payload),
+      }
     : {
-      method,
-    };
+        method,
+      };
   // get the response
   const response = await useFetch(endpoint, request);
 
@@ -84,7 +81,6 @@ export async function validateFetch<R, U extends object = {}>(
         return null;
       })
       .catch((_) => {
-
         // console.log(_);
         blackSwanError.set({
           status: BLACKSWAN_ERROR_STATUS_CODE,

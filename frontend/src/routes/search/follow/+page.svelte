@@ -174,7 +174,7 @@
           totalRecords={totalFollowers}
           recordsPerPage={PER_PAGE}
           removeRecordDialogMessage="This action cannot be undone. Do you want to remove follower?"
-          removeRecordMenuButtonLabel="Remove follower"
+          removeRecordMenuButtonLabel="Remove Follower"
           onConfirmRecordRemove={deleteFollowers}
           bind:currentPageIndex={currFollowerPageIndex}
         />

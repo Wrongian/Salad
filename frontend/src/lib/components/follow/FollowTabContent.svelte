@@ -17,7 +17,7 @@
   export let removeRecordDialogTitle: string = "Are you sure absolutely sure?";
   export let onConfirmRecordRemove: (
     profile: TPaginatedProfile | undefined,
-  ) => void | Promise<void> = (profile) => {};
+  ) => void | Promise<void> = (_) => {};
 
   let menuDeleteRecord: TPaginatedProfile | undefined;
   let menuDeleteDialogOpen = false;
