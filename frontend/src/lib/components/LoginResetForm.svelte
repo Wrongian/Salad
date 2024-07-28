@@ -1,7 +1,7 @@
 <script lang="ts">
   import { afterNavigate, goto, invalidateAll } from "$app/navigation";
   import {
-    get_reset_email,
+    getResetEmail,
     getUsername,
     resetPassword,
   } from "$lib/scripts/queries";
@@ -18,7 +18,7 @@
     let email_body: TGetEmailBody = {
       email: email,
     };
-    let is_sent: boolean = await get_reset_email(email_body);
+    let is_sent: boolean = await getResetEmail(email_body);
     if (is_sent) {
       toggle = true;
     }

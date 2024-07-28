@@ -1,3 +1,4 @@
+use crate::models::images::GetImage;
 use crate::models::users::{GetUser, InsertUser, UpdateUser, UserProfileView};
 use crate::types::error::Error;
 use diesel::prelude::*;
@@ -124,6 +125,33 @@ pub async fn update_user_by_id(
         .map(|v| v == user_id)
 }
 
+pub async fn get_queried_users(
+    conn: &mut PgConnection,
+    query: String,
+    index: i64,
+    per_page: i64,
+) -> Result<Vec<(GetUser, Option<GetImage>)>, diesel::result::Error> {
+    use crate::schema::images;
+    use crate::schema::users;
+    users::table
+        .left_join(images::table.on(users::id.nullable().eq(images::user_id)))
+        .filter(users::display_name.like(["%", query.as_str(), "%"].join("")))
+        .offset((index - 1) * per_page)
+        .limit(per_page)
+        .select((GetUser::as_select(), Option::<GetImage>::as_select()))
+        .load::<(GetUser, Option<GetImage>)>(conn)
+}
+
+pub async fn get_queried_user_total_count(
+    conn: &mut PgConnection,
+    query: String,
+) -> Result<i64, diesel::result::Error> {
+    use crate::schema::users::dsl::{display_name, users};
+    users
+        .filter(display_name.like(["%", query.as_str(), "%"].join("")))
+        .count()
+        .get_result::<i64>(conn)
+}
 pub async fn get_user_from_email(
     conn: &mut PgConnection,
     email_str: String,

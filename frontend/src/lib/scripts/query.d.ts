@@ -37,6 +37,11 @@ export type TCreateFollowRequestPayload = {
   pending_follow_id: number;
 }
 
+export type TCompleteFollowRequestPayload = {
+  from_id: number;
+  accept: boolean
+}
+
 export type TResponseBody = {
   result: boolean;
   err: string;

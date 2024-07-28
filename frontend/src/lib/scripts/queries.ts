@@ -10,18 +10,23 @@ import type {
   TResetCodeBody,
   TResetPasswordBody,
   TGetEmailBody,
+  TCompleteFollowRequestPayload,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
   TFollowStatusValidator,
+  type TGetPaginatedProfilePayload,
+  TGetPaginatedProfilePayloadValidator,
   TLinkBodyValidator,
   TProfileBodyValidator,
   UpdateImageResponseBodyValidator,
-  type FollowStatus,
+  type TFollowStatus,
   type TFollowStatusResponsePayload,
   type TLink,
   type TProfileBody,
   type TUpdateImageResponseBody,
+  type TPaginatedFollowRequestProfile,
+  TGetPaginatedFollowRequestProfileValidator,
 } from "./validation/response.js";
 import {
   type TGetUsernamePayload,
@@ -32,6 +37,7 @@ import {
   type TStandardResponsePayload as TStandardResponsePayload,
 } from "./validation/response.js";
 import { validateFetch } from "./fetch.js";
+import { getAsSearchParamString } from "./searchParams.js";
 
 const BASEURL = "/";
 const PROFILES_PREFIX = "/api/profiles";
@@ -51,9 +57,11 @@ const REGISTER_ENDPOINT = "/api/register";
 const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
 const GET_USERNAME_ENDPOINT = "/api/get-username";
 const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
+const FOLLOW_ENDPOINT = "/api/follow";
 const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
 const FOLLOWER_ENDPOINT = "/api/follower";
 const FOLLOWING_ENDPOINT = "/api/following";
+const SEARCH_USERS_ENDPOINT = "/api/search";
 const GET_EMAIL_ENDPOINT = "/api/get-email";
 const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
 const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
@@ -170,7 +178,7 @@ export const getLinks = async (
 export const getFollowStatus = async (
   targetUserId: number,
   fetch: fetch
-): Promise<FollowStatus | undefined> => {
+): Promise<TFollowStatus | undefined> => {
   return await validateFetch<TFollowStatusResponsePayload>(
     `${FOLLOW_STATUS_ENDPOINT}?${new URLSearchParams([["id", targetUserId.toString()]]).toString()}`,
     "GET",
@@ -336,7 +344,6 @@ export const updateLinkPicture = async (
   filetype: String,
   id: number,
 ): Promise<TUpdateImageResponseBody> => {
-  console.log("image: ", image);
   return await validateFetch<TUpdateImageResponseBody, Blob>(
     `${LINKS_PREFIX}/${id.toString()}/image/${filetype}`,
     "PUT",
@@ -351,20 +358,18 @@ export const updateLinkPicture = async (
 export const updateProfilePicture = async (
   image: Blob,
   filetype: String,
-): Promise<TUpdateImageResponseBody> => {
+): Promise<TUpdateImageResponseBody | null> => {
   return await validateFetch<TUpdateImageResponseBody, Blob>(
     `${UPDATE_PROFILE_IMAGE_ENDPOINT}/${filetype}`,
     "PUT",
     image,
     UpdateImageResponseBodyValidator,
     { isBlobBody: true },
-  ).then(async (payload) => {
-    return payload ?? { href: "" };
-  });
+  )
 };
 
 export const createFollowRequest = async (payload: TCreateFollowRequestPayload) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, TCreateFollowRequestPayload>(
     `${FOLLOW_REQUEST_ENDPOINT}`,
     "POST",
     payload,
@@ -372,8 +377,18 @@ export const createFollowRequest = async (payload: TCreateFollowRequestPayload) 
   )
 }
 
+export const completeFollowRequest = async (payload: TCompleteFollowRequestPayload) => {
+  return await validateFetch<TStandardResponsePayload, TCompleteFollowRequestPayload>(
+    FOLLOW_ENDPOINT,
+    "PUT",
+    payload,
+    TStandardResponsePayloadValidator,
+  )
+}
+
+
 export const removeFollowRequest = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { pending_follow_id: number }>(
     FOLLOW_REQUEST_ENDPOINT,
     "DELETE",
     { pending_follow_id: userId },
@@ -382,7 +397,7 @@ export const removeFollowRequest = async (userId: number) => {
 }
 
 export const removeFollower = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { follower_id: number }>(
     FOLLOWER_ENDPOINT,
     "DELETE",
     { follower_id: userId },
@@ -391,7 +406,7 @@ export const removeFollower = async (userId: number) => {
 }
 
 export const removeFollowing = async (userId: number) => {
-  return await validateFetch<TStandardResponsePayload>(
+  return await validateFetch<TStandardResponsePayload, { following_id: number }>(
     FOLLOWING_ENDPOINT,
     "DELETE",
     { following_id: userId },
@@ -399,7 +414,53 @@ export const removeFollowing = async (userId: number) => {
   )
 }
 
-export const get_reset_email = async (query: TGetEmailBody): Promise<boolean> => {
+export const getFollowRequests = async (query: string, pageIndex: number, fetch?: fetch) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+
+  return await validateFetch<TGetPaginatedProfilePayload<TPaginatedFollowRequestProfile>>(
+    `${FOLLOW_REQUEST_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedFollowRequestProfileValidator,
+    { fetch }
+  )
+}
+
+export const getFollowers = async (query: string, pageIndex: number, fetch? :fetch) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWER_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
+  )
+}
+
+export const getFollowings = async (query: string, pageIndex: number, fetch?: fetch) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex }) 
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWING_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
+  )
+}
+
+export const searchUsers = async (query: string, pageIndex: number, filterObj: object = {}, fetch?: fetch) => {
+  const searchParams = getAsSearchParamString({ query: query, index: pageIndex, ...filterObj}) 
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${SEARCH_USERS_ENDPOINT}?${searchParams}`,
+    "GET" ,
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch }
+  )
+}
+export const getResetEmail = async (query: TGetEmailBody): Promise<boolean> => {
   const payload = await validateFetch<TStandardResponsePayload, TGetEmailBody>(
     GET_EMAIL_ENDPOINT,
     "POST",
@@ -412,7 +473,7 @@ export const get_reset_email = async (query: TGetEmailBody): Promise<boolean> =>
   return false;
 };
 
-export const check_password_reset_code = async (query: TResetCodeBody, fetch: fetch): Promise<boolean> => {
+export const checkPasswordResetCode = async (query: TResetCodeBody, fetch: fetch): Promise<boolean> => {
   const payload = await validateFetch<TStandardResponsePayload, TResetCodeBody>(
     CHECK_PASSWORD_CODE_ENDPOINT,
     "POST",
