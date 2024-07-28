@@ -27,8 +27,8 @@
   };
 </script>
 
-<nav class="bg-lime-200">
-  <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8">
+<nav class="bg-primary">
+  <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8 shadow-lg border">
     <div class="relative flex h-10 items-center justify-between">
       <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <!-- Mobile -->

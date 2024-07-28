@@ -1,8 +1,5 @@
 <script lang="ts">
   import Errors from "$lib/components/Errors.svelte";
-  import DropDownLink from "$lib/components/ui/dropdown/DropDownLink.svelte";
-  import DropDownLinkNoPreload from "$lib/components/ui/dropdown/DropDownLinkNoPreload.svelte";
-  import NavLink from "$lib/components/ui/navbar/NavLink.svelte";
   import "../app.css";
   import { onMount } from "svelte";
   import type { PageData } from "./$types";
@@ -36,13 +33,15 @@
   <title>Welcome to Saladify!</title>
 </svelte:head>
 <Errors />
-<div class="h-screen bg-lime-50">
+<div class="h-screen bg-white">
   <Navbar {profileRoute} isLoggedIn={data.isLoggedIn} />
 
   {#if doneLoad}
-    <slot />
+    <div>
+      <slot />
+      <footer class="h-auto text-center">
+        <span> All rights reserved @Saladify. </span>
+      </footer>
+    </div>
   {/if}
-  <footer class="bg-primary h-auto text-center">
-    <span> All rights reserved @Saladify. </span>
-  </footer>
 </div>
