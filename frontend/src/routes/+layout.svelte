@@ -33,7 +33,7 @@
   <title>Welcome to Saladify!</title>
 </svelte:head>
 <Errors />
-<div class="h-screen bg-white">
+<div class="h-fit min-h-screen bg-white">
   <Navbar {profileRoute} isLoggedIn={data.isLoggedIn} />
 
   {#if doneLoad}
