@@ -1,6 +1,6 @@
 <script lang="ts">
   import { login } from "$lib/scripts/queries";
-  import { afterNavigate } from "$app/navigation";
+  import { goto } from "$app/navigation";
 
   import UsernameFormField from "./forms/UsernameFormField.svelte";
   import PasswordFormField from "./forms/PasswordFormField.svelte";
@@ -31,15 +31,15 @@
       isUsernameChanged
     );
   };
-  let next = "";
-  afterNavigate(({ from }) => {
-    next = from?.url.pathname || next;
-    // change later to dynamic route
-    // or later use svelte store to do this instead in the outermost layout route
-    if (next == "/auth/login") {
-      next = "/";
-    }
-  });
+  // let next = "";
+  // afterNavigate(({ from }) => {
+  //   next = from?.url.pathname || next;
+  //   // change later to dynamic route
+  //   // or later use svelte store to do this instead in the outermost layout route
+  //   if (next == "/auth/login") {
+  //     next = "/";
+  //   }
+  // });
 </script>
 
 <div class="form">
@@ -58,7 +58,12 @@
   </PasswordFormField>
 
   <FormSubmitButton
-    onSubmit={() => login(username, password, next)}
+    onSubmit={() =>
+      login(username, password).then((success) => {
+        if (success) {
+          goto(`/profiles/${username}`, { invalidateAll: true });
+        }
+      })}
     bind:canSubmit
     buttonLabel="Log in"
   />

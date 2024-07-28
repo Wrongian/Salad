@@ -1,7 +1,7 @@
 <script lang="ts">
   import { register } from "$lib/scripts/queries";
 
-  import { afterNavigate } from "$app/navigation";
+  import { afterNavigate, goto } from "$app/navigation";
   import EmailFormField from "./forms/EmailFormField.svelte";
   import UsernameFormField from "./forms/UsernameFormField.svelte";
   import PasswordFormField from "./forms/PasswordFormField.svelte";
@@ -44,14 +44,14 @@
       isEmailChanged
     );
   };
-  let next = "";
-  afterNavigate(({ from }) => {
-    next = from?.url.pathname || next;
-    // change later to dynamic route
-    if (next == "/auth/register") {
-      next = "/";
-    }
-  });
+  // let next = "";
+  // afterNavigate(({ from }) => {
+  //   next = from?.url.pathname || next;
+  //   // change later to dynamic route
+  //   if (next == "/auth/register") {
+  //     next = "/";
+  //   }
+  // });
 </script>
 
 <div class="form">
@@ -73,7 +73,10 @@
 
   <FormSubmitButton
     bind:canSubmit
-    onSubmit={() => register(email, username, password, next)}
+    onSubmit={() =>
+      register(email, username, password).then((result) =>
+        result ? goto(`/profiles/${username}`, { invalidateAll: true }) : {},
+      )}
     buttonLabel="Register"
   />
 
