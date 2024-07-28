@@ -28,7 +28,7 @@ use super::{init_session, PASSWORD_COST};
 const COST: u32 = 8;
 const HASH_LEN: usize = 32;
 const RESET_PASSWORD_SUBJECT: Lazy<String> = Lazy::new(|| "Saladify Password Reset".to_string());
-const RESET_PASSWORD_BODY: Lazy<String> = Lazy::new(|| "Your Verification Code is:".to_string());
+const RESET_PASSWORD_BODY: Lazy<String> = Lazy::new(|| "Your Verification Code is: ".to_string());
 // 5 minutes
 const RESET_DURATION: chrono::TimeDelta = chrono::Duration::minutes(5);
 // testing
