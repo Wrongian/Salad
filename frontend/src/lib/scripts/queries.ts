@@ -10,6 +10,10 @@ import type {
   TResetCodeBody,
   TResetPasswordBody,
   TGetEmailBody,
+  TChangePasswordBody,
+  TChangeEmailBody,
+  TChangeUsernameBody,
+  TUpdatePrivacyBody,
 } from "./query.d.ts";
 import { goto, invalidateAll } from "$app/navigation";
 import {
@@ -57,6 +61,10 @@ const FOLLOWING_ENDPOINT = "/api/following";
 const GET_EMAIL_ENDPOINT = "/api/get-email";
 const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
 const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
+const CHANGE_PASSWORD_ENDPOINT = "/api/change-password";
+const CHANGE_USERNAME_ENDPOINT = "/api/change-username";
+const CHANGE_EMAIL_ENDPOINT = "/api/change-email";
+const UPDATE_PRIVACY_ENDPOINT = "/api/update-privacy";
 
 type fetch = typeof fetch;
 
@@ -441,3 +449,55 @@ export const resetPassword = async (query: TResetPasswordBody): Promise<boolean>
   return false;
 };
 
+export const changePassword = async (query: TChangePasswordBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_PASSWORD_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const changeEmail = async (query: TChangeEmailBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_EMAIL_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const changeUsername = async (query: TChangeUsernameBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_USERNAME_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const updatePrivacy = async (query: TUpdatePrivacyBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    UPDATE_PRIVACY_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};

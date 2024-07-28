@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Register</title>
+  <title>Reset Password</title>
 </svelte:head>
 
 <header class="p-3">

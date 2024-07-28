@@ -67,3 +67,18 @@ export type TResetPasswordBody = {
   password: string;
 };
 
+export type TChangePasswordBody = {
+  password: string;
+};
+
+export type TChangeUsernameBody = {
+  username: string;
+};
+
+export type TChangeEmailBody = {
+  email: string;
+};
+
+export type TUpdatePrivacyBody = {
+  is_private: boolean;
+};
