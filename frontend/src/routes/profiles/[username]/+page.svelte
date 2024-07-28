@@ -61,9 +61,42 @@
         <Avatar.Fallback></Avatar.Fallback>
       </Avatar.Root>
       <div class="pl-2">
-        <p class="px-4 py-3 h-[50px] rounded-xl shadow-lg w-[350px] border">
-          {data.display_name}
-        </p>
+        <div class="flex justify-between items-center gap-x-2">
+          <p
+            class="flex-1 px-4 py-3 h-[50px] rounded-xl shadow-lg w-[350px] border"
+          >
+            {data.display_name}
+          </p>
+          {#if !isOwner && followStatus === "none"}
+            <button
+              class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
+              on:click={followUser}
+            >
+              <UserPlus />
+              <p>Follow</p>
+            </button>
+          {:else if !isOwner && followStatus === "pending"}
+            <div class="flex gap-x-2">
+              <button
+                class="flex hover:bg-lime-500 hover:text-white px-2 py-2 rounded-xl shadow-md ring-1 ring-lime-500"
+                on:click={cancelFollowRequest}
+              >
+                <X />
+                <p>Cancel</p>
+              </button>
+              <p class="py-2 font-semibold">Request sent</p>
+            </div>
+          {:else if !isOwner && followStatus === "following"}
+            <button
+              class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
+              on:click={unfollowUser}
+            >
+              <UserMinus />
+              <p>Unfollow</p>
+            </button>
+          {/if}
+        </div>
+
         <!-- follower/following component -->
         <div class="flex space-x-6 p-2 pt-4 items-center">
           <p>followers: {data.followers}</p>
@@ -85,34 +118,6 @@
           class="text-white center-1 bg-lime-700 hover:bg-lime-800 font-medium rounded-lg text-sm px-4 py-2"
           >Share Profile</button
         >
-        {#if !isOwner && followStatus === "none"}
-          <button
-            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
-            on:click={followUser}
-          >
-            <UserPlus />
-            <p>Follow</p>
-          </button>
-        {:else if !isOwner && followStatus === "pending"}
-          <div class="flex gap-x-2">
-            <button
-              class="flex hover:bg-lime-500 hover:text-white px-2 py-2 rounded-xl shadow-md ring-1 ring-lime-500"
-              on:click={cancelFollowRequest}
-            >
-              <X />
-              <p>Cancel</p>
-            </button>
-            <p class="py-2 font-semibold">Request sent</p>
-          </div>
-        {:else if !isOwner && followStatus === "following"}
-          <button
-            class="flex gap-x-2 hover:bg-lime-500 hover:text-white rounded-xl bg-green p-2 shadow-md ring-1 ring-lime-500"
-            on:click={unfollowUser}
-          >
-            <UserMinus />
-            <p>Unfollow</p>
-          </button>
-        {/if}
       </div>
     </div>
     <div>
