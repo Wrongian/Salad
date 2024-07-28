@@ -5,6 +5,7 @@ use tide::{log::error, Request};
 
 use crate::{
     connectors::db::{
+        follow::is_following_by_username,
         link::get_user_links_by_id,
         user::{check_username_present, get_user_profile_by_username},
     },
@@ -56,8 +57,14 @@ pub async fn get_links(req: Request<Arc<TideState>>) -> tide::Result {
     };
 
     if !is_owner && profile.is_private {
-        // if origin is not owner and querying a private profile, return empty links
-        return Response::new(GetLinksResponseBody { links: Vec::new() }).into_response();
+        match is_following_by_username(&mut conn, session_username, username).await {
+            Ok(true) => (),
+            // if origin is not owner and querying a private profile, return empty links
+            Ok(false) => {
+                return Response::new(GetLinksResponseBody { links: Vec::new() }).into_response()
+            }
+            Err(e) => return e.into_response(),
+        }
     }
     // otherwise either owner or querying a public profile.
     // Thus, get all links and return

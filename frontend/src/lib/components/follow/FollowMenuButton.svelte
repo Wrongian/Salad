@@ -24,7 +24,7 @@
 
   {#if isDropDownOpen}
     <div
-      class="origin-top-right right-0 absolute top-full w-[150px] bg-lime-50 shadow-lg ring-1 ring-black ring-opacity-5 divide-y-1"
+      class="-translate-x-full -translate-y-full absolute top-full w-auto divide-y-1"
     >
       <slot name="menu" />
     </div>

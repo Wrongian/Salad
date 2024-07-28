@@ -17,7 +17,7 @@
   export let removeRecordDialogTitle: string = "Are you sure absolutely sure?";
   export let onConfirmRecordRemove: (
     profile: TPaginatedProfile | undefined,
-  ) => void | Promise<void> = (profile) => {};
+  ) => void | Promise<void> = (_) => {};
 
   let menuDeleteRecord: TPaginatedProfile | undefined;
   let menuDeleteDialogOpen = false;
@@ -44,16 +44,17 @@
         </div>
 
         <FollowMenuButton>
-          <div slot="menu">
-            <button
-              class="h-10 w-full px-4 flex items-center justify-center border border-gray-100 hover:bg-lime-200 hover:cursor-pointer"
-              on:click={() => {
-                menuDeleteDialogOpen = true;
-                menuDeleteRecord = paginatedFollowRecords[i];
-              }}
-              >{removeRecordMenuButtonLabel}
-            </button>
-          </div>
+          <button
+            slot="menu"
+            class="h-10 w-[150px] p-4 text-sm flex items-center justify-center
+            hover:bg-primary-500 hover:text-white hover:cursor-pointer
+            font-semibold rounded-sm bg-primary"
+            on:click={() => {
+              menuDeleteDialogOpen = true;
+              menuDeleteRecord = paginatedFollowRecords[i];
+            }}
+            >{removeRecordMenuButtonLabel}
+          </button>
         </FollowMenuButton>
       </div>
     {/each}
@@ -104,6 +105,7 @@
       <Dialog.Close>
         <Button
           type="submit"
+          class="text-black hover:bg-primary-500 hover:text-white font-medium"
           on:click={() => {
             onConfirmRecordRemove(menuDeleteRecord);
             menuDeleteRecord = undefined;
@@ -111,7 +113,10 @@
         >
       </Dialog.Close>
       <Dialog.Close>
-        <Button type="submit" on:click={() => (menuDeleteRecord = undefined)}
+        <Button
+          type="submit"
+          on:click={() => (menuDeleteRecord = undefined)}
+          class="text-black hover:bg-primary-500 hover:text-white font-medium"
           >Cancel</Button
         >
       </Dialog.Close>

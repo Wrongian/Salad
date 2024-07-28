@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { invalidateAll } from "$app/navigation";
   import {
     changeEmail,
     changePassword,
@@ -17,13 +18,13 @@
   let username: string = "";
   let password: string = "";
   let email: string = "";
-  console.log(data);
   let privacy: boolean = data.profileData?.is_private ?? false;
 
   async function submitUsername() {
     let query: TChangeUsernameBody = { username: username };
     await changeUsername(query);
     username = "";
+    invalidateAll();
   }
 
   async function submitPassword() {
@@ -54,7 +55,7 @@
       <input
         type="text"
         id="change-username"
-        class="block w-full p-4 text-sm border border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
+        class="block w-full p-4 text-sm border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
         placeholder=""
         required
         bind:value={username}
@@ -77,7 +78,7 @@
       <input
         type="password"
         id="change-password"
-        class="block w-full p-4 text-sm border border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
+        class="block w-full p-4 text-sm border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
         placeholder=""
         required
         bind:value={password}
@@ -98,7 +99,7 @@
       <input
         type="text"
         id="change-email"
-        class="block w-full p-4 text-sm border border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
+        class="block w-full p-4 text-sm border-2 border-lime-300 rounded-lg bg-lime-50 focus:border-lime-400"
         placeholder=""
         required
         bind:value={email}
