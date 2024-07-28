@@ -1,50 +1,46 @@
-pub mod buckets;
-pub mod funcs;
-pub mod helpers;
-pub mod models;
-pub mod routes;
-pub mod schema;
-pub mod tests;
 use aws_config::meta::region::RegionProviderChain;
 use aws_config::BehaviorVersion;
-use buckets::file::setup_buckets;
+use aws_sdk_s3::{self as s3};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use routes::auth::{is_logged_in, login, logout, register};
-use routes::links_controller::{
-    add_link, delete_link_picture, delete_links, get_links, reorder_links, update_link_bio,
-    update_link_href, update_link_picture, update_link_title,
-};
-use routes::profile_controller::{get_profile, get_username, update_display_profile, update_profile_image};
-use std::env;
-pub mod db;
-use aws_sdk_s3::{self as s3, config};
 use dotenvy::dotenv;
 use http_types::headers::HeaderValue;
+use saladify::connectors::buckets::file::setup_buckets;
+use saladify::connectors::db::connection::start_connection;
+use saladify::connectors::smtp::email::EmailService;
+use saladify::helpers::funcs;
+use saladify::routes::auth::login::{is_logged_in, login};
+use saladify::routes::auth::logout::logout;
+use saladify::routes::auth::register::register;
+use saladify::routes::auth::reset_password::{check_password_code, get_email, reset_password};
+use saladify::routes::follow::create::create_outbound_follow_request;
+use saladify::routes::follow::delete::{
+    delete_follower, delete_following, delete_outbound_follow_request,
+};
+use saladify::routes::follow::get::{
+    get_follow_status, get_followers, get_following, get_pending_follows,
+};
+use saladify::routes::follow::update::settle_inbound_follow_request;
+use saladify::routes::links::create::add_link;
+use saladify::routes::links::delete::{delete_link_picture, delete_links};
+use saladify::routes::links::get::get_links;
+use saladify::routes::links::update::{
+    reorder_links, update_link_bio, update_link_href, update_link_picture, update_link_title,
+};
+use saladify::routes::profiles::get::{get_profile, get_username};
+use saladify::routes::profiles::update::{update_display_profile, update_profile_image};
+use saladify::routes::settings::settings::{
+    change_email, change_password, change_username, update_privacy,
+};
+use saladify::routes::search::get::search_users;
+use saladify::types::state::TideState;
+use std::env;
 use std::sync::Arc;
 use tide::security::{CorsMiddleware, Origin};
 
-use std::path::Path;
-use tempfile::TempDir;
 // Migration to DB tables creation
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-
-// app state
-pub type TidePool = Pool<ConnectionManager<PgConnection>>;
-pub struct TideState {
-    pub tide_pool: TidePool,
-    pub s3_client: s3::Client,
-    pub tempdir: TempDir,
-}
-
-impl TideState {
-    fn path(&self) -> &Path {
-        self.tempdir.path()
-    }
-}
-
-// todo replace unwraps with expect
 
 // main function
 #[tokio::main]
@@ -53,7 +49,7 @@ async fn main() -> tide::Result<()> {
     dotenv().expect("No .env file found");
 
     // setup migrations
-    let mut conn = db::start_connection().await;
+    let mut conn = start_connection().await;
     conn.run_pending_migrations(MIGRATIONS).unwrap();
 
     // setup aws s3 client
@@ -84,6 +80,7 @@ async fn main() -> tide::Result<()> {
         tide_pool: pool,
         s3_client,
         tempdir: tempfile::tempdir()?,
+        email_service: EmailService::new(),
     });
 
     // create app
@@ -146,6 +143,34 @@ async fn main() -> tide::Result<()> {
     app.at("/links/:link_id/image").delete(delete_link_picture);
     app.at("/links/:link_id").delete(delete_links);
 
+    // follow
+    app.at("/follow").put(settle_inbound_follow_request);
+    app.at("/follower")
+        .delete(delete_follower)
+        .get(get_followers);
+    app.at("/following")
+        .delete(delete_following)
+        .get(get_following);
+    app.at("/follow-status").get(get_follow_status);
+    app.at("/follow-request")
+        .get(get_pending_follows)
+        .post(create_outbound_follow_request)
+        .delete(delete_outbound_follow_request);
+
+    // password reset
+    app.at("/get-email").post(get_email);
+    app.at("/password-code").post(check_password_code);
+    app.at("/reset-password").post(reset_password);
+  
+    // settings
+    app.at("/change-username").post(change_username);
+    app.at("/change-password").post(change_password);
+    app.at("/change-email").post(change_email);
+    app.at("/update-privacy").post(update_privacy);
+  
+    // search
+    app.at("/search").get(search_users);
+
     // misc
     app.at("get-username").get(get_username);
 
@@ -158,8 +183,7 @@ async fn main() -> tide::Result<()> {
 
 #[cfg(test)]
 mod unit_tests {
-    use crate::db::start_connection;
-    use diesel::PgConnection;
+    use saladify::connectors::db::connection::start_connection;
 
     #[tokio::test]
     async fn it_can_connect_to_db() -> tide::Result<()> {

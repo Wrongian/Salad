@@ -1,73 +1,58 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    
-    --background: #FFFFFF;
-    --foreground: #050133;
- 
-    --muted: #EFF6F9;
-    --muted-foreground:#6F7D88; 
- 
-    --popover: #FFFFFF;
-    --popover-foreground: #050133;
- 
-    --card: #FFFFFF;
-    --card-foreground: #050133;
+    --background: hsl(0, 0%, 100%);
+    --foreground: hsl(120, 3%, 6%);
 
-    --border: #D6E4EB;
-    --input: #D6E4EB;
+    --muted: hsl(193, 43%, 96%);
+    --muted-foreground: hsl(206, 10%, 48%);
 
-    --primary: #0A1320;
-    --primary-foreground: #FAFBFC;
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(120, 3%, 6%);
 
-    --secondary: #EFF6F9;
-    --secondary-foreground: #0A1320;
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(120, 3%, 6%);
 
-    --accent: #EFF6F9;
-    --accent-foreground: #0A1320;
+    --border: hsl(94, 65%, 47%);
+    --input: hsl(200, 34%, 88%);
 
-    --destructive: #D93636;
-    --destructive-foreground: #FAFBFC;
+    /* primary */
+    --primary-foreground: hsl(0, 0%, 100%);
+    --clr-primary-100: hsl(94, 89%, 58%);
+    --clr-primary-200: hsl(94, 65%, 47%);
+    --clr-primary-300: hsl(93, 67%, 37%);
+    --clr-primary-400: hsl(94, 70%, 27%);
+    --clr-primary-500: hsl(94, 76%, 18%);
+    --clr-primary-600: hsl(95, 87%, 9%);
+    --clr-primary-700: hsl(101, 90%, 4%);
 
-    --ring: #050133
- 
-    --radius: 0.5rem;
+    /* secondary */
+    --clr-secondary-100: hsl(97, 79%, 89%);
+    --clr-secondary-200: hsl(94, 51%, 70%);
+    --clr-secondary-300: hsl(94, 29%, 56%);
+    --clr-secondary-400: hsl(94, 23%, 43%);
+    --clr-secondary-500: hsl(94, 25%, 31%);
+    --clr-secondary-600: hsl(96, 27%, 20%);
+    --clr-secondary-700: hsl(92, 32%, 9%);
+
+    --accent: hsl(198, 45%, 96%);
+    --accent-foreground: hsl(100, 100%, 4%);
+
+    --destructive: hsl(0, 84%, 60%);
+    --destructive-foreground: hsl(210, 25%, 98%);
+
+    --ring: hsl(120, 3%, 6%);
+    --radius: 0.4rem;
   }
- 
+
+  /* No dark theme yet */
   .dark {
-    --background: #050133;
-    --foreground: #FAFBFC;
-
-    --muted: #232C39;
-    --muted-foreground: #97A6BA;
-
-    --popover: #050133;
-    --popover-foreground: #FAFBFC;
-
-    --card: #050133;
-    --card-foreground: #FAFBFC;
-
-    --border: #232C39;
-    --input: #232C39;
-    --primary: #FAFBFC;
-    --primary-foreground: #0A1320;
-
-    --secondary: #232C39;
-    --secondary-foreground: #FAFBFC;
-
-    --accent: #232C39;
-    --accent-foreground: #FAFBFC;
-
-    --destructive: #99291B;
-    --destructive-foreground: #FAFBFC;
-
-    --ring: #D6E4EB;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;

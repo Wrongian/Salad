@@ -10,32 +10,36 @@ export type TUpdateProfile = {
   bio?: string;
 };
 
-export type TAuthResult = {
-  status: number;
-  err: string;
+export type TCreateLinkPayload = {
+  title?: string;
+  bio?: string;
+  href: string;
 };
 
-export type TCreateLinkPayload = {
-  title?: string,
-  bio?: string,
-  href: string
-}
-
 export type TUpdateLinkTitlePayload = {
-  title: string
-}
+  title: string;
+};
 
 export type TUpdateLinkBioPayload = {
-  bio: string
-}
+  bio: string;
+};
 
 export type TUpdateLinkHrefPayload = {
-  href: string
-}
+  href: string;
+};
 
 export type TReorderPayload = {
-  link_id: number,
-  new_position_id: number | null 
+  link_id: number;
+  new_position_id: number | null;
+};
+
+export type TCreateFollowRequestPayload = {
+  pending_follow_id: number;
+}
+
+export type TCompleteFollowRequestPayload = {
+  from_id: number;
+  accept: boolean
 }
 
 export type TResponseBody = {
@@ -45,11 +49,41 @@ export type TResponseBody = {
 
 export type TResult<T> =
   | {
-      payload: T;
-      success: true;
-    }
+    payload: T;
+    success: true;
+  }
   | {
-      success: false;
-      status: number;
-      err: string;
-    };
+    success: false;
+    status: number;
+    err: string;
+  };
+
+export type TGetEmailBody = {
+  email: string;
+};
+export type TResetCodeBody = {
+  email: string;
+  code: string;
+};
+
+export type TResetPasswordBody = {
+  email: string;
+  code: string;
+  password: string;
+};
+
+export type TChangePasswordBody = {
+  password: string;
+};
+
+export type TChangeUsernameBody = {
+  username: string;
+};
+
+export type TChangeEmailBody = {
+  email: string;
+};
+
+export type TUpdatePrivacyBody = {
+  is_private: boolean;
+};

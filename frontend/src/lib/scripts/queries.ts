@@ -1,31 +1,80 @@
-import type { TAuthResult, TResult, TUpdateProfileQuery, TUpdateProfile, TCreateLinkPayload, TUpdateLinkTitlePayload, TUpdateLinkBioPayload, TUpdateLinkHrefPayload, TReorderPayload } from "./query.d.ts";
-import { blackSwanError } from "../../stores/stores.js";
-import { goto, invalidateAll, replaceState } from "$app/navigation";
+import type {
+  TUpdateProfileQuery,
+  TUpdateProfile,
+  TCreateLinkPayload,
+  TUpdateLinkTitlePayload,
+  TUpdateLinkBioPayload,
+  TUpdateLinkHrefPayload,
+  TReorderPayload,
+  TCreateFollowRequestPayload,
+  TResetCodeBody,
+  TResetPasswordBody,
+  TGetEmailBody,
+  TChangePasswordBody,
+  TChangeEmailBody,
+  TChangeUsernameBody,
+  TUpdatePrivacyBody,
+  TCompleteFollowRequestPayload,
+} from "./query.d.ts";
+import { goto, invalidateAll } from "$app/navigation";
 import {
+  TFollowStatusValidator,
+  type TGetPaginatedProfilePayload,
+  TGetPaginatedProfilePayloadValidator,
   TLinkBodyValidator,
   TProfileBodyValidator,
   UpdateImageResponseBodyValidator,
-  standardResponseValidator,
+  type TFollowStatus,
+  type TFollowStatusResponsePayload,
   type TLink,
   type TProfileBody,
   type TUpdateImageResponseBody,
-} from "./response-validator.js";
-import {addError} from "$lib/modules/Errors.svelte";
-import type { NavigationEvent } from "@sveltejs/kit";
-
-const MASKED_ERROR_MESSAGE = "/Oh no! Looks like something went wrong. Please try again later."
+  type TPaginatedFollowRequestProfile,
+  TGetPaginatedFollowRequestProfileValidator,
+} from "./validation/response.js";
+import {
+  type TGetUsernamePayload,
+  TGetUsernamePayloadValidator,
+  TResultPayloadValidator,
+  TStandardResponsePayloadValidator,
+  type TResultPayload,
+  type TStandardResponsePayload as TStandardResponsePayload,
+} from "./validation/response.js";
+import { validateFetch } from "./fetch.js";
+import { getAsSearchParamString } from "./searchParams.js";
 
 const BASEURL = "/";
-const UPDATE_PROFILE_IMAGE_ENDPOINT = "/api/profiles/image"
-const UPDATE_LINK_TITLE_ENDPOINT = "/api/links/title"
-const UPDATE_LINK_BIO_ENDPOINT = "/api/links/bio"
-const UPDATE_LINK_HREF_ENDPOINT = "/api/links/href"
-const REORDER_LINK_ENDPOINT = "/api/links/reorder"
-const DELETE_LINK_ENDPOINT = "/api/links"
+const PROFILES_PREFIX = "/api/profiles";
+const UPDATE_PROFILE_IMAGE_ENDPOINT = PROFILES_PREFIX + "/image";
+const UPDATE_DISPLAY_PROFILE_ENDPOINT = PROFILES_PREFIX + "/display";
+const LINKS_PREFIX = "/api/links";
+const GET_LINKS_ENDPOINT = "/api/links";
+const ADD_LINKS_ENDPOINT = LINKS_PREFIX;
+const UPDATE_LINK_TITLE_ENDPOINT = "/api/links/title";
+const UPDATE_LINK_BIO_ENDPOINT = "/api/links/bio";
+const UPDATE_LINK_HREF_ENDPOINT = "/api/links/href";
+const REORDER_LINK_ENDPOINT = "/api/links/reorder";
+const DELETE_LINK_ENDPOINT = "/api/links";
+const LOGIN_ENDPOINT = "/api/login";
+const LOGOUT_ENDPOINT = "/api/logout";
+const REGISTER_ENDPOINT = "/api/register";
+const GET_IS_LOGGED_IN_ENDPOINT = "/api/logged-in";
+const GET_USERNAME_ENDPOINT = "/api/get-username";
+const FOLLOW_REQUEST_ENDPOINT = "/api/follow-request";
+const FOLLOW_ENDPOINT = "/api/follow";
+const FOLLOW_STATUS_ENDPOINT = "/api/follow-status";
+const FOLLOWER_ENDPOINT = "/api/follower";
+const FOLLOWING_ENDPOINT = "/api/following";
+const SEARCH_USERS_ENDPOINT = "/api/search";
+const GET_EMAIL_ENDPOINT = "/api/get-email";
+const RESET_PASSWORD_ENDPOINT = "/api/reset-password";
+const CHECK_PASSWORD_CODE_ENDPOINT = "/api/password-code";
+const CHANGE_PASSWORD_ENDPOINT = "/api/change-password";
+const CHANGE_USERNAME_ENDPOINT = "/api/change-username";
+const CHANGE_EMAIL_ENDPOINT = "/api/change-email";
+const UPDATE_PRIVACY_ENDPOINT = "/api/update-privacy";
 
-const BLACKSWAN_ERROR_STATUS_CODE = 500
-
-
+type fetch = typeof fetch;
 
 /**
  * forms a POST query to the /login endpoint to validate and log in user
@@ -39,48 +88,17 @@ const BLACKSWAN_ERROR_STATUS_CODE = 500
 export const login = async (
   username: string,
   password: string,
-  next: string,
-): Promise<void> => {
-  const response: TAuthResult = await fetch(`/api/login`, {
-    method: "POST",
-    body: JSON.stringify({
-      username: username,
-      password: password,
-    }),
-    // redirect: "manual",
-  })
-    .then(async (success) => {
-      // check and handle redirects
-      if (success.redirected) {
-        await goto(success.url);
-        return { status: 302, err: "" };
-      }
-
-      const resBody = await success.json();
-      if (!standardResponseValidator(resBody))
-        return Promise.reject("Obtained an invalid response body.");
-      return { status: success.status, err: resBody.err };
-    })
-    .catch((err) => {
-      return { status: 500, err: JSON.stringify(err) };
-    });
-
-  await invalidateAll();
-  if (response.status === 200) {
-    if (next != null) {
-      goto(next);
-    }
-    else{
-      goto(BASEURL)
-    }
-
-  } else if (response.status === 400) {
-    // TODO: type validation and integration tests
-    addError(response.err, response.status);
-  } else if (response.status > 400 && response.status <= 500) {
-    // render error page on other error status codes
-    blackSwanError.set({ status: response.status, message: response.err });
-  }
+): Promise<boolean> => {
+  // validate request here
+  return await validateFetch<
+    TStandardResponsePayload,
+    { username: string; password: string }
+  >(
+    LOGIN_ENDPOINT,
+    "POST",
+    { username, password },
+    TStandardResponsePayloadValidator,
+  ).then((p) => Boolean(p));
 };
 
 /**
@@ -96,475 +114,488 @@ export const register = async (
   email: string,
   username: string,
   password: string,
-  next: string,
-): Promise<void> => {
-  const response: TAuthResult = await fetch(`/api/register`, {
-    method: "POST",
-    body: JSON.stringify({
-      email: email,
-      username: username,
-      password: password,
-    }),
-  })
-    .then(async (success) => {
-      // TODO: set cookie
-      return success;
-    })
-    .then(async (success) => {
-      // check and handle redirects
-      if (success.redirected) {
-        await goto(success.url);
-        return { status: 302, err: "" };
-      }
-
-      const resBody = await success.json();
-      if (!standardResponseValidator(resBody))
-        return Promise.reject("Obtained an invalid response body.");
-      return { status: success.status, err: resBody.err };
-    })
-    .catch((err) => {
-      return { status: 400, err: JSON.stringify(err) };
-    });
-  await invalidateAll();
-  if (response.status === 200) {
-    if (next != null) {
-      goto(next);
-    }
-    else{
-      goto(BASEURL);
-    }
-  } else if (response.status === 400) {
-    // TODO: flash svelte error
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: response.err });
-  }
-};
-
-// TODO: server-side CORS
-export const resetPassword = async (email: string) => {
-  const response = await fetch(`/api/users`, {
-    method: "PUT",
-    body: JSON.stringify({
-      email: email,
-    }),
-  }).catch((err) => {
-    return { status: 400, message: err };
-  });
-
-  if (response.status === 200) {
-    // reloads the current login page
-    await invalidateAll();
-  } else {
-    // TODO: flash svelte error
-  }
-  // uncomment to test for reset routing
-  // invalidateAll()
+): Promise<boolean> => {
+  // validate request here
+  return await validateFetch<
+    TStandardResponsePayload,
+    { username: string; password: string; email: string }
+  >(
+    REGISTER_ENDPOINT,
+    "POST",
+    { username, password, email },
+    TStandardResponsePayloadValidator,
+  ).then((payload) => Boolean(payload));
 };
 
 export const updateProfile = async (updateQuery: TUpdateProfileQuery) => {
-  const response = await fetch(`/api/profiles/display`, {
-    method: "PUT",
-    body: JSON.stringify(updateQuery),
-  }).then(async res => {
-    let body = await res.json();
-    return {
-      status: res.status,
-      err: body.err
-    }
-  }).catch(err => {
-    return {status: 400, err }
-  })
-
-  if (response.status === 200) {
-    // code to redirect client to GET profile/:username
-    await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred updating profile information" });
-  }
+  await validateFetch<TStandardResponsePayload, TUpdateProfileQuery>(
+    UPDATE_DISPLAY_PROFILE_ENDPOINT,
+    "PUT",
+    updateQuery,
+    TStandardResponsePayloadValidator,
+  );
 };
-
-type fetch = typeof fetch;
 
 export const getProfile = async (
   username: string,
-  fetch: fetch
-): Promise<TProfileBody | undefined> => {
-  const result: TResult<TProfileBody> = await fetch(
-    `/api/profiles/${username}`,
-    { method: "GET" }
-  )
-    .then(async (success) => {
-      const body = await success.json();
-      if (success.ok) {
-        const payload = await TProfileBodyValidator.validateAsync(body).catch(e => {
-          console.log(e)
-          return Promise.reject(MASKED_ERROR_MESSAGE)
-        });
-        return {
-          payload,
-          success: true as const,
-        };
-      } 
-
-      // if response not ok check error body type
-      if (!standardResponseValidator(body)) {
-        // this is unexpected
-        return Promise.reject(MASKED_ERROR_MESSAGE)
-      }
-
-      return {
-        success: false as const,
-        status: success.status,
-        err: body.err
-      }
-    })
-    .catch((err) => {
-      return { status: 500, err: JSON.stringify(err), success: false as const };
-    });
-
-
-  if (result.success) {
-    return result.payload;
-  } else if (result.status < BLACKSWAN_ERROR_STATUS_CODE) {
-    addError(result.err, result.status)
-  } else {
-    // something really bad happened here
-    blackSwanError.set({ status: result.status, message: result.err });
-  }
+  fetch: fetch,
+): Promise<TProfileBody | null> => {
+  return await validateFetch<TProfileBody, { username: string }>(
+    `${PROFILES_PREFIX}/${username}`,
+    "GET",
+    { username },
+    TProfileBodyValidator,
+    { fetch },
+  );
 };
 
-export const getLinks = async (username: string, fetch: fetch): Promise<TLink[]> => {
-  const result: TResult<TLink[]> = await fetch(`/api/links/${username}`, {
-    method: "GET",
-  })
-    .then(async (success) => {
-      const body = await success.json();
-      if (success.ok) {
-        const payload = await TLinkBodyValidator.validateAsync(body).then(v => v.links).catch(e => {
-          console.log(e)
-          // this is unexpected
-          return Promise.reject(MASKED_ERROR_MESSAGE)
-        });
-        return {
-          payload,
-          success: true as const,
-        };
-      } else {
-        if (!standardResponseValidator(body)) {
-          // this is unexpected
-          return Promise.reject(MASKED_ERROR_MESSAGE)
-        }
-        return {
-          success: false as const,
-          status: success.status,
-          err: body.err
-        }
-      }
-        
-    })
-    .catch((err) => {
-      return { status: BLACKSWAN_ERROR_STATUS_CODE, err: JSON.stringify(err), success: false as const };
-    });
-
-  if (result.success) {
-    return result.payload;
-  } else if (result.status < BLACKSWAN_ERROR_STATUS_CODE) {
-    addError(result.err, result.status)
+export const getLinks = async (
+  username: string,
+  fetch: fetch,
+): Promise<TLink[]> => {
+  // todo change the function
+  return await validateFetch<{ links: TLink[] }>(
+    `${GET_LINKS_ENDPOINT}/${username}`,
+    "GET",
+    {},
+    TLinkBodyValidator,
+    { fetch },
+  ).then((linkBody) => {
+    // return links if can
+    if (linkBody) {
+      return linkBody.links;
+    }
+    // return nothing
     return [];
-  } else {
-    // something really bad happened here
-    blackSwanError.set({ status: result.status, message: result.err });
-    return [];
-  }
+  });
 };
 
-export const getIsLoggedIn = async (fetch: fetch) : Promise<boolean> => {
-  let isLoggedIn: boolean = false;
-  const response = await fetch("/api/logged-in",{
-    method: "GET",
-  }).then((success: any) => {
-    if (success.status === 200) {
-      isLoggedIn = true;
-    }
-    else {
-      isLoggedIn = false;
-    }
-  }).catch((err: any) => {
-    // something something error
-    // placeholder
-    console.log("error checking logged in");
-    isLoggedIn = false;
-  }
-  )
-  return isLoggedIn;
-}
+export const getFollowStatus = async (
+  targetUserId: number,
+  fetch: fetch,
+): Promise<TFollowStatus | undefined> => {
+  return await validateFetch<TFollowStatusResponsePayload>(
+    `${FOLLOW_STATUS_ENDPOINT}?${new URLSearchParams([["id", targetUserId.toString()]]).toString()}`,
+    "GET",
+    {},
+    TFollowStatusValidator,
+    { fetch },
+  ).then((payload) => payload?.status);
+};
 
-// logout route, doesnt do anything if not logged in 
+export const getIsLoggedIn = async (fetch: fetch): Promise<boolean> => {
+  return (
+    (
+      await validateFetch<TResultPayload>(
+        GET_IS_LOGGED_IN_ENDPOINT,
+        "GET",
+        {},
+        TResultPayloadValidator,
+        { fetch },
+      )
+    )?.result ?? false
+  );
+};
+
+// logout route, doesnt do anything if not logged in
 // cant really get an error logging out since its a get request
-export const logout = async (fetch: fetch, next: string) : Promise<void> => {
-  await fetch("/api/logout").catch((err) => {
-    console.log("Error logging out") 
-    console.log(err) 
-  }) 
-  await invalidateAll();
-  if (next != null) {
-      goto(next);
-    }
-    else{
-      goto(BASEURL)
-    }
-}
+export const logout = async (fetch?: fetch): Promise<void> => {
+  await validateFetch<TStandardResponsePayload>(
+    LOGOUT_ENDPOINT,
+    "GET",
+    {},
+    TStandardResponsePayloadValidator,
+    { fetch },
+  );
+};
 
 // get username route
-export const getUsername = async (fetch :fetch) : Promise<string> => {
-    let response = await fetch("/api/get-username")
-    .then(async (success) => {
-      const payload = await success.json();
-      return {
-        payload: payload,
-        status: success.status,
-      }
-    }).catch((error) => {
-      return { status: 400, payload: error }
-    })
-    if (response.status === 200) {
-      return response.payload.username
-    }
-    return "";
-}
+export const getUsername = async (fetch: fetch): Promise<string | null> => {
+  const maybeUsername = await validateFetch<TGetUsernamePayload>(
+    GET_USERNAME_ENDPOINT,
+    "GET",
+    {},
+    TGetUsernamePayloadValidator,
+    { fetch },
+  );
 
-export const updateTextProfile = async (query: TUpdateProfile) : Promise<void> => {
-  let response = await fetch("/api/profiles/display", {
-    method: "PUT",
-    body: JSON.stringify(query),
-  }).then(async res => {
-    let body = await res.json();
-    return {
-      status: res.status,
-      err: body.err
-    }
-  }).catch(err => {
-    return {status: 400, err }
-  })
+  // we provide a default value to username in the event it is null
+  // errors would have been handled by the frontend (via redirect)
+  return maybeUsername?.username ?? "";
+};
 
-  if (response.status === 200) {
-    // code to redirect client to GET profile/:username
+export const updateTextProfile = async (
+  query: TUpdateProfile,
+): Promise<void> => {
+  let payload = await validateFetch<TStandardResponsePayload, TUpdateProfile>(
+    UPDATE_DISPLAY_PROFILE_ENDPOINT,
+    "PUT",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload !== null) {
     await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred updating profile" });
   }
-}
+};
 
-export const addLinks = async (query: TCreateLinkPayload) : Promise<void> => {
-  let response = await fetch("/api/links", {
-    method: "POST",
-    body: JSON.stringify(query),
-  }).then(async success => {
-    const body = await success.json()
-    if(!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
+export const addLinks = async (query: TCreateLinkPayload): Promise<void> => {
+  await validateFetch<TStandardResponsePayload, TCreateLinkPayload>(
+    ADD_LINKS_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+};
 
-    return { status: success.status, err: body.err }
-  }).catch(err => {
-      return { status: 400, err }
-  }); 
+export const updateLinkTitle = async (
+  query: TUpdateLinkTitlePayload,
+  link_id: number,
+) => {
+  const payload = await validateFetch<
+    TStandardResponsePayload,
+    TUpdateLinkTitlePayload
+  >(
+    `${UPDATE_LINK_TITLE_ENDPOINT}/${link_id}`,
+    "PUT",
+    query,
+    TStandardResponsePayloadValidator,
+  );
 
-  if (response.status === 200) {
+  if (payload !== null) {
     await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating links" });
   }
-}
+};
 
-export const updateLinkTitle = async (query: TUpdateLinkTitlePayload, link_id: number) => {
-  let response = await fetch(`${UPDATE_LINK_TITLE_ENDPOINT}/${link_id}`, {
-    method: "PUT",
-    body: JSON.stringify(query)
-  }).then(async success => {
-    const body = await success.json()
-    if(!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
-    return { status: success.status, err: body.err }
-  }).catch(err => {
-      return { status: 400, err }
-  }); 
+export const updateLinkBio = async (
+  query: TUpdateLinkBioPayload,
+  link_id: number,
+) => {
+  const payload = await validateFetch<
+    TStandardResponsePayload,
+    TUpdateLinkBioPayload
+  >(
+    `${UPDATE_LINK_BIO_ENDPOINT}/${link_id}`,
+    "PUT",
+    query,
+    TStandardResponsePayloadValidator,
+  );
 
-  if (response.status === 200) {
+  if (payload !== null) {
     await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating link title" });
   }
-}
+};
 
-export const updateLinkBio = async (query: TUpdateLinkBioPayload, link_id: number) => {
-  const response = await fetch(`${UPDATE_LINK_BIO_ENDPOINT}/${link_id}`, {
-    method: "PUT",
-    body: JSON.stringify(query)
-  }).then(async success => {
-    const body = await success.json()
-    if(!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
-    return { status: success.status, err: body.err }
-  }).catch(err => {
-      return { status: 400, err }
-  }); 
+export const updateLinkHref = async (
+  query: TUpdateLinkHrefPayload,
+  link_id: number,
+) => {
+  const payload = await validateFetch<
+    TStandardResponsePayload,
+    TUpdateLinkHrefPayload
+  >(
+    `${UPDATE_LINK_HREF_ENDPOINT}/${link_id}`,
+    "PUT",
+    query,
+    TStandardResponsePayloadValidator,
+  );
 
-  if (response.status === 200) {
+  if (payload !== null) {
     await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating link bio" });
   }
-}
-
-export const updateLinkHref = async (query: TUpdateLinkHrefPayload, link_id: number) => {
-  const response = await fetch(`${UPDATE_LINK_HREF_ENDPOINT}/${link_id}`, {
-    method: "PUT",
-    body: JSON.stringify(query)
-  }).then(async success => {
-    const body = await success.json()
-    if(!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
-    return { status: success.status, err: body.err }
-  }).catch(err => {
-      return { status: 400, err }
-  }); 
-
-  if (response.status === 200) {
-    await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating link href" });
-  }
-}
+};
 
 export const deleteLink = async (link_id: number) => {
-  const response = await fetch(`${DELETE_LINK_ENDPOINT}/${link_id}`, {
-    method: "DELETE"
-  }).then(async response => {
-    const body = await response.json()
-    if(!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
-    return { status: response.status, err: body.err } 
-  }).catch(e => {
-    return { status: 400, err: JSON.stringify(e) } 
-  })
+  const payload = await validateFetch<TStandardResponsePayload>(
+    `${DELETE_LINK_ENDPOINT}/${link_id}`,
+    "DELETE",
+    {},
+    TStandardResponsePayloadValidator,
+  );
 
-  if (response.status === 200) {
+  if (payload !== null) {
     await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in deleting link href" });
   }
-}
+};
 
 export const reorderLink = async (query: TReorderPayload) => {
-  const response = await fetch(`${REORDER_LINK_ENDPOINT}`, {
-    method: "POST",
-    body: JSON.stringify(query)
-  }).then(async response => {
-    const body = await response.json();
-    if (!standardResponseValidator(body)) {
-      return Promise.reject(MASKED_ERROR_MESSAGE)
-    }
-    return {status: response.status, err: body.err }
-  }).catch(e => {
-    return {status: 400, err: JSON.stringify(e)}
+  const payload = await validateFetch<
+    TStandardResponsePayload,
+    TReorderPayload
+  >(REORDER_LINK_ENDPOINT, "POST", query, TStandardResponsePayloadValidator);
+
+  if (payload !== null) {
+    await invalidateAll();
+  }
+};
+
+export const updateLinkPicture = async (
+  image: Blob,
+  filetype: String,
+  id: number,
+): Promise<TUpdateImageResponseBody> => {
+  return await validateFetch<TUpdateImageResponseBody, Blob>(
+    `${LINKS_PREFIX}/${id.toString()}/image/${filetype}`,
+    "PUT",
+    image,
+    UpdateImageResponseBodyValidator,
+    { isBlobBody: true },
+  ).then(async (payload) => {
+    return payload ?? { href: "" };
+  });
+};
+
+export const updateProfilePicture = async (
+  image: Blob,
+  filetype: String,
+): Promise<TUpdateImageResponseBody | null> => {
+  return await validateFetch<TUpdateImageResponseBody, Blob>(
+    `${UPDATE_PROFILE_IMAGE_ENDPOINT}/${filetype}`,
+    "PUT",
+    image,
+    UpdateImageResponseBodyValidator,
+    { isBlobBody: true },
+  );
+};
+
+export const createFollowRequest = async (
+  payload: TCreateFollowRequestPayload,
+) => {
+  return await validateFetch<
+    TStandardResponsePayload,
+    TCreateFollowRequestPayload
+  >(
+    `${FOLLOW_REQUEST_ENDPOINT}`,
+    "POST",
+    payload,
+    TStandardResponsePayloadValidator,
+  );
+};
+
+export const completeFollowRequest = async (
+  payload: TCompleteFollowRequestPayload,
+) => {
+  return await validateFetch<
+    TStandardResponsePayload,
+    TCompleteFollowRequestPayload
+  >(FOLLOW_ENDPOINT, "PUT", payload, TStandardResponsePayloadValidator);
+};
+
+export const removeFollowRequest = async (userId: number) => {
+  return await validateFetch<
+    TStandardResponsePayload,
+    { pending_follow_id: number }
+  >(
+    FOLLOW_REQUEST_ENDPOINT,
+    "DELETE",
+    { pending_follow_id: userId },
+    TStandardResponsePayloadValidator,
+  );
+};
+
+export const removeFollower = async (userId: number) => {
+  return await validateFetch<TStandardResponsePayload, { follower_id: number }>(
+    FOLLOWER_ENDPOINT,
+    "DELETE",
+    { follower_id: userId },
+    TStandardResponsePayloadValidator,
+  );
+};
+
+export const removeFollowing = async (userId: number) => {
+  return await validateFetch<
+    TStandardResponsePayload,
+    { following_id: number }
+  >(
+    FOLLOWING_ENDPOINT,
+    "DELETE",
+    { following_id: userId },
+    TStandardResponsePayloadValidator,
+  );
+};
+
+export const getFollowRequests = async (
+  query: string,
+  pageIndex: number,
+  fetch?: fetch,
+) => {
+  const searchParams = getAsSearchParamString({
+    query: query,
+    index: pageIndex,
   });
 
-  if (response.status === 200) {
-    await invalidateAll();
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in reordering link." });
+  return await validateFetch<
+    TGetPaginatedProfilePayload<TPaginatedFollowRequestProfile>
+  >(
+    `${FOLLOW_REQUEST_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedFollowRequestProfileValidator,
+    { fetch },
+  );
+};
+
+export const getFollowers = async (
+  query: string,
+  pageIndex: number,
+  fetch?: fetch,
+) => {
+  const searchParams = getAsSearchParamString({
+    query: query,
+    index: pageIndex,
+  });
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWER_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch },
+  );
+};
+
+export const getFollowings = async (
+  query: string,
+  pageIndex: number,
+  fetch?: fetch,
+) => {
+  const searchParams = getAsSearchParamString({
+    query: query,
+    index: pageIndex,
+  });
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${FOLLOWING_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch },
+  );
+};
+
+export const searchUsers = async (
+  query: string,
+  pageIndex: number,
+  filterObj: object = {},
+  fetch?: fetch,
+) => {
+  const searchParams = getAsSearchParamString({
+    query: query,
+    index: pageIndex,
+    ...filterObj,
+  });
+
+  return await validateFetch<TGetPaginatedProfilePayload>(
+    `${SEARCH_USERS_ENDPOINT}?${searchParams}`,
+    "GET",
+    {},
+    TGetPaginatedProfilePayloadValidator,
+    { fetch },
+  );
+};
+export const getResetEmail = async (query: TGetEmailBody): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TGetEmailBody>(
+    GET_EMAIL_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+  if (payload) {
+    return true;
   }
-}
+  return false;
+};
 
-export const updateLinkPicture = async (image: Blob, filetype: String, id : number) : Promise<TUpdateImageResponseBody> => {
-  let response: TResult<TUpdateImageResponseBody> = await fetch("/api/links/" + id.toString() + "/image/" + filetype, {
-    method: "PUT",
-    body: image,
-  }).then(async success => {
-    const body = await success.json()
-    const validatedBody = await UpdateImageResponseBodyValidator.validateAsync(body).catch(e => {
-      console.error(e);
-      throw new Error(MASKED_ERROR_MESSAGE);
-    });
-    
-    return {
-      payload: validatedBody,
-      success: true as const
-    }
-  }).catch(err => {
-    return {
-      success: false as const,
-      err: JSON.stringify(err),
-      status: 400
-    }
-  }); 
+export const checkPasswordResetCode = async (
+  query: TResetCodeBody,
+  fetch: fetch,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload, TResetCodeBody>(
+    CHECK_PASSWORD_CODE_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+    { fetch },
+  );
 
-  if (response.success) {
-    await invalidateAll();
-    return response.payload;
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-    return { result: false, err: response.err, href: "" }
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating link picture" });
-    return {} as never
+  if (payload) {
+    return true;
   }
-}
+  return false;
+};
 
-export const updateProfilePicture = async (image: Blob, filetype: String) : Promise<TUpdateImageResponseBody> => {
-  let response: TResult<TUpdateImageResponseBody> = await fetch(`${UPDATE_PROFILE_IMAGE_ENDPOINT}/${filetype}`, {
-    method: "PUT",
-    body: image,
-  }).then(async success => {
-      const body = await success.json()
-      const validatedBody = await UpdateImageResponseBodyValidator.validateAsync(body).catch(e => {
-        console.error(e);
-        throw new Error(MASKED_ERROR_MESSAGE);
-      });
+export const resetPassword = async (
+  query: TResetPasswordBody,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    RESET_PASSWORD_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
 
-      return {
-        payload: validatedBody,
-        success: true as const
-      }
-  }).catch(err => {
-      return {
-        success: false as const,
-        err: JSON.stringify(err),
-        status: 400
-      }
-  }); 
-
-  if (response.success) {
-    await invalidateAll();
-    return response.payload;
-  } else if (response.status === 400) {
-    addError(response.err, response.status);
-    return { result: false, err: response.err, href: "" }
-  } else {
-    blackSwanError.set({ status: response.status, message: "Error occurred in updating profile picture" });
-    return {} as never
+  if (payload) {
+    return true;
   }
- 
-}
+  return false;
+};
+
+export const changePassword = async (
+  query: TChangePasswordBody,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_PASSWORD_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const changeEmail = async (
+  query: TChangeEmailBody,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_EMAIL_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const changeUsername = async (
+  query: TChangeUsernameBody,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    CHANGE_USERNAME_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+export const updatePrivacy = async (
+  query: TUpdatePrivacyBody,
+): Promise<boolean> => {
+  const payload = await validateFetch<TStandardResponsePayload>(
+    UPDATE_PRIVACY_ENDPOINT,
+    "POST",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+
+  if (payload) {
+    return true;
+  }
+  return false;
+};

@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { twMerge } from "tailwind-merge";
   import { register } from "$lib/scripts/queries";
-  import {
-    MAX_PASSWORD_LENGTH,
-    MAX_USERNAME_LENGTH,
-    MIN_PASSWORD_LENGTH,
-    MIN_USERNAME_LENGTH,
-  } from "$lib/modules/Constants.svelte";
-  import {afterNavigate} from "$app/navigation";
+
+  import { afterNavigate, goto } from "$app/navigation";
+  import EmailFormField from "./forms/EmailFormField.svelte";
+  import UsernameFormField from "./forms/UsernameFormField.svelte";
+  import PasswordFormField from "./forms/PasswordFormField.svelte";
+  import FormSubmitButton from "./forms/FormSubmitButton.svelte";
 
   let email = "";
   let username = "";
@@ -41,102 +39,46 @@
       emailElement.validity.valid &&
       usernameElement.validity.valid &&
       passwordElement.validity.valid &&
-      !!isPasswordChanged &&
-      !!isUsernameChanged &&
-      !!isEmailChanged
+      isPasswordChanged &&
+      isUsernameChanged &&
+      isEmailChanged
     );
   };
-  let next = "";
-  afterNavigate(({from}) => {
-    next = from?.url.pathname || next
-    // change later to dynamic route
-    if (next == "/auth/register") {
-      next = "/"
-    }
-  })
-
+  // let next = "";
+  // afterNavigate(({ from }) => {
+  //   next = from?.url.pathname || next;
+  //   // change later to dynamic route
+  //   if (next == "/auth/register") {
+  //     next = "/";
+  //   }
+  // });
 </script>
 
 <div class="form">
-  <label for="register-email-text" class="block text-sm font-medium py-2">
-    <span
-      class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
-    >
-      Email
-    </span>
-    <input
-      id="register-email-text"
-      type="email"
-      class="block peer mt-1 w-full bg-primary border border-slate-300 rounded-md text-sm shadow-sm
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
-      "
-      required={isEmailChanged}
-      on:input={() => (isEmailChanged = true)}
-      bind:value={email}
-    />
-    <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
-      Please provide a valid email.
-    </p>
-  </label>
+  <EmailFormField id="register-email-text" bind:isEmailChanged bind:email />
 
-  <label for="register-username-text" class="block text-sm font-medium py-2">
-    <span
-      class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
-    >
-      Username</span
-    >
-    <input
-      id="register-username-text"
-      type="text"
-      minlength={MIN_USERNAME_LENGTH}
-      maxlength={MAX_USERNAME_LENGTH}
-      class="peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
-      "
-      required={isUsernameChanged}
-      on:input={() => (isUsernameChanged = true)}
-      bind:value={username}
-    />
-    <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
-      Username must have at least {MIN_USERNAME_LENGTH}
-      characters.
-    </p>
-  </label>
+  <UsernameFormField
+    bind:isUsernameChanged
+    bind:username
+    id="register-username-text"
+  />
 
-  <label for="register-password-text" class="block text-sm font-medium py-2">
-    <span
-      class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
-    >
-      Password</span
-    >
-    <input
-      id="register-password-text"
-      type="password"
-      minlength={MIN_PASSWORD_LENGTH}
-      maxlength={MAX_PASSWORD_LENGTH}
-      class="peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
-      "
-      required={isPasswordChanged}
-      on:input={() => (isPasswordChanged = true)}
-      bind:value={password}
-    />
-    <p class="hidden peer-invalid:block text-invalid text-sm pt-2">
-      Password must have at least {MIN_PASSWORD_LENGTH} characters.
-    </p>
-  </label>
+  <PasswordFormField
+    bind:isPasswordChanged
+    bind:password
+    id="register-password-text"
+  >
+    <slot name="forgot-password" slot="forgot-password" />
+  </PasswordFormField>
 
-  <div class="py-3 flex justify-center">
-    <button
-      type="submit"
-      class={twMerge(
-        "justify-center rounded-md w-[200px] bg-primary ring-1 ring-secondary shadow-lg",
-        !canSubmit && "opacity-40 pointer-events-none"
+  <FormSubmitButton
+    bind:canSubmit
+    onSubmit={() =>
+      register(email, username, password).then((result) =>
+        result ? goto(`/profiles/${username}`, { invalidateAll: true }) : {},
       )}
-      disabled={!canSubmit}
-      on:click={() => register(email, username, password, next)}
-    >
-      <span>Register</span>
-    </button>
-  </div>
+    buttonLabel="Register"
+  />
+
+  <slot name="footer" />
 </div>

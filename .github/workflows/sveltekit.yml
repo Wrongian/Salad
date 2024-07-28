@@ -1,0 +1,19 @@
+name: Sveltekit
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: cd frontend && yarn install
+      - name: Build
+        run: cd frontend && yarn build
+      - name: Run Linter
+        run: cd frontend && yarn lint

@@ -4,9 +4,8 @@
   import { errorStore } from "../../stores/stores";
   import { removeAt } from "$lib/modules/Errors.svelte";
 
-  let errors: TErrorContext[] = []
-  $: errors = Array.from($errorStore.values())
-
+  let errors: TErrorContext[] = [];
+  $: errors = Array.from($errorStore.values());
 </script>
 
 <div class="z-50 fixed left-2 top-2">
