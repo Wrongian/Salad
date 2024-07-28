@@ -27,6 +27,9 @@ use saladify::routes::links::update::{
 };
 use saladify::routes::profiles::get::{get_profile, get_username};
 use saladify::routes::profiles::update::{update_display_profile, update_profile_image};
+use saladify::routes::settings::settings::{
+    change_email, change_password, change_username, update_privacy,
+};
 use saladify::types::state::TideState;
 use std::env;
 use std::sync::Arc;
@@ -149,6 +152,12 @@ async fn main() -> tide::Result<()> {
     app.at("/get-email").post(get_email);
     app.at("/password-code").post(check_password_code);
     app.at("/reset-password").post(reset_password);
+
+    // settings
+    app.at("/change-username").post(change_username);
+    app.at("/change-password").post(change_password);
+    app.at("/change-email").post(change_email);
+    app.at("/update-privacy").post(update_privacy);
 
     // misc
     app.at("get-username").get(get_username);

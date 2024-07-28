@@ -2,12 +2,12 @@ use crate::connectors::db::connection::DBConnection;
 use crate::connectors::db::reset::{
     create_request, delete_request, get_request_by_id, replace_request, request_exists,
 };
+use crate::connectors::db::user::get_user_from_email;
 use crate::connectors::db::user::{does_email_exist, update_user_by_id};
-use crate::connectors::db::user::{get_user_by_id, get_user_from_email};
 use crate::connectors::smtp::smtp_service::SMTPService;
-use crate::helpers::auth::get_session_user_id;
 use crate::helpers::funcs::is_expired;
 use crate::helpers::random::make_random_string;
+use crate::helpers::state::get_connection;
 use crate::models::reset::InsertRequest;
 use crate::models::users::{GetUser, UpdateUser};
 use crate::types::error::{Error, RequestErrors};
@@ -55,7 +55,7 @@ struct CheckPasswordCodeParams {
     email: String,
 }
 
-// register parameters for register route
+// email params
 #[derive(Debug, Deserialize, Validate)]
 pub struct GetEmailParams {
     #[validate(email(message = "Email is incorrect"))]
@@ -73,7 +73,7 @@ pub async fn get_email(mut req: Request<Arc<TideState>>) -> tide::Result {
     let state = req.state();
 
     // get connection pool
-    let mut conn: DBConnection = state.tide_pool.get().unwrap();
+    let mut conn = get_connection(&mut req);
 
     // get payload
     let get_email_params: GetEmailParams = match req.body_json().await {

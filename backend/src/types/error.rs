@@ -59,6 +59,10 @@ pub enum Error {
     PasswordResetCodeExpiredError(),
     #[error("No password reset requested")]
     NoPasswordResetError(),
+    #[error("Email already taken")]
+    DuplicateEmailError(),
+    #[error("Username already taken")]
+    DuplicateUsernameError(),
 }
 
 impl Error {
@@ -88,6 +92,8 @@ impl Error {
             Error::WrongPasswordResetCodeError() => StatusCode::BadRequest,
             Error::PasswordResetCodeExpiredError() => StatusCode::BadRequest,
             Error::NoPasswordResetError() => StatusCode::BadRequest,
+            Error::DuplicateEmailError() => StatusCode::BadRequest,
+            Error::DuplicateUsernameError() => StatusCode::BadRequest,
         }
     }
 

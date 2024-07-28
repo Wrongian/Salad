@@ -37,6 +37,7 @@ struct GetProfileResponseBody {
     picture: String,
     following: Option<i64>,
     followers: Option<i64>,
+    is_private: bool,
     id: i32,
 }
 
@@ -93,6 +94,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                     is_owner: false,
                     followers: None,
                     following: None,
+                    is_private: profile.is_private,
                 }
             } else {
                 // either is_owner or not private account, either ways all fields are accessible.
@@ -121,6 +123,7 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
                     picture,
                     followers: follower_count,
                     following: following_count,
+                    is_private: profile.is_private,
                 }
             }
         }

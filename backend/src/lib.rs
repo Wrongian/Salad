@@ -3,6 +3,7 @@ pub mod routes {
     pub mod follow;
     pub mod links;
     pub mod profiles;
+    pub mod settings;
 }
 
 // These are custom structs for handling errors and responses
