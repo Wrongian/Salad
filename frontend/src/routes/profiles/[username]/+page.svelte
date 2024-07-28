@@ -11,11 +11,30 @@
   import { addError } from "$lib/modules/Errors.svelte";
   import { goto, invalidateAll } from "$app/navigation";
   import { Contact } from "lucide-svelte";
+  import type { TFollowStatus } from "$lib/scripts/validation/response";
+  import PrivateProfileContent from "$lib/components/profiles/PrivateProfileContent.svelte";
+  import { toast, Toaster } from "svelte-sonner";
   export let data: PageData;
-  $: links = data.links ?? [];
-  $: isOwner = data.is_owner ?? false;
+  let isViewable = checkViewable(
+    data.is_private,
+    data.is_owner,
+    data.followStatus ?? "none",
+  );
+
+  $: links = data.links;
+  $: isOwner = data.is_owner;
   $: followStatus = data.followStatus ?? "none";
-  $: userId = data.id ?? NaN;
+  $: userId = data.id;
+  $: isViewable = checkViewable(data.is_private, isOwner, followStatus);
+
+  function checkViewable(
+    isPrivate: boolean,
+    isOwner: boolean,
+    followStatus: TFollowStatus,
+  ) {
+    // render private page <-> isOwner || !isPrivate || (isPrivate && followStatus === following)
+    return isOwner || !isPrivate || (isPrivate && followStatus === "following");
+  }
 
   async function followUser() {
     if (Number.isNaN(userId)) {
@@ -49,10 +68,11 @@
   function copyToClipboard() {
     let url: string = document.baseURI;
     navigator.clipboard.writeText(url);
-    alert("Profile Link Copied");
+    toast.success("Profile Link Copied");
   }
 </script>
 
+<Toaster />
 <div class="p-2 flex flex-col">
   <main class="flex-1">
     <div class="flex space-y-5 px-2 space-x-2">
@@ -99,8 +119,8 @@
 
         <!-- follower/following component -->
         <div class="flex space-x-6 p-2 pt-4 items-center">
-          <p>followers: {data.followers}</p>
-          <p>following: {data.following}</p>
+          <p class="font-medium">Followers: {data.followers ?? 0}</p>
+          <p class="font-medium">Following: {data.following ?? 0}</p>
           {#if isOwner}
             <button
               class="p-0 hover:text-white hover:bg-black rounded-full"
@@ -131,33 +151,36 @@
       </div>
     </div>
   </main>
-  <article class="overflow-y-auto max-h-[50vh]">
-    <div class="flex-1 flex-col space-y-4 pt-4">
-      {#each links as link}
-        <Card.Root class="h-[150px] rounded-xl">
-          <Card.Header>
-            <div class="flex space-x-4">
-              <div>
-                <Avatar.Root class="w-[50px] h-[50px] ring-2">
-                  <Avatar.Image src={link.img_src} alt="" />
-                  <Avatar.Fallback></Avatar.Fallback>
-                </Avatar.Root>
-              </div>
 
-              <div class="flex-1">
-                <a
-                  href={"//" + link.href}
-                  data-sveltekit-preload-data="tap"
-                  class="font-semibold">{link.title}</a
-                >
-                <Card.Description class="overflow-y-auto line-clamp-2"
-                  >{link.description}</Card.Description
-                >
+  {#if isViewable}
+    <article class="overflow-y-auto max-h-[50vh]">
+      <div class="flex-1 flex-col space-y-4 pt-4">
+        {#each links as link}
+          <Card.Root class="h-[150px] rounded-xl">
+            <Card.Header>
+              <div class="flex space-x-4">
+                <div>
+                  <Avatar.Root class="w-[50px] h-[50px] ring-2">
+                    <Avatar.Image src={link.img_src} alt="" />
+                    <Avatar.Fallback></Avatar.Fallback>
+                  </Avatar.Root>
+                </div>
+
+                <div class="flex-1">
+                  <a
+                    href={"//" + link.href}
+                    data-sveltekit-preload-data="tap"
+                    class="font-semibold">{link.title}</a
+                  >
+                  <Card.Description class="overflow-y-auto line-clamp-2"
+                    >{link.description}</Card.Description
+                  >
+                </div>
               </div>
-            </div>
-          </Card.Header>
-        </Card.Root>
-      {/each}
-    </div>
-  </article>
+            </Card.Header>
+          </Card.Root>
+        {/each}
+      </div>
+    </article>
+  {:else}<PrivateProfileContent />{/if}
 </div>
