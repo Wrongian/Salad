@@ -123,6 +123,29 @@ pub async fn is_following(
         .map(|count| count > 0)
 }
 
+pub async fn is_following_by_username(
+    conn: &mut PgConnection,
+    username: String,
+    following_username: String,
+) -> Result<bool, Error> {
+    use crate::schema::follows;
+    use crate::schema::users;
+    let (follower, following) = diesel::alias!(users as user1, users as user2);
+    follows::table
+        .inner_join(follower.on(follower.field(users::id).eq(follows::from_id)))
+        .inner_join(following.on(following.field(users::id).eq(follows::to_id)))
+        .filter(
+            follower
+                .field(users::username)
+                .eq(username)
+                .and(following.field(users::username).eq(following_username)),
+        )
+        .count()
+        .get_result::<i64>(conn)
+        .map(|count| count > 0)
+        .map_err(|e| Error::DieselError(e))
+}
+
 pub async fn has_follow_request(
     conn: &mut PgConnection,
     to_user_id: i32,
