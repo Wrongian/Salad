@@ -1,41 +1,57 @@
 <script lang="ts">
   import { afterNavigate, goto, invalidateAll } from "$app/navigation";
-  import {
-    getResetEmail,
-    getUsername,
-    resetPassword,
-  } from "$lib/scripts/queries";
+  import { getResetEmail, resetPassword } from "$lib/scripts/queries";
   import {
     type TGetEmailBody,
     type TResetPasswordBody,
   } from "$lib/scripts/query.d";
-  let email: string = "";
-  let code: string = "";
-  let password: string = "";
+  import { ArrowLeft } from "lucide-svelte";
+  import FormSubmitButton from "./forms/FormSubmitButton.svelte";
+  import InputFormField from "./forms/InputFormField.svelte";
+  import PasswordFormField from "./forms/PasswordFormField.svelte";
+  import EmailFormField from "./forms/EmailFormField.svelte";
+  let verificationCode: string = "";
   let toggle: boolean = false;
+  let canSubmit = false;
 
-  async function send_request() {
-    let email_body: TGetEmailBody = {
+  let isPasswordChanged = false;
+  let password: string = "";
+
+  let email: string = "";
+
+  $: (canSubmit = checkValid()), password;
+
+  const checkValid = () => {
+    // new password
+    const passwordElement = document.getElementById("reset-password-text");
+    if (!passwordElement || !(passwordElement instanceof HTMLInputElement))
+      return false;
+
+    return passwordElement.validity.valid && isPasswordChanged;
+  };
+
+  async function sendRequest() {
+    let emailBody: TGetEmailBody = {
       email: email,
     };
-    let is_sent: boolean = await getResetEmail(email_body);
-    if (is_sent) {
+    let isSent: boolean = await getResetEmail(emailBody);
+    if (isSent) {
       toggle = true;
     }
   }
-  async function send_reset_password() {
-    let reset_body: TResetPasswordBody = {
+  async function sendResetPassword() {
+    let resetBody: TResetPasswordBody = {
       email: email,
-      code: code,
+      code: verificationCode,
       password: password,
     };
 
-    let is_reset: boolean = await resetPassword(reset_body);
-    if (is_reset) {
+    let isReset: boolean = await resetPassword(resetBody);
+    if (isReset) {
       await invalidateAll();
       goto(next);
     }
-    code = "";
+    verificationCode = "";
     password = "";
   }
 
@@ -50,83 +66,43 @@
   });
 </script>
 
-{#if !toggle}
-  <div class="form">
-    <label for="login-reset-text" class="block text-sm font-medium"
-      >Enter your email:</label
-    >
-    <input
-      type="text"
-      id="login-reset-text"
-      class="px-1 peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300"
-      bind:value={email}
+<div class="form">
+  {#if !toggle}
+    <EmailFormField
+      bind:email
+      id="reset-email-text"
+      emailInputLabel="Enter your email"
+    />
+    <FormSubmitButton canSubmit onSubmit={sendRequest} buttonLabel="Submit" />
+  {:else}
+    <InputFormField
+      bind:value={verificationCode}
+      id="reset-code-text"
+      formInputLabel="Verification code"
     />
 
+    <PasswordFormField
+      bind:password
+      bind:isPasswordChanged
+      id="reset-password-text"
+      passwordInputLabel="New password"
+    />
+    <FormSubmitButton
+      bind:canSubmit
+      onSubmit={() => sendResetPassword()}
+      buttonLabel="Reset password"
+    />
     <div class="py-3 flex justify-center">
       <button
         type="submit"
-        class="justify-center rounded-md w-[200px]"
-        on:click={async () => await send_request()}
-      >
-        <span>Submit</span>
-      </button>
-    </div>
-  </div>
-{/if}
-
-{#if toggle}
-  <div class="form">
-    <label for="code-text" class="block text-sm font-medium py-2">
-      <span
-        class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
-      >
-        Verification Code</span
-      >
-      <input
-        id="code-text"
-        type="text"
-        class="px-1 peer block mt-1 w-full rounded-md text-sm shadow-sm bg-primary border border-slate-300
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
-      "
-        bind:value={code}
-      />
-    </label>
-
-    <label for="new-password-text" class="block text-sm font-medium py-2">
-      <span
-        class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
-      >
-        New Password
-      </span>
-      <input
-        id="new-password-text"
-        type="password"
-        class="px-1 peer block w-full rounded-md text-sm shadow-sm border border-slate-300 bg-primary mt-1
-      focus:outline-none focus:invalid:border-invalid focus:invalid:ring-invalid invalid:border-invalid invalid:text-invalid
-      "
-        bind:value={password}
-      />
-    </label>
-    <div class="py-3 flex justify-center">
-      <button
-        type="submit"
-        class="justify-center rounded-md w-[200px]"
-        on:click={async () => await send_reset_password()}
-      >
-        <span>Submit</span>
-      </button>
-    </div>
-    <div class="py-3 flex justify-center">
-      <button
-        type="submit"
-        class="justify-center rounded-md w-[200px]"
+        class="justify-center rounded-full p-2 bg-primary-700 text-white opacity-90 hover:opacity-100"
         on:click={async () => {
           email = "";
           toggle = false;
         }}
       >
-        <span>Back</span>
+        <ArrowLeft />
       </button>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>

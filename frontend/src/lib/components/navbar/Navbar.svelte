@@ -1,9 +1,10 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import favicon from "$lib/assets/favicon.ico";
+  import { logout } from "$lib/scripts/queries";
   import Searchbar from "../search/Searchbar.svelte";
+  import DropDownButton from "../ui/dropdown/DropDownButton.svelte";
   import DropDownLink from "../ui/dropdown/DropDownLink.svelte";
-  import DropDownLinkNoPreload from "../ui/dropdown/DropDownLinkNoPreload.svelte";
-  import { Input } from "../ui/input";
   import NavLink from "../ui/navbar/NavLink.svelte";
   export let isLoggedIn = false;
   export let profileRoute = "";
@@ -26,8 +27,8 @@
   };
 </script>
 
-<nav class="bg-lime-200">
-  <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8">
+<nav class="bg-primary">
+  <div class="mx-auto max-w-9xl px-2 sm:px-6 lg:px-8 shadow-lg border">
     <div class="relative flex h-10 items-center justify-between">
       <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
         <!-- Mobile -->
@@ -154,8 +155,13 @@
               >
                 <DropDownLink linkName="Settings" link="/settings"
                 ></DropDownLink>
-                <DropDownLinkNoPreload linkName="Logout" link="/logout"
-                ></DropDownLinkNoPreload>
+                <DropDownButton
+                  buttonTitle="Log out"
+                  onButtonClick={() =>
+                    logout().then((_) =>
+                      goto("/auth/login", { invalidateAll: true }),
+                    )}
+                />
               </div>
             {/if}
           </div>

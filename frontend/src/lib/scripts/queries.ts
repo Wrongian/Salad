@@ -205,7 +205,7 @@ export const getIsLoggedIn = async (fetch: fetch): Promise<boolean> => {
 
 // logout route, doesnt do anything if not logged in
 // cant really get an error logging out since its a get request
-export const logout = async (fetch: fetch, next: string): Promise<void> => {
+export const logout = async (fetch?: fetch): Promise<void> => {
   await validateFetch<TStandardResponsePayload>(
     LOGOUT_ENDPOINT,
     "GET",
@@ -213,14 +213,6 @@ export const logout = async (fetch: fetch, next: string): Promise<void> => {
     TStandardResponsePayloadValidator,
     { fetch },
   );
-
-  await invalidateAll();
-  goto("/")
-  // if (next != null) {
-  //   goto(next);
-  // } else {
-  //   goto(BASEURL);
-  // }
 };
 
 // get username route
