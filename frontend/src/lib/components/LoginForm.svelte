@@ -24,7 +24,12 @@
     if (!passwordElement || !(passwordElement instanceof HTMLInputElement))
       return false;
 
-    return usernameElement.validity.valid && passwordElement.validity.valid;
+    return (
+      usernameElement.validity.valid &&
+      passwordElement.validity.valid &&
+      isPasswordChanged &&
+      isUsernameChanged
+    );
   };
   let next = "";
   afterNavigate(({ from }) => {

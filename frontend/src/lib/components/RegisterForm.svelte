@@ -39,9 +39,9 @@
       emailElement.validity.valid &&
       usernameElement.validity.valid &&
       passwordElement.validity.valid &&
-      !!isPasswordChanged &&
-      !!isUsernameChanged &&
-      !!isEmailChanged
+      isPasswordChanged &&
+      isUsernameChanged &&
+      isEmailChanged
     );
   };
   let next = "";
