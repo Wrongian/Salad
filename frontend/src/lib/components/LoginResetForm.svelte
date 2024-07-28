@@ -14,7 +14,7 @@
   let password: string = "";
   let toggle: boolean = false;
 
-  async function send_request() {
+  async function sendRequest() {
     let email_body: TGetEmailBody = {
       email: email,
     };
@@ -23,7 +23,7 @@
       toggle = true;
     }
   }
-  async function send_reset_password() {
+  async function sendResetPassword() {
     let reset_body: TResetPasswordBody = {
       email: email,
       code: code,
@@ -66,7 +66,7 @@
       <button
         type="submit"
         class="justify-center rounded-md w-[200px]"
-        on:click={async () => await send_request()}
+        on:click={async () => await sendRequest()}
       >
         <span>Submit</span>
       </button>
@@ -111,7 +111,7 @@
       <button
         type="submit"
         class="justify-center rounded-md w-[200px]"
-        on:click={async () => await send_reset_password()}
+        on:click={async () => await sendResetPassword()}
       >
         <span>Submit</span>
       </button>
