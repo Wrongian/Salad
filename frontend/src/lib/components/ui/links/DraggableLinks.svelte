@@ -1,7 +1,7 @@
 <script lang="ts">
   import Link from "./Link.svelte";
   import type { ListData } from "$lib/types/Profile";
-  import type { TLink } from "$lib/scripts/response-validator";
+  import type { TLink } from "$lib/scripts/validation/response";
   import PictureModal from "$lib/components/ui/modals/ImageModal.svelte";
   import { reorderLink } from "$lib/scripts/queries";
   import { updateLinkPicture } from "$lib/scripts/queries";
@@ -43,7 +43,7 @@
       const payload = await updateLinkPicture(image, filetype, modalLinkId);
 
       // skip if updating the link picture failed
-      if (!payload.result) {
+      if (!payload) {
         return;
       }
 
@@ -148,6 +148,7 @@
 </script>
 
 <div
+  role="article"
   on:drag={(e) => {
     onDrag(e);
   }}

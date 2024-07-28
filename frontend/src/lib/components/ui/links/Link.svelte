@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ListData } from "$lib/types/Profile";
-  import type { TLink } from "$lib/scripts/response-validator";
+  import type { TLink } from "$lib/scripts/validation/response";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import type { ModalCallback } from "$lib/types/Callback";
   import {

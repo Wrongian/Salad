@@ -8,8 +8,6 @@
   import { updateTextProfile } from "$lib/scripts/queries";
   import type { TLink } from "$lib/scripts/validation/response";
   import { updateProfilePicture } from "$lib/scripts/queries";
-  import { invalidateAll } from "$app/navigation";
-  import type { TLink } from "$lib/scripts/validation/response";
   export let data: PageData;
   export let links: TLink[] = data.links;
   $: links = data.links;
@@ -41,9 +39,7 @@
 </script>
 
 <!--Icons from https://flowbite.com/icons/ -->
-
-<!--todo change brightness when modal is focused-->
-<div class="bg-lime-50 px-6">
+<div class="px-6">
   <div
     class="font-medium text-2xl px-4 py-3 relative flex justify-start border-lime-100 border-b-2 border-solid"
   >
