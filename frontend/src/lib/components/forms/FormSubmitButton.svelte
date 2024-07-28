@@ -2,7 +2,8 @@
   import type { MouseEventHandler } from "svelte/elements";
   import { twMerge } from "tailwind-merge";
 
-  export let canSubmit: boolean;
+  // by default the submit button is not disabled
+  export let canSubmit: boolean = true;
   export let onSubmit: MouseEventHandler<HTMLButtonElement>;
   export let buttonLabel: string;
 </script>

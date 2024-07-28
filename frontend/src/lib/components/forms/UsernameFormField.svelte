@@ -3,16 +3,14 @@
     MAX_USERNAME_LENGTH,
     MIN_USERNAME_LENGTH,
   } from "$lib/modules/Constants.svelte";
+  // set to true once user has started typing
+  export let isUsernameChanged: boolean = false;
 
-  export let isUsernameChanged: boolean;
   export let username: string;
   export let id: string;
 </script>
 
-<label
-  for="login-username-text"
-  class="block text-sm font-medium text-slate-800"
->
+<label for={id} class="block text-sm font-medium text-slate-800">
   <span
     class="block text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
   >

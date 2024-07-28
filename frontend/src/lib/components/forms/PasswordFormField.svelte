@@ -3,20 +3,19 @@
     MAX_PASSWORD_LENGTH,
     MIN_PASSWORD_LENGTH,
   } from "$lib/modules/Constants.svelte";
+  // set to true once user has started typing
+  export let isPasswordChanged: boolean = false;
 
-  export let isPasswordChanged: boolean;
   export let password: string;
   export let id: string;
+  export let passwordInputLabel: string = "Password";
 </script>
 
-<label
-  for="login-password-text"
-  class="grid grid-cols-5 text-sm font-medium py-2"
->
+<label for={id} class="grid grid-cols-5 text-sm font-medium py-2">
   <span
     class="col-span-full text-sm font-medium text-slate-800 after:content-['*'] after:ml-0.5 after:text-red-500"
   >
-    Password
+    {passwordInputLabel}
   </span>
 
   <input
