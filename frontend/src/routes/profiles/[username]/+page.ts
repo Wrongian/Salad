@@ -15,10 +15,10 @@ export const load: PageLoad = async ({ fetch, params, parent }) => {
       message: "Profile not found",
     });
   }
+
   let followStatus: TFollowStatus | undefined = isLoggedIn
     ? await getFollowStatus(profileData.id, fetch)
     : undefined;
-
   let links = await getLinks(params.username, fetch);
 
   return {
