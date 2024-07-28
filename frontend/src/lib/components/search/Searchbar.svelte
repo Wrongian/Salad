@@ -31,7 +31,7 @@
 <div class="p-0 w-80 relative" on:focusout={handleDropdownFocusLoss}>
   <div class="flex gap-x-2 w-full">
     <Input
-      class="rounded-[0.25rem] h-full flex-1"
+      class="rounded-[0.25rem] h-8 flex-1"
       type="search"
       placeholder="Search users..."
       bind:value={searchQuery}
@@ -40,6 +40,7 @@
         isSearchDropdownOpen = true;
       }}
     />
+
     <button
       class="hover:text-white"
       on:click={() => {
@@ -54,7 +55,7 @@
 
   {#if isSearchDropdownOpen}
     <div
-      class="group w-80 absolute z-3 h-fit top-full bg-lime-50 shadow-lg ring-1 ring-black ring-opacity-5 divide-y-1"
+      class="group w-80 absolute z-3 h-fit top-full translate-y-2 bg-lime-50 shadow-lg ring-1 ring-black ring-opacity-5 divide-y-1"
       role="menu"
     >
       {#each results as { username, img_src, display_name }}
