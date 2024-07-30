@@ -34,7 +34,7 @@ pub async fn create_mock_user() -> GetUser {
     let user = InsertUser {
         username: generate(5, charset),
         display_name: "test-display-name".to_string(),
-        password: "12345".to_string(),
+        password: "a12345678".to_string(),
         email: format!("{}@gmail.com", generate(5, charset)),
         bio: Some("this is a bio".to_string()),
         is_private: false,
