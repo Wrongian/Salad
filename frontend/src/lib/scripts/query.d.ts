@@ -35,12 +35,12 @@ export type TReorderPayload = {
 
 export type TCreateFollowRequestPayload = {
   pending_follow_id: number;
-}
+};
 
 export type TCompleteFollowRequestPayload = {
   from_id: number;
-  accept: boolean
-}
+  accept: boolean;
+};
 
 export type TResponseBody = {
   result: boolean;
@@ -49,14 +49,14 @@ export type TResponseBody = {
 
 export type TResult<T> =
   | {
-    payload: T;
-    success: true;
-  }
+      payload: T;
+      success: true;
+    }
   | {
-    success: false;
-    status: number;
-    err: string;
-  };
+      success: false;
+      status: number;
+      err: string;
+    };
 
 export type TGetEmailBody = {
   email: string;
@@ -86,4 +86,8 @@ export type TChangeEmailBody = {
 
 export type TUpdatePrivacyBody = {
   is_private: boolean;
+};
+
+export type TReadNotification = {
+  notification_id: number;
 };
