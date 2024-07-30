@@ -3,12 +3,18 @@ use std::sync::Arc;
 use serde::Deserialize;
 use tide::Request;
 
+use crate::connectors::db::notifications::notification_exists_by_uids;
+use crate::helpers::notifications::FOLLOW_REQUEST_TYPE;
 use crate::{
     connectors::db::{
         follow::{add_follow, delete_follow_request, has_follow_request},
+        notifications::delete_notification_by_uids,
         user::has_user_id,
     },
-    helpers::{auth::get_session_user_id, state::get_connection},
+    helpers::{
+        auth::get_session_user_id, notifications::create_accepted_notification,
+        state::get_connection,
+    },
     models::follows::InsertFollow,
     types::{
         error::{Error, RequestErrors},
@@ -71,7 +77,27 @@ pub async fn settle_inbound_follow_request(mut req: Request<Arc<TideState>>) -> 
         }
     }
 
-    // TODO: publish notification
+    // publish notification
+    match create_accepted_notification(&mut conn, from_id, user_id).await {
+        Ok(_) => {}
+        Err(e) => return e.into_response(),
+    }
+
+    // check if notification exists
+    match notification_exists_by_uids(&mut conn, from_id, user_id, FOLLOW_REQUEST_TYPE).await {
+        Ok(true) => {
+            // delete notification for user
+            match delete_notification_by_uids(&mut conn, from_id, user_id, FOLLOW_REQUEST_TYPE)
+                .await
+            {
+                Ok(_) => {}
+                Err(e) => return e.into_response(),
+            }
+        }
+        Ok(false) => {}
+
+        Err(e) => return e.into_response(),
+    }
 
     return Response::empty().into_response();
 }

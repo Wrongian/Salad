@@ -8,7 +8,10 @@ use crate::{
         follow::{add_follow_request, has_follow_request, is_following},
         user::has_user_id,
     },
-    helpers::{auth::get_session_user_id, state::get_connection},
+    helpers::{
+        auth::get_session_user_id, notifications::create_request_notification,
+        state::get_connection,
+    },
     models::follows::InsertFollowRequest,
     types::{
         error::{AssociationErrors, Error, RequestErrors},
@@ -83,7 +86,11 @@ pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
         return Error::DieselError(e).into_response();
     }
 
-    // TODO: publish notification
+    // create notification
+    match create_request_notification(&mut conn, to_id, user_id).await {
+        Ok(_) => {}
+        Err(e) => return e.into_response(),
+    }
 
     return Response::empty().into_response();
 }
