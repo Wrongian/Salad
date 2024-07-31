@@ -31,6 +31,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    notifications (id) {
+        id -> Int4,
+        user_id -> Int4,
+        trigger_id -> Int4,
+        created_at -> Timestamp,
+        notification_type -> Int4,
+        msg -> Varchar,
+        is_read -> Bool,
+    }
+}
+
+diesel::table! {
     pending_follow_requests (id) {
         id -> Int4,
         from_id -> Int4,
@@ -85,6 +97,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     follows,
     images,
     links,
+    notifications,
     pending_follow_requests,
     reset_password_request,
     user_insights,

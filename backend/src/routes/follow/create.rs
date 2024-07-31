@@ -10,11 +10,12 @@ use crate::{
         insight::update_user_insights,
         user::has_user_id,
     },
-    helpers::{auth::get_session_user_id, state::get_connection},
-    models::{
-        follows::InsertFollowRequest,
-        insights::{Increment, UpdateUserInsight},
+    helpers::{
+        auth::get_session_user_id, notifications::create_request_notification,
+        state::get_connection,
     },
+    models::follows::InsertFollowRequest,
+    models::insights::{Increment, UpdateUserInsight},
     types::{
         error::{AssociationErrors, Error, RequestErrors},
         response::Response,
@@ -100,6 +101,11 @@ pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
     }
 
     // TODO: publish notification
+    // create notification
+    match create_request_notification(&mut conn, to_id, user_id).await {
+        Ok(_) => {}
+        Err(e) => return e.into_response(),
+    }
 
     return Response::empty().into_response();
 }

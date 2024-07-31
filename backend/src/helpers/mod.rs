@@ -2,6 +2,7 @@ pub mod auth;
 pub mod errors;
 pub mod funcs;
 pub mod links;
+pub mod notifications;
 pub mod params;
 pub mod random;
 pub mod state;

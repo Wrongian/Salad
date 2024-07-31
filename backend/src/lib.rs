@@ -3,6 +3,7 @@ pub mod routes {
     pub mod follow;
     pub mod insights;
     pub mod links;
+    pub mod notifications;
     pub mod profiles;
     pub mod search;
     pub mod settings;

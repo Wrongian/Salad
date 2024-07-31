@@ -28,6 +28,9 @@ use saladify::routes::links::get::get_links;
 use saladify::routes::links::update::{
     reorder_links, update_link_bio, update_link_href, update_link_picture, update_link_title,
 };
+use saladify::routes::notifications::{
+    delete::delete_all_notifications, get::get_notifications, update::read_notification,
+};
 use saladify::routes::profiles::get::{get_profile, get_username};
 use saladify::routes::profiles::update::{update_display_profile, update_profile_image};
 use saladify::routes::search::get::search_users;
@@ -168,6 +171,11 @@ async fn main() -> tide::Result<()> {
     app.at("/change-password").post(change_password);
     app.at("/change-email").post(change_email);
     app.at("/update-privacy").post(update_privacy);
+
+    // notifications
+    app.at("/notifications").delete(delete_all_notifications);
+    app.at("/notifications").get(get_notifications);
+    app.at("/notifications").put(read_notification);
 
     // search
     app.at("/search").get(search_users);

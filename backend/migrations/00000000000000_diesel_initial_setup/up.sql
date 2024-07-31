@@ -68,6 +68,18 @@ CREATE TABLE IF NOT EXISTS user_insights (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    trigger_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    notification_type INT NOT NULL,
+    msg VARCHAR NOT NULL,
+    is_read BOOLEAN NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (trigger_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
 DECLARE
     current_next INT;

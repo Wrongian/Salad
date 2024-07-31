@@ -152,6 +152,7 @@ pub async fn get_queried_user_total_count(
         .count()
         .get_result::<i64>(conn)
 }
+
 pub async fn get_user_from_email(
     conn: &mut PgConnection,
     email_str: String,

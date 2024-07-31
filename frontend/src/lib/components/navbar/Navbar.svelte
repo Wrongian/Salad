@@ -1,13 +1,33 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import favicon from "$lib/assets/favicon.ico";
-  import { logout } from "$lib/scripts/queries";
+  import { Trash } from "lucide-svelte";
+  import {
+    completeFollowRequest,
+    deleteAllNotifications,
+    logout,
+    readNotification,
+  } from "$lib/scripts/queries";
+  import type {
+    TNotification,
+    TNotificationsPayload,
+  } from "$lib/scripts/validation/response";
   import Searchbar from "../search/Searchbar.svelte";
   import DropDownButton from "../ui/dropdown/DropDownButton.svelte";
   import DropDownLink from "../ui/dropdown/DropDownLink.svelte";
   import NavLink from "../ui/navbar/NavLink.svelte";
+  import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+  } from "$lib/components/ui/popover";
+  import { Separator } from "$lib/components/ui/separator";
+  import type TReadNotification from "$lib/scripts/query";
+
   export let isLoggedIn = false;
   export let profileRoute = "";
+  export let notifications: TNotificationsPayload = { notifications: [] };
+  $: notifs = notifications.notifications;
 
   let isDropdownOpen: boolean = false;
 
@@ -25,6 +45,35 @@
     }
     isDropdownOpen = false;
   };
+
+  async function handleFollowRequest(
+    hasAccepted: boolean,
+    fromID: number,
+    notification: TNotification,
+  ) {
+    completeFollowRequest({ accept: hasAccepted, from_id: fromID });
+    if (hasAccepted) {
+      notification.is_read = true;
+    }
+    const ele = document.getElementById("notif-" + notification.id);
+    ele?.remove();
+    // await invalidateAll();
+  }
+
+  async function handleReadNotification(notif: TNotification) {
+    if (!notif.is_read) {
+      let query: TReadNotification = { notification_id: notif.id };
+      notif.is_read = false;
+      notifs = notifs;
+      await invalidateAll();
+      readNotification(query);
+    }
+  }
+
+  async function handleDeleteNotifications() {
+    deleteAllNotifications();
+    notifs = [];
+  }
 </script>
 
 <nav class="bg-primary">
@@ -101,32 +150,102 @@
           </div>
         </div>
       {:else}
-        <!--Notifications todo later-->
         <div
           class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
         >
-          <button
-            type="button"
-            class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-          >
-            <span class="absolute -inset-1.5"></span>
-            <span class="sr-only">View notifications</span>
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-              />
-            </svg>
-          </button>
-
+          <Popover
+            ><PopoverTrigger>
+              <button
+                type="button"
+                class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+              >
+                <span class="absolute -inset-1.5"></span>
+                <span class="sr-only">View notifications</span>
+                <svg
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                  />
+                </svg>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent class="w-56 bg-lime-50">
+              <div class="flex flex-row space-x-4">
+                <div class="">
+                  <h1>Notifications</h1>
+                </div>
+                <div class="">
+                  <button
+                    on:click={() => {
+                      handleDeleteNotifications();
+                    }}
+                  >
+                    <Trash /></button
+                  >
+                </div>
+              </div>
+              <Separator />
+              <div class="py-4">
+                {#each notifs as notif}
+                  <div
+                    role="listitem"
+                    on:mouseenter={() => {
+                      handleReadNotification(notif);
+                    }}
+                    id="notif-{notif.id}"
+                    class="border border-3 p-2 {notif.is_read
+                      ? 'bg-lime-50'
+                      : 'bg-lime-100'}"
+                  >
+                    {#if notif.notification_type == 1}
+                      <div class="max-w-56">{notif.msg}</div>
+                    {/if}
+                    {#if notif.notification_type == 2}
+                      <div class="max-w-56">
+                        <div class="flex flex-col space-y-2">
+                          <div class="overflow-y-auto">
+                            <h3>{notif.msg}</h3>
+                          </div>
+                          <div
+                            class="flex-row flex space-x-1 justify-center space-between"
+                          >
+                            <button
+                              on:click={() =>
+                                handleFollowRequest(
+                                  true,
+                                  notif.trigger_id,
+                                  notif,
+                                )}
+                              class="px-4 py-1 text-white bg-lime-700 hover:bg-lime-800 font-medium rounded-lg text-base"
+                              >Accept</button
+                            >
+                            <button
+                              on:click={() =>
+                                handleFollowRequest(
+                                  false,
+                                  notif.trigger_id,
+                                  notif,
+                                )}
+                              class="px-4 py-1 text-white bg-lime-700 hover:bg-lime-800 font-medium rounded-lg text-base"
+                              >Reject</button
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            </PopoverContent>
+          </Popover>
           <!-- Profile dropdown -->
           <div on:focusout={handleDropdownFocusLoss} class="relative ml-3">
             <div>

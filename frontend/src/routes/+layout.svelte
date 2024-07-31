@@ -34,7 +34,11 @@
 </svelte:head>
 <Errors />
 <div class="h-fit min-h-screen bg-white">
-  <Navbar {profileRoute} isLoggedIn={data.isLoggedIn} />
+  <Navbar
+    {profileRoute}
+    isLoggedIn={data.isLoggedIn}
+    notifications={data.notifications}
+  />
 
   {#if doneLoad}
     <div>

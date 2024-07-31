@@ -2,23 +2,20 @@ use std::sync::Arc;
 
 use chrono::Utc;
 use tide::{
-    log::{error, info, warn},
+    log::{error, info},
     Request,
 };
 use validator::Validate;
 
 use crate::{
     connectors::db::{
-        follow::{get_follower_count, get_following_count, is_following, is_following_by_username},
+        follow::{get_follower_count, get_following_count, is_following_by_username},
         image::get_profile_image,
         insight::update_user_insights,
         user::{check_username_present, get_user_profile_by_username},
     },
-    helpers::{auth::get_session_username, params::extract_username_from_params},
-    models::{
-        insights::{Increment, UpdateUserInsight},
-        users::UserProfileView,
-    },
+    helpers::params::extract_username_from_params,
+    models::insights::{Increment, UpdateUserInsight},
     types::{error::Error, response::Response, state::TideState},
 };
 
