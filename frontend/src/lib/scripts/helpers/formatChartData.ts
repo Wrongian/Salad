@@ -1,6 +1,9 @@
 export type TDataset = {
   label: string;
+  fill: boolean;
   data: number[];
+  borderColor: string;
+  backgroundColor: string;
 } & unknown;
 
 export type TChartGraph = {
@@ -9,7 +12,7 @@ export type TChartGraph = {
 };
 
 export const createChartData = (
-  labels: Date[],
+  labels: number[],
   graphLabel: string,
   rawInterval: [Date, number][],
 ): TChartGraph => {
@@ -17,8 +20,11 @@ export const createChartData = (
     labels,
     datasets: [
       {
+        fill: true,
         label: graphLabel,
         data: rawInterval.map((el) => el[1]),
+        borderColor: "rgb(50, 205,50)",
+        backgroundColor: "rgb(50, 205,50)",
       },
     ],
   };
