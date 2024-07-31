@@ -614,6 +614,8 @@ export const getUserInsights = async (fetch?: fetch) => {
     UserInsightResponsePayloadValidator,
     { fetch },
   );
+};
+
 export const getNotifications = async (
   fetch: fetch,
 ): Promise<TNotificationsPayload> => {
