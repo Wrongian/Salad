@@ -1,5 +1,9 @@
 use std::sync::Arc;
 
+use crate::{
+    connectors::db::notifications::{delete_notification_by_uids, notification_exists_by_uids},
+    helpers::notifications::FOLLOW_REQUEST_TYPE,
+};
 use serde::Deserialize;
 use tide::Request;
 
@@ -62,7 +66,28 @@ pub async fn delete_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
         return Error::DieselError(e).into_response();
     }
 
-    // TODO: delete tagged notifications
+    // check if notification exists
+    match notification_exists_by_uids(&mut conn, user_id, pending_follow_id, FOLLOW_REQUEST_TYPE)
+        .await
+    {
+        Ok(true) => {
+            // delete notification for person they were trying to follow
+            match delete_notification_by_uids(
+                &mut conn,
+                user_id,
+                pending_follow_id,
+                FOLLOW_REQUEST_TYPE,
+            )
+            .await
+            {
+                Ok(_) => {}
+                Err(e) => return e.into_response(),
+            }
+        }
+        Ok(false) => {}
+
+        Err(e) => return e.into_response(),
+    }
 
     return Response::empty().into_response();
 }

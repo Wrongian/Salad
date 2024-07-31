@@ -1,4 +1,4 @@
-use crate::models::reset::{GetRequest, InsertRequest, UpdateRequest};
+use crate::models::reset::{GetRequest, InsertRequest};
 use crate::types::error::Error;
 use crate::types::error::Error::DieselError;
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl, SelectableHelper};

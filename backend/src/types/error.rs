@@ -128,6 +128,8 @@ pub enum AssociationErrors {
     LinkDoesNotBelongToUser,
     #[error("Invalid follow user specified.")]
     InvalidFollowUser,
+    #[error("Notification does not belong to the user")]
+    NotificationDoesNotBelongToUser,
 }
 
 #[derive(thiserror::Error, Debug)]

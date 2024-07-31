@@ -133,3 +133,34 @@ export const TGetPaginatedFollowRequestProfileValidator = Joi.object<
   ),
   total_size: Joi.number(),
 });
+
+export type TNotification = {
+  id: number;
+  user_id: number;
+  trigger_id: number;
+  notification_type: number;
+  msg: string;
+  is_read: boolean;
+};
+
+export type TNotificationsPayload = {
+  notifications: TNotification[];
+};
+
+export const NOTIFICATION_TYPES = [1, 2] as const;
+export const TNotificationsValidator = Joi.object<TNotificationsPayload>({
+  notifications: Joi.array<TNotification[]>()
+    .items(
+      Joi.object({
+        id: Joi.number(),
+        user_id: Joi.number().required(),
+        trigger_id: Joi.number().required(),
+        notification_type: Joi.number()
+          .required()
+          .valid(...NOTIFICATION_TYPES),
+        msg: Joi.string().required(),
+        is_read: Joi.boolean().required(),
+      }),
+    )
+    .min(0),
+});
