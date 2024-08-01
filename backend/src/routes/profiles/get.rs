@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::Utc;
 use tide::{
     log::{error, info},
     Request,
@@ -10,9 +11,11 @@ use crate::{
     connectors::db::{
         follow::{get_follower_count, get_following_count, is_following_by_username},
         image::get_profile_image,
+        insight::update_user_insights,
         user::{check_username_present, get_user_profile_by_username},
     },
     helpers::params::extract_username_from_params,
+    models::insights::{Increment, UpdateUserInsight},
     types::{error::Error, response::Response, state::TideState},
 };
 
@@ -143,6 +146,17 @@ pub async fn get_profile(req: Request<Arc<TideState>>) -> tide::Result {
             } else {
                 // either is_owner or not private account, either ways all fields are accessible.
                 // So return all fields.
+
+                // update view count if not owner
+                if !is_owner {
+                    let increment_views =
+                        UpdateUserInsight::increment_view_count(profile.id, Utc::now().naive_utc());
+
+                    // fail silently
+                    if let Err(e) = update_user_insights(&mut conn, increment_views).await {
+                        log::error!("Failed to increment view count for user insights {:?}", e);
+                    }
+                }
 
                 // get cdn_href from db
                 let picture = get_profile_image(&mut conn, profile.id)

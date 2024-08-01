@@ -17,7 +17,7 @@ import type {
   TCompleteFollowRequestPayload,
   TReadNotification,
 } from "./query.d.ts";
-import { goto, invalidateAll } from "$app/navigation";
+import { invalidateAll } from "$app/navigation";
 import {
   TFollowStatusValidator,
   type TGetPaginatedProfilePayload,
@@ -32,6 +32,8 @@ import {
   type TUpdateImageResponseBody,
   type TPaginatedFollowRequestProfile,
   TGetPaginatedFollowRequestProfileValidator,
+  type TUserInsightResponsePayload,
+  UserInsightResponsePayloadValidator,
   type TNotificationsPayload,
 } from "./validation/response.js";
 import {
@@ -75,6 +77,7 @@ const CHANGE_PASSWORD_ENDPOINT = "/api/change-password";
 const CHANGE_USERNAME_ENDPOINT = "/api/change-username";
 const CHANGE_EMAIL_ENDPOINT = "/api/change-email";
 const UPDATE_PRIVACY_ENDPOINT = "/api/update-privacy";
+const INSIGHT_ENDPOINT = "/api/insights";
 const NOTIFICATIONS_ENDPOINT = "/api/notifications";
 
 type fetch = typeof fetch;
@@ -601,6 +604,16 @@ export const updatePrivacy = async (
     return true;
   }
   return false;
+};
+
+export const getUserInsights = async (fetch?: fetch) => {
+  return await validateFetch<TUserInsightResponsePayload>(
+    INSIGHT_ENDPOINT,
+    "GET",
+    {},
+    UserInsightResponsePayloadValidator,
+    { fetch },
+  );
 };
 
 export const getNotifications = async (

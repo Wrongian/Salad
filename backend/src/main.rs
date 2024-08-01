@@ -21,6 +21,7 @@ use saladify::routes::follow::get::{
     get_follow_status, get_followers, get_following, get_pending_follows,
 };
 use saladify::routes::follow::update::settle_inbound_follow_request;
+use saladify::routes::insights::get::get_insights;
 use saladify::routes::links::create::add_link;
 use saladify::routes::links::delete::{delete_link_picture, delete_links};
 use saladify::routes::links::get::get_links;
@@ -181,6 +182,9 @@ async fn main() -> tide::Result<()> {
 
     // misc
     app.at("get-username").get(get_username);
+
+    // analytics
+    app.at("/insights").get(get_insights);
 
     // attach to IP and port
     app.listen(funcs::get_url()).await?;

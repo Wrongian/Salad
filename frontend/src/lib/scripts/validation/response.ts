@@ -134,6 +134,38 @@ export const TGetPaginatedFollowRequestProfileValidator = Joi.object<
   total_size: Joi.number(),
 });
 
+export type TUserInsightResponsePayload = {
+  total_profile_views: number;
+  interval_views: [Date, number][];
+  interval_follows: [Date, number][];
+  interval_unfollows: [Date, number][];
+  interval_follow_requests: [Date, number][];
+  interval_shares: [Date, number][];
+};
+
+export const UserInsightResponsePayloadValidator =
+  Joi.object<TUserInsightResponsePayload>({
+    total_profile_views: Joi.number(),
+
+    interval_views: Joi.array().items(
+      Joi.array().ordered(Joi.date().required(), Joi.number().required()),
+    ),
+    interval_follows: Joi.array().items(
+      Joi.array().ordered(Joi.date().required(), Joi.number().required()),
+    ),
+
+    interval_unfollows: Joi.array().items(
+      Joi.array().ordered(Joi.date().required(), Joi.number().required()),
+    ),
+
+    interval_follow_requests: Joi.array().items(
+      Joi.array().ordered(Joi.date().required(), Joi.number().required()),
+    ),
+
+    interval_shares: Joi.array().items(
+      Joi.array().ordered(Joi.date().required(), Joi.number().required()),
+    ),
+  });
 export type TNotification = {
   id: number;
   user_id: number;

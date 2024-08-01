@@ -161,6 +161,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@kurkle/color@^0.3.0":
+  version "0.3.2"
+  resolved "https://registry.npmjs.org/@kurkle/color/-/color-0.3.2.tgz"
+  integrity sha512-fuscdXJ9G1qb7W8VdHi+IwRqij3lBkosAm4ydQtEmbY58OzHXqQhvlxqEkoz0yssNVn38bcpRWgA9PP+OGoisw==
+
 "@melt-ui/svelte@0.76.2":
   version "0.76.2"
   resolved "https://registry.npmjs.org/@melt-ui/svelte/-/svelte-0.76.2.tgz"
@@ -726,6 +731,13 @@ chalk@^4.0.0:
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
+
+"chart.js@^3.5.0 || ^4.0.0", chart.js@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.npmjs.org/chart.js/-/chart.js-4.4.3.tgz"
+  integrity sha512-qK1gkGSRYcJzqrrzdR6a+I0vQ4/R+SoODXyAjscQ/4mzuNzySaMCd+hyVxitSY1+L2fjPD1Gbn+ibNqRmwQeLw==
+  dependencies:
+    "@kurkle/color" "^0.3.0"
 
 chokidar@^3.4.1, chokidar@^3.5.3:
   version "3.6.0"
@@ -2468,6 +2480,11 @@ supports-preserve-symlinks-flag@^1.0.0:
   resolved "https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
+svelte-chartjs@^3.1.5:
+  version "3.1.5"
+  resolved "https://registry.npmjs.org/svelte-chartjs/-/svelte-chartjs-3.1.5.tgz"
+  integrity sha512-ka2zh7v5FiwfAX1oMflZ0HkNkgjHjFqANgRyC+vNYXfxtx2ku68Zo+2KgbKeBH2nS1ThDqkIACPzGxy4T0UaoA==
+
 svelte-check@^3.6.0:
   version "3.7.1"
   resolved "https://registry.npmjs.org/svelte-check/-/svelte-check-3.7.1.tgz"
@@ -2519,7 +2536,7 @@ svelte-sonner@^0.3.27:
   resolved "https://registry.npmjs.org/svelte-sonner/-/svelte-sonner-0.3.27.tgz"
   integrity sha512-+PvbuePNTyTNCepCWqKcFeu+Lo27yYuwfSc7zJvrWjCRMJrWAmccPg3j7jO1W13QoN3TySXU5Trb956VBQiM5Q==
 
-"svelte@^3 || ^4 || ^5.0.0-next.42", "svelte@^3.0.0 || ^4.0.0 || ^5.0.0-next.1", "svelte@^3.19.0 || ^4.0.0", "svelte@^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0", "svelte@^3.23.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0", "svelte@^3.37.0 || ^4.0.0 || ^5.0.0-next.115", "svelte@^3.37.0 || ^4.0.0 || ^5.0.0-next.155", "svelte@^3.55.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0", "svelte@^4.0.0 || ^5.0.0-next.0", "svelte@^4.0.0 || ^5.0.0-next.118", svelte@^4.2.18, "svelte@>=3 <5":
+"svelte@^3 || ^4 || ^5.0.0-next.42", "svelte@^3.0.0 || ^4.0.0 || ^5.0.0-next.1", "svelte@^3.19.0 || ^4.0.0", "svelte@^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0", "svelte@^3.23.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0", "svelte@^3.37.0 || ^4.0.0 || ^5.0.0-next.115", "svelte@^3.37.0 || ^4.0.0 || ^5.0.0-next.155", "svelte@^3.55.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0", svelte@^4.0.0, "svelte@^4.0.0 || ^5.0.0-next.0", "svelte@^4.0.0 || ^5.0.0-next.118", svelte@^4.2.18, "svelte@>=3 <5":
   version "4.2.18"
   resolved "https://registry.npmjs.org/svelte/-/svelte-4.2.18.tgz"
   integrity sha512-d0FdzYIiAePqRJEb90WlJDkjUEx42xhivxN8muUBmfZnP+tzUgz12DJ2hRJi8sIHCME7jeK1PTMgKPSfTd8JrA==

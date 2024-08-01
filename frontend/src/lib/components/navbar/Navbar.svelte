@@ -274,6 +274,8 @@
               >
                 <DropDownLink linkName="Settings" link="/settings"
                 ></DropDownLink>
+                <DropDownLink linkName="Insights" link="/insights"
+                ></DropDownLink>
                 <DropDownButton
                   buttonTitle="Log out"
                   onButtonClick={() =>

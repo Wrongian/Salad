@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use chrono::Utc;
 use serde::Deserialize;
 use tide::Request;
 
 use crate::{
     connectors::db::{
         follow::{add_follow_request, has_follow_request, is_following},
+        insight::update_user_insights,
         user::has_user_id,
     },
     helpers::{
@@ -13,6 +15,7 @@ use crate::{
         state::get_connection,
     },
     models::follows::InsertFollowRequest,
+    models::insights::{Increment, UpdateUserInsight},
     types::{
         error::{AssociationErrors, Error, RequestErrors},
         response::Response,
@@ -86,6 +89,18 @@ pub async fn create_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
         return Error::DieselError(e).into_response();
     }
 
+    // increment follow request analytics
+    let increment_follow_requests =
+        UpdateUserInsight::increment_follow_request_count(to_id, Utc::now().naive_utc());
+
+    if let Err(e) = update_user_insights(&mut conn, increment_follow_requests).await {
+        log::error!(
+            "Failed to increment follow request count for user insights {:?}",
+            e
+        );
+    }
+
+    // TODO: publish notification
     // create notification
     match create_request_notification(&mut conn, to_id, user_id).await {
         Ok(_) => {}
