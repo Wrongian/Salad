@@ -135,7 +135,7 @@ pub async fn get_queried_users(
     use crate::schema::users;
     users::table
         .left_join(images::table.on(users::id.nullable().eq(images::user_id)))
-        .filter(users::display_name.like(["%", query.as_str(), "%"].join("")))
+        .filter(users::display_name.ilike(["%", query.as_str(), "%"].join("")))
         .offset((index - 1) * per_page)
         .limit(per_page)
         .select((GetUser::as_select(), Option::<GetImage>::as_select()))
