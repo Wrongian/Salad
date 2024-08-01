@@ -11,8 +11,19 @@ env:
 
 jobs:
   build:
+    services:
+      postgres:
+        image: postgres-latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Create env file
+        run: touch .env && echo "${{secrets.ENV_FILE}}" > .env
       - name: Build
         run: cd backend && cargo build --verbose
