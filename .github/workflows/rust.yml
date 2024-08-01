@@ -24,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Create env file
-        run: touch .env && echo "${{secrets.ENV_FILE}}" > .env
+        run: cd backend && touch .env && echo "${{secrets.ENV_FILE}}" > .env
       - name: Build
         run: cd backend && cargo build --verbose
+      - name: Test
+        run: cd backend && cargo test
