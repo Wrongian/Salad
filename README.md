@@ -10,5 +10,12 @@ Additionally, we have experienced that we have lost track of our friends with ti
 Saladify is a website that allows users to aggregate their social media sites or any links they want to have. Whether it be for keeping in touch with your friend’s social media or to broadcast your commissions or sites as a freelancer by following others. They can also display their aggregated links on their profile and share it to their friends and search for their friends on the social media site.
 
 ## Poster
+![6061](https://github.com/user-attachments/assets/061aaa23-e539-4817-9a72-1f6a088b97a0)
+
+## Server Architecture
+![orbital-server-arch](https://github.com/user-attachments/assets/cdd8c8ed-ca3f-4379-899b-54d14ce4c88e)
 
 ## Entity Relationship Diagram
+![orbital-db-erd](https://github.com/user-attachments/assets/b78d25a7-73c8-4a20-a5fc-ec9596788c3f)
+
+
