@@ -1,5 +1,10 @@
 use std::sync::Arc;
 
+use crate::{
+    connectors::db::notifications::{delete_notification_by_uids, notification_exists_by_uids},
+    helpers::notifications::FOLLOW_REQUEST_TYPE,
+};
+use chrono::Utc;
 use serde::Deserialize;
 use tide::Request;
 
@@ -11,9 +16,11 @@ use crate::{
             delete_following as db_delete_following, has_follow_request, has_follower,
             is_following,
         },
+        insight::update_user_insights,
         user::has_user_id,
     },
     helpers::{auth::get_session_user_id, state::get_connection},
+    models::insights::{Increment, UpdateUserInsight},
     types::{
         error::{AssociationErrors, Error, RequestErrors},
         response::Response,
@@ -62,7 +69,28 @@ pub async fn delete_outbound_follow_request(mut req: Request<Arc<TideState>>) ->
         return Error::DieselError(e).into_response();
     }
 
-    // TODO: delete tagged notifications
+    // check if notification exists
+    match notification_exists_by_uids(&mut conn, user_id, pending_follow_id, FOLLOW_REQUEST_TYPE)
+        .await
+    {
+        Ok(true) => {
+            // delete notification for person they were trying to follow
+            match delete_notification_by_uids(
+                &mut conn,
+                user_id,
+                pending_follow_id,
+                FOLLOW_REQUEST_TYPE,
+            )
+            .await
+            {
+                Ok(_) => {}
+                Err(e) => return e.into_response(),
+            }
+        }
+        Ok(false) => {}
+
+        Err(e) => return e.into_response(),
+    }
 
     return Response::empty().into_response();
 }
@@ -141,6 +169,18 @@ pub async fn delete_following(mut req: Request<Arc<TideState>>) -> tide::Result 
     if let Err(e) = db_delete_following(&mut conn, user_id, following_id).await {
         return Error::DieselError(e).into_response();
     };
+
+    // update insight analytics
+    let increment_unfollows =
+        UpdateUserInsight::increment_unfollow_count(user_id, Utc::now().naive_utc());
+
+    // fail silently
+    if let Err(e) = update_user_insights(&mut conn, increment_unfollows).await {
+        log::error!(
+            "Failed to increment unfollow count for user insights {:?}",
+            e
+        );
+    }
 
     return Response::empty().into_response();
 }

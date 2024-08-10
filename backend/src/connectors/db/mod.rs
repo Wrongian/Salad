@@ -1,7 +1,9 @@
 pub mod connection;
 pub mod follow;
 pub mod image;
+pub mod insight;
 pub mod link;
+pub mod notifications;
 pub mod reset;
 pub mod user;
 

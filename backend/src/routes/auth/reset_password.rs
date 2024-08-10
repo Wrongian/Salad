@@ -69,9 +69,6 @@ pub struct GetEmailParams {
 pub async fn get_email(mut req: Request<Arc<TideState>>) -> tide::Result {
     // get user id from email
 
-    // get state
-    let state = req.state();
-
     // get connection pool
     let mut conn = get_connection(&mut req);
 

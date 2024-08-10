@@ -54,6 +54,32 @@ CREATE TABLE IF NOT EXISTS reset_password_request (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS user_insights (
+    id SERIAL PRIMARY KEY NOT NULL,
+    user_id INT NOT NULL,
+    view_count INT NOT NULL DEFAULT 0,
+    follow_count INT NOT NULL DEFAULT 0,
+    unfollow_count INT NOT NULL DEFAULT 0,
+    follow_request_count INT NOT NULL DEFAULT 0,
+    share_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL,
+    created_bucket TIMESTAMP GENERATED ALWAYS AS (DATE_TRUNC('hour', created_at)) STORED NOT NULL,
+    UNIQUE(user_id, created_bucket),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    trigger_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    notification_type INT NOT NULL,
+    msg VARCHAR NOT NULL,
+    is_read BOOLEAN NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (trigger_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE OR REPLACE FUNCTION reorder_link(node_id INT, new_position_id INT) RETURNS VOID AS $$
 DECLARE
     current_next INT;

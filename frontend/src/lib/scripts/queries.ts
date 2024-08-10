@@ -15,8 +15,9 @@ import type {
   TChangeUsernameBody,
   TUpdatePrivacyBody,
   TCompleteFollowRequestPayload,
+  TReadNotification,
 } from "./query.d.ts";
-import { goto, invalidateAll } from "$app/navigation";
+import { invalidateAll } from "$app/navigation";
 import {
   TFollowStatusValidator,
   type TGetPaginatedProfilePayload,
@@ -31,6 +32,9 @@ import {
   type TUpdateImageResponseBody,
   type TPaginatedFollowRequestProfile,
   TGetPaginatedFollowRequestProfileValidator,
+  type TUserInsightResponsePayload,
+  UserInsightResponsePayloadValidator,
+  type TNotificationsPayload,
 } from "./validation/response.js";
 import {
   type TGetUsernamePayload,
@@ -42,7 +46,7 @@ import {
 } from "./validation/response.js";
 import { validateFetch } from "./fetch.js";
 import { getAsSearchParamString } from "./searchParams.js";
-
+import { TNotificationsValidator } from "./validation/response";
 const BASEURL = "/";
 const PROFILES_PREFIX = "/api/profiles";
 const UPDATE_PROFILE_IMAGE_ENDPOINT = PROFILES_PREFIX + "/image";
@@ -73,6 +77,8 @@ const CHANGE_PASSWORD_ENDPOINT = "/api/change-password";
 const CHANGE_USERNAME_ENDPOINT = "/api/change-username";
 const CHANGE_EMAIL_ENDPOINT = "/api/change-email";
 const UPDATE_PRIVACY_ENDPOINT = "/api/update-privacy";
+const INSIGHT_ENDPOINT = "/api/insights";
+const NOTIFICATIONS_ENDPOINT = "/api/notifications";
 
 type fetch = typeof fetch;
 
@@ -594,6 +600,61 @@ export const updatePrivacy = async (
     TStandardResponsePayloadValidator,
   );
 
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+
+export const getUserInsights = async (fetch?: fetch) => {
+  return await validateFetch<TUserInsightResponsePayload>(
+    INSIGHT_ENDPOINT,
+    "GET",
+    {},
+    UserInsightResponsePayloadValidator,
+    { fetch },
+  );
+};
+
+export const getNotifications = async (
+  fetch: fetch,
+): Promise<TNotificationsPayload> => {
+  // todo change the function
+  let payload = await validateFetch<TNotificationsPayload>(
+    NOTIFICATIONS_ENDPOINT,
+    "GET",
+    {},
+    TNotificationsValidator,
+    { fetch },
+  );
+  if (payload) {
+    return payload;
+  }
+  return { notifications: [] };
+};
+
+export const readNotification = async (
+  query: TReadNotification,
+): Promise<boolean> => {
+  let payload = await validateFetch<TStandardResponsePayload>(
+    NOTIFICATIONS_ENDPOINT,
+    "PUT",
+    query,
+    TStandardResponsePayloadValidator,
+  );
+  if (payload) {
+    return true;
+  }
+  return false;
+};
+
+export const deleteAllNotifications = async (): Promise<boolean> => {
+  let payload = await validateFetch<TStandardResponsePayload>(
+    NOTIFICATIONS_ENDPOINT,
+    "DELETE",
+    {},
+    TStandardResponsePayloadValidator,
+  );
   if (payload) {
     return true;
   }
